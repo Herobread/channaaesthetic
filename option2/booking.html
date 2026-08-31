@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking | Channa Aesthetic</title>
+
+    <!-- Google Fonts: Cormorant Garamond & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      :root {
+        --gold: #b8925d;
+        --gold-hover: #9e7b4c;
+        --bg-main: #f9f8f6;
+        --bg-card: #ffffff;
+        --text-dark: #1c1917;
+        --text-muted: #6b7280;
+        --border: #e5e2dc;
+        --font-serif: "Cormorant Garamond", serif;
+        --font-sans: "Inter", sans-serif;
+        --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.03);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-sans);
+      }
+      body {
+        background: var(--bg-main);
+        color: var(--text-dark);
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-serif);
+        font-weight: 500;
+      }
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      /* HEADER */
+      header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 40;
+      }
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 24px;
+        font-family: var(--font-serif);
+        font-weight: 600;
+      }
+
+      /* PLACEHOLDER CONTENT */
+      .placeholder-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+      }
+      .placeholder-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 50px 40px;
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+      }
+      .icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(184, 146, 93, 0.1);
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+      }
+      .placeholder-card h2 {
+        font-size: 32px;
+        margin-bottom: 12px;
+        color: var(--text-dark);
+      }
+      .placeholder-card p {
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: var(--text-dark);
+        color: #fff;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
+      .btn-back:hover {
+        background: var(--gold);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div class="header-inner">
+        <div class="logo">Channa Aesthetic</div>
+      </div>
+    </header>
+
+    <!-- PLACEHOLDER MAIN -->
+    <main class="placeholder-wrapper">
+      <div class="placeholder-card">
+        <div class="icon-wrapper">
+          <i data-lucide="calendar-clock" style="width: 32px; height: 32px"></i>
+        </div>
+
+        <h2>Booking Flow</h2>
+
+        <p>
+          This is a placeholder page. It will be integrated with the
+          <strong>Wix Headless Booking API</strong> so you can easily manage
+          your calendar, availability, and staff directly from your Wix
+          Dashboard.
+        </p>
+
+        <!-- JavaScript history.back() takes them right back to the treatments list -->
+        <a href="javascript:history.back()" class="btn-back">
+          <i data-lucide="arrow-left" style="width: 16px"></i> Return to
+          Treatments
+        </a>
+      </div>
+    </main>
+
+    <script>
+      // Initialize Icons
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

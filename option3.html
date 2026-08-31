@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Channa Aesthetic | Advanced Skin & Aesthetic Clinic</title>
+
+    <!-- Google Fonts: Cormorant Garamond & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      /* LUXURY CLINIC VARIABLES */
+      :root {
+        --gold-primary: #b8925d;
+        --gold-hover: #9e7b4c;
+        --gold-light: #dfcda5;
+
+        --bg-page: #f9f8f6;
+        --bg-card: #ffffff;
+
+        --text-main: #1c1917;
+        --text-muted: #6b7280;
+
+        --border-light: #ebe5df;
+
+        --radius-xl: 24px;
+        --radius-lg: 16px;
+        --radius-md: 8px;
+
+        --shadow-portal: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+        --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.03);
+
+        --font-serif: "Cormorant Garamond", serif;
+        --font-sans: "Inter", sans-serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: var(--bg-page);
+        color: var(--text-main);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.6;
+      }
+      a {
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        font-family: var(--font-serif);
+        font-weight: 500;
+      }
+
+      .container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .section-padding {
+        padding: 80px 0;
+      }
+
+      /* 1. HEADER */
+      header {
+        position: sticky;
+        top: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-light);
+        z-index: 1000;
+        padding: 16px 0;
+      }
+      .nav-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--text-main);
+      }
+      .nav-links {
+        display: flex;
+        gap: 32px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a:hover {
+        color: var(--gold-primary);
+      }
+      .nav-cta {
+        background: var(--text-main);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      /* 2. HERO SECTION */
+      .hero {
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(28, 25, 23, 0.4),
+            rgba(28, 25, 23, 0.7)
+          ),
+          url("https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070&auto=format&fit=crop")
+            center/cover no-repeat;
+        padding: 100px 24px 160px;
+        text-align: center;
+        color: #fff;
+      }
+      .hero h1 {
+        font-size: 56px;
+        line-height: 1.1;
+        margin-bottom: 16px;
+        font-weight: 400;
+      }
+      .hero p {
+        font-size: 18px;
+        max-width: 600px;
+        margin: 0 auto;
+        font-family: var(--font-sans);
+        font-weight: 300;
+        opacity: 0.9;
+      }
+
+      /* 3. THE BOOKING PORTAL (Overlapping the Hero) */
+      .portal-wrapper {
+        max-width: 860px;
+        margin: -100px auto 60px;
+        position: relative;
+        z-index: 10;
+        padding: 0 20px;
+      }
+      .portal-card {
+        background: #ffffff;
+        border-radius: var(--radius-xl);
+        padding: 40px;
+        box-shadow: var(--shadow-portal);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+      }
+      .portal-header {
+        margin-bottom: 24px;
+      }
+      .portal-header h2 {
+        font-size: 32px;
+        color: var(--text-main);
+        margin-bottom: 4px;
+      }
+      .portal-header p {
+        font-size: 14px;
+        color: var(--text-muted);
+      }
+
+      /* Dropdown */
+      .location-select-box {
+        position: relative;
+        margin-bottom: 24px;
+      }
+      .custom-select {
+        width: 100%;
+        height: 56px;
+        background: var(--bg-page);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 0 48px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-main);
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        font-family: var(--font-sans);
+      }
+      .custom-select:focus {
+        border-color: var(--gold-primary);
+        box-shadow: 0 0 0 3px rgba(184, 146, 93, 0.15);
+      }
+      .select-icon-left {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gold-primary);
+        pointer-events: none;
+      }
+      .select-icon-right {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+      }
+
+      /* Action Buttons */
+      .actions-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+      .btn-action {
+        height: 60px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+      }
+      .btn-book {
+        background: var(--gold-primary);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(184, 146, 93, 0.3);
+      }
+      .btn-book:hover {
+        background: var(--gold-hover);
+        transform: translateY(-2px);
+      }
+      .btn-outline {
+        background: #fff;
+        color: var(--text-main);
+        border: 1px solid var(--border-light);
+      }
+      .btn-outline:hover {
+        border-color: var(--text-main);
+      }
+
+      /* Secondary Portal Cards (Offers / Contact) */
+      .mini-card {
+        background: #fff;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .mini-card:hover {
+        border-color: var(--gold-primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card);
+      }
+      .mini-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: rgba(184, 146, 93, 0.1);
+        color: var(--gold-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .mini-text h4 {
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .mini-text p {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      /* 4. LANDING PAGE CONTENT (Below Fold) */
+      .section-header {
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto 50px;
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--gold-primary);
+        margin-bottom: 16px;
+      }
+      .section-header h2 {
+        font-size: 36px;
+        margin-bottom: 12px;
+        color: var(--text-main);
+      }
+      .section-header p {
+        font-size: 16px;
+        color: var(--text-muted);
+        font-weight: 300;
+      }
+
+      /* Treatments Grid */
+      .treatments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+      }
+      .treatment-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-card);
+        transition: transform 0.3s ease;
+      }
+      .treatment-card:hover {
+        transform: translateY(-4px);
+      }
+      .treatment-card h3 {
+        font-size: 26px;
+        margin: 0 0 8px;
+      }
+      .solves-tag {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gold-hover);
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-light);
+      }
+      .treatment-card p {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 300;
+        margin-bottom: 24px;
+        flex-grow: 1;
+      }
+
+      .link-btn {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-bottom: 1px solid transparent;
+        width: fit-content;
+      }
+      .link-btn:hover {
+        border-bottom-color: var(--text-main);
+      }
+
+      /* Journey */
+      .journey-section {
+        background: #fff;
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
+      }
+      .journey-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px;
+      }
+      .journey-card h3 {
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+      .journey-card p {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 300;
+      }
+      .step-num {
+        font-family: var(--font-serif);
+        font-size: 40px;
+        color: var(--gold-light);
+        line-height: 1;
+        margin-bottom: 16px;
+      }
+
+      /* Footer / Bottom CTA */
+      .footer-cta {
+        background: var(--text-main);
+        color: #fff;
+        text-align: center;
+        padding: 80px 20px;
+      }
+      .footer-cta h2 {
+        font-size: 40px;
+        margin-bottom: 20px;
+      }
+      .footer-cta p {
+        color: #ccc;
+        margin-bottom: 32px;
+        font-family: var(--font-sans);
+        font-weight: 300;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+        .hero h1 {
+          font-size: 40px;
+        }
+        .hero {
+          padding: 80px 24px 120px;
+        }
+        .portal-wrapper {
+          margin-top: -60px;
+        }
+        .portal-card {
+          padding: 24px;
+        }
+        .actions-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .journey-grid {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. HEADER -->
+
+    <!-- 2. HERO -->
+    <section class="hero">
+      <h1>Enhancing Your Natural Beauty</h1>
+      <p>10+ Years of Excellence in London & Glasgow Aesthetics</p>
+    </section>
+
+    <!-- 3. THE BOOKING PORTAL (High Intent Booking Widget) -->
+    <div class="portal-wrapper" id="book">
+      <div class="portal-card">
+        <div class="portal-header">
+          <h2>Welcome to Channa Aesthetic</h2>
+          <p>Select your preferred location to view availability.</p>
+        </div>
+
+        <!-- Location Selector -->
+        <div class="location-select-box">
+          <i
+            data-lucide="map-pin"
+            class="select-icon-left"
+            style="width: 20px"
+          ></i>
+          <select class="custom-select">
+            <option>London (Bloomsbury / Coram St, WC1N 1HB)</option>
+            <option>Glasgow (City Center Suites)</option>
+          </select>
+          <i
+            data-lucide="chevron-down"
+            class="select-icon-right"
+            style="width: 20px"
+          ></i>
+        </div>
+
+        <!-- Main Actions -->
+        <div class="actions-grid">
+          <a href="/option2/book.html" class="btn-action btn-book">
+            Make a booking
+            <i data-lucide="chevron-right" style="width: 18px"></i>
+          </a>
+          <button class="btn-action btn-outline">
+            Treatments <i data-lucide="search" style="width: 18px"></i>
+          </button>
+          <button class="btn-action btn-outline">
+            Gift Vouchers <i data-lucide="gift" style="width: 18px"></i>
+          </button>
+        </div>
+
+        <!-- Secondary Help Cards -->
+        <div class="mini-card">
+          <div class="mini-icon">
+            <i data-lucide="sparkles" style="width: 20px"></i>
+          </div>
+          <div class="mini-text">
+            <h4>View seasonal treatment packages</h4>
+            <p>Explore curated courses for skin hydration and contouring.</p>
+          </div>
+          <i
+            data-lucide="chevron-right"
+            style="width: 18px; color: #ccc; margin-left: auto"
+          ></i>
+        </div>
+
+        <div class="mini-card">
+          <div class="mini-icon">
+            <i data-lucide="phone" style="width: 20px"></i>
+          </div>
+          <div class="mini-text">
+            <h4>Book a call back</h4>
+            <p>Need guidance? Let our medical team advise you.</p>
+          </div>
+          <i
+            data-lucide="chevron-right"
+            style="width: 18px; color: #ccc; margin-left: auto"
+          ></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TREATMENTS (Education for Cold Traffic) -->
+    <section class="section-padding" id="treatments">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge">Bespoke Services</span>
+          <h2>Targeted Aesthetic Solutions</h2>
+          <p>
+            Combining aesthetic medicine with a deep understanding of facial
+            anatomy.
+          </p>
+        </div>
+
+        <div class="treatments-grid">
+          <div
+            class="treatment-card"
+            style="border-color: var(--gold-primary); background: #faf9f7"
+          >
+            <h3>Initial Consultation</h3>
+            <p class="solves-tag">
+              For: Unsure which treatment is right for you
+            </p>
+            <p>
+              A thorough assessment to create a bespoke treatment plan for your
+              unique needs. No pressure, just expert advice.
+            </p>
+            <a href="#book" class="link-btn"
+              >Book Consultation
+              <i data-lucide="arrow-right" style="width: 16px"></i
+            ></a>
+          </div>
+
+          <div class="treatment-card">
+            <h3>Anti-Wrinkle Injections</h3>
+            <p class="solves-tag">
+              For: Forehead lines, frown lines, crow's feet
+            </p>
+            <p>
+              Smooth fine lines and prevent new ones from forming. Expertly
+              administered for results that refresh without freezing.
+            </p>
+            <a href="#book" class="link-btn"
+              >Learn More <i data-lucide="arrow-right" style="width: 16px"></i
+            ></a>
+          </div>
+
+          <div class="treatment-card">
+            <h3>Dermal & Lip Fillers</h3>
+            <p class="solves-tag">
+              For: Lost volume, lip definition, facial contouring
+            </p>
+            <p>
+              Restore lost volume and rejuvenate your appearance using premium
+              hyaluronic acid tailored to your anatomy.
+            </p>
+            <a href="#book" class="link-btn"
+              >Learn More <i data-lucide="arrow-right" style="width: 16px"></i
+            ></a>
+          </div>
+
+          <div class="treatment-card">
+            <h3>Deep Facial & LED</h3>
+            <p class="solves-tag">
+              For: Dull skin, dehydration, loss of elasticity
+            </p>
+            <p>
+              Bio-remodelling treatments that hydrate from within, stimulate
+              collagen, and deliver luminous skin quality.
+            </p>
+            <a href="#book" class="link-btn"
+              >Learn More <i data-lucide="arrow-right" style="width: 16px"></i
+            ></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. THE JOURNEY (Trust Building) -->
+    <section class="section-padding journey-section" id="experience">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge">The Clinic Difference</span>
+          <h2>Expert Care, Natural Results</h2>
+          <p>
+            Every client deserves a personalized approach. Here is how we ensure
+            your safety and satisfaction.
+          </p>
+        </div>
+
+        <div class="journey-grid">
+          <div class="journey-card">
+            <div class="step-num">01</div>
+            <h3>Expert Practitioners</h3>
+            <p>
+              Our team comprises highly qualified medical professionals with
+              extensive experience in advanced injectables across London.
+            </p>
+          </div>
+          <div class="journey-card">
+            <div class="step-num">02</div>
+            <h3>Personalized Care</h3>
+            <p>
+              No two clients are alike. We conduct thorough facial assessments
+              to ensure outcomes enhance, never alter, your natural beauty.
+            </p>
+          </div>
+          <div class="journey-card">
+            <div class="step-num">03</div>
+            <h3>Cutting-Edge Safety</h3>
+            <p>
+              We use only premium, clinically approved products and stay at the
+              forefront of aesthetic medicine innovations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. BOTTOM CTA -->
+    <footer class="footer-cta">
+      <div class="container">
+        <h2>Ready to Enhance Your Natural Beauty?</h2>
+        <p>Secure your consultation at our London or Glasgow clinics today.</p>
+        <button
+          class="btn-action btn-book"
+          style="
+            margin: 0 auto;
+            width: 200px;
+            background: #fff;
+            color: var(--text-main);
+          "
+        >
+          Book Appointment
+        </button>
+      </div>
+    </footer>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Treatments | Channa Aesthetic</title>
+
+    <!-- Google Fonts: Cormorant Garamond & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      :root {
+        --gold: #b8925d;
+        --gold-hover: #9e7b4c;
+        --bg-main: #f9f8f6;
+        --bg-card: #ffffff;
+        --text-dark: #1c1917;
+        --text-muted: #6b7280;
+        --border: #e5e2dc;
+        --font-serif: "Cormorant Garamond", serif;
+        --font-sans: "Inter", sans-serif;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-sans);
+      }
+      body {
+        background: var(--bg-main);
+        color: var(--text-dark);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-serif);
+        font-weight: 500;
+      }
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: inherit;
+      }
+
+      /* HEADER */
+      header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 40;
+      }
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 24px;
+        font-family: var(--font-serif);
+        font-weight: 600;
+      }
+
+      .my-account-btn {
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid var(--border);
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+      .my-account-btn:hover {
+        border-color: var(--text-dark);
+      }
+
+      /* LAYOUT */
+      .app-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 24px;
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 48px;
+        align-items: start;
+      }
+
+      /* SIDEBAR (Desktop) */
+      .sidebar {
+        position: sticky;
+        top: 100px;
+      }
+      .sidebar h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+      }
+      .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .cat-btn {
+        text-align: left;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-muted);
+        transition: all 0.2s;
+      }
+      .cat-btn:hover {
+        background: rgba(184, 146, 93, 0.1);
+        color: var(--gold);
+      }
+      .cat-btn.active {
+        background: var(--text-dark);
+        color: #fff;
+      }
+
+      /* MAIN CONTENT AREA */
+      .services-header {
+        margin-bottom: 24px;
+      }
+      .services-header h1 {
+        font-size: 36px;
+        margin-bottom: 8px;
+      }
+
+      /* TOP CONSULTATION BANNER */
+      .top-banner {
+        background: var(--text-dark);
+        color: #fff;
+        border-radius: 12px;
+        padding: 24px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        background-image: radial-gradient(
+          circle at right,
+          #2a2a2a 0%,
+          #1a1a1a 100%
+        );
+        box-shadow: var(--shadow-sm);
+      }
+      .top-banner h3 {
+        font-size: 24px;
+        margin-bottom: 4px;
+      }
+      .top-banner p {
+        font-size: 14px;
+        color: #ccc;
+        font-weight: 300;
+      }
+      .btn-light {
+        display: inline-block;
+        text-align: center;
+        background: #fff;
+        color: var(--text-dark);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+      .btn-light:hover {
+        background: var(--bg-main);
+      }
+
+      /* SEARCH BAR */
+      .search-box {
+        position: relative;
+        margin-bottom: 32px;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 16px 16px 16px 48px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 15px;
+        background: #fff;
+        outline: none;
+        transition: all 0.2s;
+        font-family: var(--font-sans);
+        box-shadow: var(--shadow-sm);
+      }
+      .search-box input:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(184, 146, 93, 0.1);
+      }
+      .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+      }
+
+      /* SERVICES GRID */
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+      }
+
+      /* SERVICE CARD */
+      .service-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-sm);
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
+      .service-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--gold);
+      }
+
+      .service-card h3 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+      .service-card p {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+        line-height: 1.5;
+        flex-grow: 1;
+      }
+
+      .card-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-dark);
+      }
+      .meta-row i {
+        color: var(--gold);
+      }
+
+      .book-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--text-dark);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
+      .book-btn:hover {
+        background: var(--gold);
+      }
+
+      .no-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        color: var(--text-muted);
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 900px) {
+        .app-container {
+          grid-template-columns: 1fr;
+          padding: 24px;
+          gap: 24px;
+        }
+        .sidebar {
+          position: static;
+        }
+        .category-list {
+          flex-direction: row;
+          overflow-x: auto;
+          padding-bottom: 8px;
+          scrollbar-width: none;
+        }
+        .category-list::-webkit-scrollbar {
+          display: none;
+        }
+        .cat-btn {
+          white-space: nowrap;
+          padding: 10px 20px;
+          border-radius: 30px;
+          background: #fff;
+          border: 1px solid var(--border);
+        }
+        .cat-btn.active {
+          background: var(--text-dark);
+          border-color: var(--text-dark);
+        }
+
+        .top-banner {
+          flex-direction: column;
+          text-align: center;
+          gap: 16px;
+          padding: 24px;
+        }
+        .btn-light {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div class="header-inner">
+        <a href="/option3.html">
+          <div class="logo">Channa Aesthetic</div>
+        </a>
+      </div>
+    </header>
+
+    <!-- MAIN APP LAYOUT -->
+    <div class="app-container">
+      <!-- SIDEBAR CATEGORIES -->
+      <aside class="sidebar">
+        <h3>Categories</h3>
+        <div class="category-list" id="category-list">
+          <!-- Injected via JS -->
+        </div>
+      </aside>
+
+      <!-- SERVICES FEED -->
+      <main>
+        <!-- NOT SURE? BANNER -->
+        <div class="top-banner">
+          <div>
+            <h3>Not sure which treatment you need?</h3>
+            <p>Book an initial facial assessment with our medical experts.</p>
+          </div>
+          <!-- Standard Link redirecting to booking page with service ID 1 -->
+          <a href="booking.html?service=1" class="btn-light"
+            >Book Consultation</a
+          >
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon" style="width: 20px"></i>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search treatments (e.g., Lip Filler, Profhilo)..."
+            oninput="handleSearch(event)"
+          />
+        </div>
+
+        <div class="services-header">
+          <h1 id="category-title">All Treatments</h1>
+        </div>
+
+        <div class="services-grid" id="services-grid">
+          <!-- Injected via JS -->
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // 1. DATA
+      const services = [
+        {
+          id: 1,
+          category: "Consultations",
+          title: "Initial Aesthetic Consultation",
+          desc: "A bespoke 1-on-1 facial assessment to discuss goals and build a tailored plan.",
+          time: "45 min",
+          price: "Free",
+        },
+        {
+          id: 2,
+          category: "Fillers",
+          title: "2ml Cheek Filler",
+          desc: "Restore lost volume and subtly enhance your natural bone structure for a lifted look.",
+          time: "45 min",
+          price: "£250",
+        },
+        {
+          id: 3,
+          category: "Fillers",
+          title: "2ml Jawline Filler",
+          desc: "Enhance jawline definition for a balanced, sculpted profile.",
+          time: "45 min",
+          price: "£250",
+        },
+        {
+          id: 4,
+          category: "Fillers",
+          title: "1ml Chin Filler",
+          desc: "Elongate the lower face and improve facial balance with natural-looking results.",
+          time: "30 min",
+          price: "£120",
+        },
+        {
+          id: 5,
+          category: "Anti-Wrinkle",
+          title: "3 Areas Anti-Wrinkle",
+          desc: "Smooth forehead lines, frown lines, and crow's feet. Refreshed, never frozen.",
+          time: "30 min",
+          price: "£220",
+        },
+        {
+          id: 6,
+          category: "Skin Boosters",
+          title: "Profhilo Bio-Remodelling",
+          desc: "Deep hydration treatment that stimulates collagen and delivers luminous skin.",
+          time: "30 min",
+          price: "£280",
+        },
+      ];
+
+      const categories = [
+        "All",
+        "Consultations",
+        "Fillers",
+        "Anti-Wrinkle",
+        "Skin Boosters",
+      ];
+
+      // DOM Elements
+      const gridEl = document.getElementById("services-grid");
+      const catListEl = document.getElementById("category-list");
+      const catTitleEl = document.getElementById("category-title");
+
+      // State
+      let currentCat = "All";
+      let searchQuery = "";
+
+      // 2. RENDER CATEGORIES
+      function renderCategories() {
+        catListEl.innerHTML = categories
+          .map(
+            (cat) => `
+      <button class="cat-btn ${cat === currentCat ? "active" : ""}" onclick="setCategory('${cat}')">
+        ${cat} Treatments
+      </button>
+    `,
+          )
+          .join("");
+      }
+
+      function setCategory(cat) {
+        currentCat = cat;
+        // Reset search on category change for better UX
+        searchQuery = "";
+        document.getElementById("search-input").value = "";
+
+        renderCategories();
+        catTitleEl.innerText = cat === "All" ? "All Treatments" : cat;
+        renderGrid();
+      }
+
+      function handleSearch(e) {
+        searchQuery = e.target.value.toLowerCase();
+        renderGrid();
+      }
+
+      // 3. RENDER SERVICES
+      function renderGrid() {
+        let filtered =
+          currentCat === "All"
+            ? services
+            : services.filter((s) => s.category === currentCat);
+
+        if (searchQuery) {
+          filtered = filtered.filter(
+            (s) =>
+              s.title.toLowerCase().includes(searchQuery) ||
+              s.desc.toLowerCase().includes(searchQuery),
+          );
+        }
+
+        if (filtered.length === 0) {
+          gridEl.innerHTML = `<div class="no-results">No treatments found matching "${searchQuery}". Please try another term or book a consultation.</div>`;
+          lucide.createIcons();
+          return;
+        }
+
+        // Updated: Now using standard <a> links for routing to a booking page
+        gridEl.innerHTML = filtered
+          .map(
+            (s) => `
+      <div class="service-card">
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+        <div class="card-bottom">
+          <div class="meta">
+            <span class="meta-row"><i data-lucide="clock" style="width:14px;"></i> ${s.time}</span>
+            <span class="meta-row"><i data-lucide="credit-card" style="width:14px;"></i> ${s.price}</span>
+          </div>
+          <a href="booking.html?service=${s.id}" class="book-btn">Book</a>
+        </div>
+      </div>
+    `,
+          )
+          .join("");
+
+        lucide.createIcons();
+      }
+
+      // Init
+      renderCategories();
+      renderGrid();
+    </script>
+  </body>
+</html>
