@@ -1,139 +1,77 @@
 "use client";
 
-import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import {
+  MappedTreatment,
+  useLocations,
+  useTreatments,
+} from "@/api/useTreatments";
+import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
+import TreatmentCard from "@/components/ui/TreatmentCard";
+import {
+  AlertCircle,
   CheckCircle2,
   ChevronRight,
-  Clock,
+  Loader2,
   MapPin,
-  Minus,
-  Plus,
   Search,
-  Trash2,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-
-interface Treatment {
-  id: number;
-  category: "Consultations" | "Fillers" | "Anti-Wrinkle" | "Skin Boosters";
-  title: string;
-  desc: string;
-  time: string;
-  price: string;
-  priceNum: number;
-  featured?: boolean;
-}
+import { useEffect, useMemo, useState } from "react";
 
 interface SelectedItem {
-  treatment: Treatment;
+  treatment: MappedTreatment;
   quantity: number;
 }
 
-const TREATMENTS: Treatment[] = [
-  {
-    id: 1,
-    category: "Consultations",
-    title: "Comprehensive Facial Assessment",
-    desc: "A thorough 1-on-1 anatomical mapping session to identify facial vectors, balance, and build a phased treatment plan.",
-    time: "45 min",
-    price: "Free",
-    priceNum: 0,
-    featured: true,
-  },
-  {
-    id: 2,
-    category: "Fillers",
-    title: "2ml Mid-Face Cheek Contour",
-    desc: "Restores deep structural volume, creates high-cheek definition, and provides a subtle mid-face lifting effect.",
-    time: "45 min",
-    price: "£250",
-    priceNum: 250,
-  },
-  {
-    id: 3,
-    category: "Fillers",
-    title: "2ml Lower Face & Jawline Definition",
-    desc: "Sculpting the mandibular angle to sharpen jawline contour and tighten the appearance of the lower face profile.",
-    time: "45 min",
-    price: "£250",
-    priceNum: 250,
-  },
-  {
-    id: 4,
-    category: "Fillers",
-    title: "1ml Chin Projection & Harmony",
-    desc: "Corrects retrognathia and lengthens the lower third of the face to create balanced aesthetic harmony.",
-    time: "30 min",
-    price: "£120",
-    priceNum: 120,
-  },
-  {
-    id: 5,
-    category: "Anti-Wrinkle",
-    title: "3 Areas Anti-Wrinkle Smoothing",
-    desc: "Precision micro-injections targeting forehead lines, glabella frown lines, and crow's feet. Refreshed and expressive.",
-    time: "30 min",
-    price: "£220",
-    priceNum: 220,
-  },
-  {
-    id: 6,
-    category: "Anti-Wrinkle",
-    title: "Masseter Slimming & Bruxism",
-    desc: "Relieves clenching tension and slims the lower facial profile by relaxing overactive masseter muscles.",
-    time: "30 min",
-    price: "£240",
-    priceNum: 240,
-  },
-  {
-    id: 7,
-    category: "Skin Boosters",
-    title: "Profhilo® Full Face Remodelling",
-    desc: "High-concentration hyaluronic acid bio-remodelling across 10 anatomical points to trigger collagen and elasticity.",
-    time: "30 min",
-    price: "£280",
-    priceNum: 280,
-  },
-  {
-    id: 8,
-    category: "Skin Boosters",
-    title: "Polynucleotide Eye Rejuvenation",
-    desc: "DNA-derived cellular therapy to repair under-eye hollowing, dark pigmentation, and delicate fine lines.",
-    time: "45 min",
-    price: "£260",
-    priceNum: 260,
-  },
-];
-
-const CATEGORIES = [
-  "All",
-  "Consultations",
-  "Fillers",
-  "Anti-Wrinkle",
-  "Skin Boosters",
-];
-
 export default function BookingPage() {
+  const {
+    data: treatments = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useTreatments();
+  const { locations } = useLocations();
+
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<
-    "london" | "glasgow"
-  >("london");
+  const [selectedLocationId, setSelectedLocationId] = useState<string>("");
   const [cart, setCart] = useState<SelectedItem[]>([]);
 
+  // Automatically default to the first location once loaded from Wix
+  useEffect(() => {
+    if (!selectedLocationId && locations.length > 0) {
+      setSelectedLocationId(locations[0].id);
+    }
+  }, [locations, selectedLocationId]);
+
+  // Dynamically derive categories
+  const categories = useMemo(() => {
+    const cats = Array.from(
+      new Set(treatments.map((t) => t.category).filter(Boolean)),
+    );
+    return ["All", ...cats];
+  }, [treatments]);
+
+  // Filter treatments
   const filteredTreatments = useMemo(() => {
-    return TREATMENTS.filter((item) => {
+    return treatments.filter((item) => {
       const matchesCategory =
         activeCategory === "All" || item.category === activeCategory;
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.desc.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [activeCategory, searchQuery]);
+      const matchesLocation =
+        !selectedLocationId ||
+        item.locationIds.length === 0 ||
+        item.locationIds.includes(selectedLocationId);
 
-  const incrementItem = (treatment: Treatment) => {
+      return matchesCategory && matchesSearch && matchesLocation;
+    });
+  }, [treatments, activeCategory, searchQuery, selectedLocationId]);
+
+  // Cart handlers
+  const handleIncrement = (treatment: MappedTreatment) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.treatment.id === treatment.id);
       if (existing) {
@@ -147,7 +85,7 @@ export default function BookingPage() {
     });
   };
 
-  const decrementItem = (treatmentId: number) => {
+  const handleDecrement = (treatmentId: string) => {
     setCart((prev) =>
       prev
         .map((i) =>
@@ -165,31 +103,20 @@ export default function BookingPage() {
     0,
   );
 
-  const getBookingLink = () => {
-    const params = cart
-      .flatMap((i) => Array(i.quantity).fill(i.treatment.id))
-      .join(",");
-    const baseUrl =
-      selectedLocation === "london"
-        ? "https://yourbookingplatform.com/london"
-        : "https://yourbookingplatform.com/glasgow";
-    return `${baseUrl}?services=${params}`;
-  };
-
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <NavBarLogoOnly />
+      <NavBarLogoOnly theme="dark" />
 
-      {/* Atmospheric Hero */}
+      {/* Header */}
       <header className="pt-24 pb-4 max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EBE5DF] pb-4">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
               Select Your Treatments
             </h1>
             <p className="text-xs sm:text-sm text-[#666666] font-light">
-              Consultation included • Combine treatments for tailored
-              rejuvenation
+              Doctor-led clinical appointments • Stack multiple procedures as
+              needed
             </p>
           </div>
 
@@ -207,18 +134,17 @@ export default function BookingPage() {
         </div>
       </header>
 
-      {/* Main Feed */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 pb-36 space-y-6">
-        {/* Sticky Search & Filter Container */}
-        <div className="sticky top-4 z-30 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-[#EBE5DF] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] space-y-3">
-          {/* Integrated Search Input */}
+      {/* Main Content */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-36 space-y-4">
+        {/* Sticky Search + Categories */}
+        <div className="sticky top-4 z-30 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-[#EBE5DF] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] space-y-3">
           <div className="relative w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search treatments by name or goal (e.g. Jawline, Botox)..."
+              placeholder="Search treatments by name or goal..."
               className="w-full h-11 bg-[#FAFAF8] border border-[#EBE5DF] rounded-xl pl-10 pr-9 text-sm font-medium placeholder:text-[#8C827A] focus:outline-none focus:border-[#B8925D] focus:ring-2 focus:ring-[#B8925D]/20 transition"
             />
             {searchQuery && (
@@ -231,9 +157,8 @@ export default function BookingPage() {
             )}
           </div>
 
-          {/* Category Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -249,120 +174,98 @@ export default function BookingPage() {
           </div>
         </div>
 
-        {/* Compact Location Picker */}
-        <div className="flex items-center justify-between gap-3 bg-white border border-[#EBE5DF] rounded-xl px-4 py-2.5 shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8C827A] shrink-0">
-            <MapPin className="w-4 h-4 text-[#B8925D]" />
-            <span>Location</span>
-          </div>
+        {/* Dynamic Location Picker */}
+        {locations.length > 0 && (
+          <div className="flex items-center justify-between gap-3 bg-white border border-[#EBE5DF] rounded-xl px-4 py-2.5 shadow-xs">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8C827A] shrink-0">
+              <MapPin className="w-4 h-4 text-[#B8925D]" />
+              <span>Clinic Location</span>
+            </div>
 
-          <div className="relative">
-            <select
-              value={selectedLocation}
-              onChange={(e) =>
-                setSelectedLocation(e.target.value as "london" | "glasgow")
-              }
-              aria-label="Select clinic location"
-              className="appearance-none bg-[#FAFAF8] border border-[#EBE5DF] rounded-lg pl-3 pr-8 py-1.5 text-xs font-medium text-[#1A1A1A] cursor-pointer focus:outline-none focus:border-[#B8925D] focus:ring-1 focus:ring-[#B8925D]/20 transition"
-            >
-              <option value="london">London (WC1N)</option>
-              <option value="glasgow">Glasgow</option>
-            </select>
-            <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C827A] rotate-90 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Treatment Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredTreatments.map((treatment) => {
-            const cartItem = cart.find((i) => i.treatment.id === treatment.id);
-            const quantity = cartItem?.quantity || 0;
-            const isSelected = quantity > 0;
-
-            return (
-              <div
-                key={treatment.id}
-                className={`group relative bg-white rounded-2xl p-6 border flex flex-col justify-between transition-all duration-200 ${
-                  isSelected
-                    ? "border-[#B8925D] ring-2 ring-[#B8925D]/20 shadow-md bg-[#FAFAF8]/50"
-                    : "border-[#EBE5DF] hover:border-[#B8925D]/60 hover:shadow-xs shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]"
-                }`}
+            <div className="relative">
+              <select
+                value={selectedLocationId}
+                onChange={(e) => setSelectedLocationId(e.target.value)}
+                aria-label="Select clinic location"
+                className="appearance-none bg-[#FAFAF8] border border-[#EBE5DF] rounded-lg pl-3 pr-8 py-1.5 text-xs font-medium text-[#1A1A1A] cursor-pointer focus:outline-none focus:border-[#B8925D] transition"
               >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8C827A]">
-                      {treatment.category}
-                    </span>
-                    {treatment.featured && (
-                      <span className="bg-[#B8925D]/10 text-[#B8925D] text-[10px] font-medium uppercase px-2 py-0.5 rounded-md">
-                        Recommended First Step
-                      </span>
-                    )}
-                  </div>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C827A] rotate-90 pointer-events-none" />
+            </div>
+          </div>
+        )}
 
-                  <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A] group-hover:text-[#B8925D] transition-colors">
-                    {treatment.title}
-                  </h3>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="py-24 flex flex-col items-center justify-center text-[#8C827A] gap-2.5">
+            <Loader2 className="w-6 h-6 animate-spin text-[#B8925D]" />
+            <span className="text-xs font-medium tracking-wide">
+              Loading live treatment menu...
+            </span>
+          </div>
+        )}
 
-                  <p className="text-sm text-[#666666] font-light leading-relaxed">
-                    {treatment.desc}
-                  </p>
-                </div>
+        {/* Error State */}
+        {isError && (
+          <div className="py-16 text-center bg-white rounded-2xl border border-red-200 p-8 space-y-3">
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-600 mb-1">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <p className="text-sm font-medium text-[#1A1A1A]">
+              Failed to load treatments from Wix
+            </p>
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
+              {(error as Error)?.message || "An unexpected error occurred."}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="mt-2 text-xs font-medium text-[#B8925D] hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
-                <div className="pt-4 mt-5 border-t border-[#EBE5DF] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1 text-xs text-[#8C827A]">
-                      <Clock className="w-3.5 h-3.5 text-[#B8925D]" />{" "}
-                      {treatment.time}
-                    </span>
-                    <span className="font-semibold text-base text-[#1A1A1A]">
-                      {treatment.price}
-                    </span>
-                  </div>
+        {/* Empty State */}
+        {!isLoading && !isError && filteredTreatments.length === 0 && (
+          <div className="py-16 text-center text-sm text-[#8C827A] bg-white rounded-2xl border border-[#EBE5DF] p-8 space-y-2">
+            <p className="font-medium text-[#1A1A1A]">No treatments found</p>
+            <p className="text-xs">
+              Try adjusting your search query, selecting another category, or
+              switching locations.
+            </p>
+          </div>
+        )}
 
-                  {/* Multi-Select Stepper */}
-                  {isSelected ? (
-                    <div className="flex items-center gap-2 bg-white border border-[#B8925D] rounded-xl p-1 shadow-xs">
-                      <button
-                        onClick={() => decrementItem(treatment.id)}
-                        aria-label="Decrease quantity"
-                        className="w-7 h-7 rounded-lg bg-[#FAFAF8] hover:bg-[#EBE5DF] text-[#1A1A1A] flex items-center justify-center transition"
-                      >
-                        {quantity === 1 ? (
-                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                        ) : (
-                          <Minus className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                      <span className="text-xs font-semibold text-[#1A1A1A] px-1.5 min-w-[18px] text-center">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={() => incrementItem(treatment)}
-                        aria-label="Increase quantity"
-                        className="w-7 h-7 rounded-lg bg-[#B8925D] hover:bg-[#9E7B4C] text-white flex items-center justify-center transition"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => incrementItem(treatment)}
-                      className="h-9 px-4 rounded-xl bg-[#FAFAF8] hover:bg-[#B8925D] text-[#1A1A1A] hover:text-white border border-[#EBE5DF] hover:border-[#B8925D] text-xs font-medium flex items-center gap-1.5 transition-all shadow-xs"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Cards Grid */}
+        {!isLoading && !isError && filteredTreatments.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            {filteredTreatments.map((treatment) => {
+              const cartItem = cart.find(
+                (i) => i.treatment.id === treatment.id,
+              );
+              return (
+                <TreatmentCard
+                  key={treatment.id}
+                  treatment={treatment}
+                  quantity={cartItem?.quantity || 0}
+                  onIncrement={handleIncrement}
+                  onDecrement={handleDecrement}
+                />
+              );
+            })}
+          </div>
+        )}
       </main>
 
-      {/* Floating Bottom Selection Dock */}
+      {/* Floating Checkout Drawer */}
       {cart.length > 0 && (
-        <div className="fixed bottom-6 inset-x-4 max-w-lg mx-auto z-50">
+        <div className="fixed bottom-6 inset-x-4 max-w-lg mx-auto z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-[#1C1917] text-white rounded-2xl p-4 shadow-2xl border border-white/10 flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[#DFC095] uppercase tracking-wider font-semibold">
@@ -376,13 +279,19 @@ export default function BookingPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <a
-                href={getBookingLink()}
-                className="bg-[#B8925D] hover:bg-[#9E7B4C] text-white px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-1.5 shadow-sm transition"
+              <button
+                onClick={() =>
+                  alert(
+                    `Checking out: ${cart
+                      .map((c) => `${c.quantity}x ${c.treatment.title}`)
+                      .join(", ")}`,
+                  )
+                }
+                className="bg-[#B8925D] hover:bg-[#9E7B4C] text-white px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer"
               >
                 <span>Checkout</span>
                 <ChevronRight className="w-4 h-4" />
-              </a>
+              </button>
               <button
                 onClick={() => setCart([])}
                 aria-label="Clear selection"

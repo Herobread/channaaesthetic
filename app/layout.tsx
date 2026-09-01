@@ -1,5 +1,6 @@
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
+import Providers from "./Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="font-sans bg-[#FAF8F5] text-[#1C1917] antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

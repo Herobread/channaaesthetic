@@ -36,7 +36,7 @@ export default function AboutCard({
       className={`bg-white rounded-3xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] border border-[#EBE5DF] ${className}`}
     >
       {/* Full Portrait Container Carousel */}
-      <div className="relative w-full h-[500px] sm:h-[620px] bg-[#1C1917] group">
+      <div className="relative w-full h-125 sm:h-155 bg-[#1C1917] group">
         {images.map((image, index) => (
           <div
             key={index}
@@ -58,7 +58,7 @@ export default function AboutCard({
         ))}
 
         {/* Cinematic Gradient Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent z-20 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent z-20 pointer-events-none" />
 
         {/* Navigation Arrows */}
         <button
