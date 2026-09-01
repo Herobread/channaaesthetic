@@ -2,9 +2,9 @@
 
 import { useLocations, useTreatments } from "@/api/useTreatments";
 import CheckoutBar from "@/components/booking/CheckoutBar";
-import LocationPicker from "@/components/booking/LocationPicker";
 import SearchCategoryDock from "@/components/booking/SearchCategoryDock";
 import TreatmentCard from "@/components/booking/TreatmentCard";
+import LocationPicker from "@/components/shared/LocationPicker";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -82,11 +82,8 @@ export default function BookingPage() {
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-36 space-y-4">
-        <LocationPicker
-          locations={locations}
-          selectedLocationId={selectedLocationId}
-          onLocationChange={setSelectedLocationId}
-        />
+        <LocationPicker />
+
         <SearchCategoryDock
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  MapPin,
-  PhoneCall,
-  Sparkles,
-} from "lucide-react";
+import LocationPicker from "@/components/shared/LocationPicker";
+import { CheckCircle2, ChevronRight, PhoneCall, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 interface BookingCardProps {
@@ -35,44 +30,20 @@ export default function BookingCard({
         </p>
       </div>
 
-      {/* Location Selector */}
-      <div className="space-y-2">
-        <label
-          htmlFor="clinic-select"
-          className="text-xs font-semibold tracking-wider text-[#8C827A] block"
-        >
-          Clinic Location
-        </label>
-        <div className="relative">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#B8925D] pointer-events-none" />
-          <select
-            id="clinic-select"
-            value={selectedLocation}
-            onChange={(e) => setSelectedLocation(e.target.value)}
-            aria-label="Select Clinic Location"
-            className="w-full h-14 bg-[#FAFAF8] border border-[#EBE5DF] rounded-xl pl-12 pr-10 text-base font-medium text-[#1A1A1A] appearance-none cursor-pointer focus:outline-none focus:border-[#B8925D] focus:ring-2 focus:ring-[#B8925D]/20 transition"
-          >
-            <option value="london">
-              London (Bloomsbury / Coram St, WC1N 1HB)
-            </option>
-            <option value="glasgow">Glasgow (City Centre Suites)</option>
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666666] pointer-events-none" />
-        </div>
-      </div>
+      <LocationPicker />
 
       {/* Primary Action Button */}
-      <a
+      <Link
         href={"/book"}
         className="w-full h-14 bg-[#B8925D] hover:bg-[#9E7B4C] active:bg-[#8A6A3F] text-white rounded-xl font-medium text-lg flex items-center justify-center gap-2 shadow-sm transition"
       >
         <span>Book Appointment</span>
         <ChevronRight className="w-5 h-5" />
-      </a>
+      </Link>
 
       {/* Secondary Paths */}
       <div className="grid gap-3 pt-2">
-        <a
+        <Link
           href="#treatments"
           className="group flex items-center gap-4 p-4 rounded-xl border border-[#EBE5DF] hover:border-[#B8925D] bg-white hover:shadow-xs transition"
         >
@@ -88,7 +59,7 @@ export default function BookingCard({
             </p>
           </div>
           <ChevronRight className="w-5 h-5 text-[#B8925D] transition transform group-hover:translate-x-1" />
-        </a>
+        </Link>
 
         <a
           href="tel:+440000000000"

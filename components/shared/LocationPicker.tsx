@@ -1,19 +1,24 @@
 "use client";
 
-import { ClinicLocation } from "@/api/useTreatments";
+import { useClinicLocations } from "@/api/useClinicLocations";
 import { ChevronRight, MapPin } from "lucide-react";
 
-interface LocationPickerProps {
-  locations: ClinicLocation[];
-  selectedLocationId: string;
-  onLocationChange: (id: string) => void;
-}
+export default function LocationPicker() {
+  const { locations, isLoading, selectedLocationId, setLocationId } =
+    useClinicLocations();
 
-export default function LocationPicker({
-  locations,
-  selectedLocationId,
-  onLocationChange,
-}: LocationPickerProps) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between gap-3 bg-white border border-[#EBE5DF] rounded-xl px-4 py-2.5 shadow-xs animate-pulse">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-[#EBE5DF] rounded-full" />
+          <div className="w-24 h-3.5 bg-[#EBE5DF] rounded" />
+        </div>
+        <div className="w-32 h-7 bg-[#FAFAF8] border border-[#EBE5DF] rounded-lg" />
+      </div>
+    );
+  }
+
   if (locations.length === 0) return null;
 
   return (
@@ -25,8 +30,8 @@ export default function LocationPicker({
 
       <div className="relative">
         <select
-          value={selectedLocationId}
-          onChange={(e) => onLocationChange(e.target.value)}
+          value={selectedLocationId || ""}
+          onChange={(e) => setLocationId(e.target.value)}
           aria-label="Select clinic location"
           className="appearance-none bg-[#FAFAF8] border border-[#EBE5DF] rounded-lg pl-3 pr-8 py-1.5 text-xs font-medium text-[#1A1A1A] cursor-pointer focus:outline-none focus:border-[#B8925D] transition"
         >
