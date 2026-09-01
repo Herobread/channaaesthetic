@@ -1,5 +1,6 @@
 import { wixClient } from "@/lib/wixClient";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { media } from "@wix/sdk";
 
 export interface ClinicLocation {
   id: string;
@@ -17,12 +18,32 @@ export interface MappedTreatment {
   price: string;
   priceNum: number;
   deposit?: string;
+  imageUrl?: string;
   locationIds: string[];
   locations: ClinicLocation[];
   featured?: boolean;
 }
 
-// 1. Pure Fetcher
+// Helper to convert Wix media URI to public static CDN URL
+function parseWixImageUrl(rawUri?: string): string | undefined {
+  if (!rawUri) return undefined;
+  if (rawUri.startsWith("http://") || rawUri.startsWith("https://")) {
+    return rawUri;
+  }
+  try {
+    // Generates a proper https://static.wixstatic.com/media/... URL
+    const resolved = media.getImageUrl(rawUri);
+    return resolved.url;
+  } catch {
+    // Regex fallback if SDK helper fails
+    const match = rawUri.match(/v1\/([^/~#]+)/);
+    if (match && match[1]) {
+      return `https://static.wixstatic.com/media/${match[1]}`;
+    }
+    return undefined;
+  }
+}
+
 export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
   const { items = [] } = await wixClient.services.queryServices().find();
 
@@ -34,7 +55,14 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
       const priceNum = parseFloat(priceVal) || 0;
       const isFree = priceNum === 0;
 
-      // Map dynamic locations from Wix
+      // Extract raw image URI from media payload
+      const rawImageUri =
+        service.media?.mainMedia?.image ||
+        service.media?.items?.[0]?.image ||
+        undefined;
+
+      const imageUrl = parseWixImageUrl(rawImageUri);
+
       const rawLocations = service.locations || [];
       const locations: ClinicLocation[] = rawLocations.map((loc: any) => {
         const id = loc._id || loc.business?._id || "";
@@ -59,15 +87,13 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
       return {
         id: service._id || "",
         title: service.name || "Untitled Treatment",
-        desc:
-          service.description ||
-          service.tagLine ||
-          "Bespoke clinical treatment.",
+        desc: service.description || "Bespoke clinical treatment.",
         category: service.category?.name || "Other",
         time: "45 min",
         price: isFree ? "Free" : `£${priceNum}`,
         priceNum,
         deposit: depositVal ? `£${depositVal}` : undefined,
+        imageUrl,
         locationIds: locations.map((l) => l.id),
         locations,
         featured: isFree,
@@ -75,7 +101,6 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
     });
 }
 
-// 2. Query Options
 export const treatmentsQueryOptions = () =>
   queryOptions({
     queryKey: ["treatments"],
@@ -84,12 +109,10 @@ export const treatmentsQueryOptions = () =>
     gcTime: 1000 * 60 * 30,
   });
 
-// 3. Treatments Hook
 export function useTreatments() {
   return useQuery(treatmentsQueryOptions());
 }
 
-// 4. Dynamic Locations Hook (derives unique locations from the cached treatments)
 export function useLocations() {
   const { data: treatments = [], ...rest } = useTreatments();
 
