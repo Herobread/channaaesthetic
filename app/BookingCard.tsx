@@ -21,11 +21,6 @@ export default function BookingCard({
 }: BookingCardProps) {
   const [selectedLocation, setSelectedLocation] = useState("london");
 
-  const bookingUrl =
-    selectedLocation === "london"
-      ? "https://yourbookingplatform.com/london"
-      : "https://yourbookingplatform.com/glasgow";
-
   return (
     <div
       id={id}
@@ -68,7 +63,7 @@ export default function BookingCard({
 
       {/* Primary Action Button */}
       <a
-        href={bookingUrl}
+        href={"/book"}
         className="w-full h-14 bg-[#B8925D] hover:bg-[#9E7B4C] active:bg-[#8A6A3F] text-white rounded-xl font-medium text-lg flex items-center justify-center gap-2 shadow-sm transition"
       >
         <span>Book Appointment</span>
