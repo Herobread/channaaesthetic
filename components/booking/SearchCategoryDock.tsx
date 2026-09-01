@@ -19,7 +19,7 @@ export default function SearchCategoryDock({
 }: SearchCategoryDockProps) {
   return (
     <>
-      <div className="sticky top-4 z-30 bg-white/90 backdrop-blur-xl p-3.5 sm:p-4 rounded-2xl border border-[#EBE5DF] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.08)] space-y-3">
+      <div className="sticky top-4 z-30 bg-white p-3.5 sm:p-4 rounded-2xl border border-[#EBE5DF] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.08)] space-y-3">
         {/* Search Input */}
         <div className="relative w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C827A]" />
