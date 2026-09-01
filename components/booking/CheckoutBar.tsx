@@ -12,6 +12,7 @@ import {
   Stethoscope,
   Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface CheckoutBarProps {
@@ -20,7 +21,7 @@ interface CheckoutBarProps {
   totalPrice: number;
   onIncrement: (treatment: MappedTreatment) => void;
   onDecrement: (treatmentId: string) => void;
-  onCheckout: () => void;
+  onCheckout?: () => void;
 }
 
 export default function CheckoutBar({
@@ -31,6 +32,7 @@ export default function CheckoutBar({
   onDecrement,
   onCheckout,
 }: CheckoutBarProps) {
+  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
@@ -47,6 +49,13 @@ export default function CheckoutBar({
       return () => clearTimeout(timer);
     }
   }, [totalQuantity]);
+
+  const handleSelectDate = () => {
+    if (onCheckout) {
+      onCheckout();
+    }
+    router.push("/book/time");
+  };
 
   if (!shouldRender) return null;
 
@@ -195,10 +204,10 @@ export default function CheckoutBar({
               </div>
             </div>
 
-            {/* Original Simple Button */}
+            {/* Select Date Button */}
             <button
               type="button"
-              onClick={onCheckout}
+              onClick={handleSelectDate}
               className="h-12 px-6 rounded-xl bg-[#B8925D] hover:bg-[#9E7B4C] text-white text-sm font-bold tracking-wider flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer shrink-0"
             >
               <span>Select Date</span>

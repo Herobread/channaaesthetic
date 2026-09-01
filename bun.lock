@@ -6,7 +6,9 @@
       "dependencies": {
         "@base-ui/react": "^1.7.0",
         "@tanstack/react-query": "^5.102.8",
-        "@wix/bookings": "^1.0.1671",
+        "@wix/bookings": "^1.0.1672",
+        "@wix/ecom": "^1.0.2472",
+        "@wix/redirects": "^1.0.125",
         "@wix/sdk": "^1.21.16",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -337,13 +339,13 @@
 
     "@types/validate-npm-package-name": ["@types/validate-npm-package-name@4.0.2", "", {}, "sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw=="],
 
-    "@wix/auto_sdk_bookings_add-ons": ["@wix/auto_sdk_bookings_add-ons@1.0.35", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-oR4zD1mDDCJzJ62SIfpKTeT2DUV15/P2guVFOnDJRntQMeWr3O6IoClcQV7ePmij7nAgWBbUwSgl8fr2417aoQ=="],
+    "@wix/auto_sdk_bookings_add-ons": ["@wix/auto_sdk_bookings_add-ons@1.0.36", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-hefIjcDOwvzir6LWO7HYq3z5tcc3gTfbJsLBAGI8cAIXM6y0lqAWIHpSwvfRLNaPKGKxR3fQK0sGf8lgcl47BQ=="],
 
-    "@wix/auto_sdk_bookings_attendance": ["@wix/auto_sdk_bookings_attendance@1.0.70", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-BOppldzJ7YeSt0bvR4xtCQGQX5mh4Mibb0DD0DTndkMiNVl2iMkiSWNYDRJqKg1RhikT4D83T3I7hJRi8L42VQ=="],
+    "@wix/auto_sdk_bookings_attendance": ["@wix/auto_sdk_bookings_attendance@1.0.71", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-pgQEA8vWAULirMk5Wi6Sc6KUc6EX9ENz5gxzczHG+i3v9UqdTMgzV0gjVoJB/ohDrXIJvHuOKCYkO1lb6zEOuA=="],
 
-    "@wix/auto_sdk_bookings_attribute-definition": ["@wix/auto_sdk_bookings_attribute-definition@1.0.9", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-YKx5kpOKJvukevfPdO6l+PkK6zh5SjGT8s/ACw/z7Ed/bo37lCxXJqIJcMhrLpr4dkoiZfRKuOMtTWTWtjdY0w=="],
+    "@wix/auto_sdk_bookings_attribute-definition": ["@wix/auto_sdk_bookings_attribute-definition@1.0.10", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-HexTRynTqmNVbwVYtz/urn2Ut16MWrXHxEH5mratl5oSNh35Wkjh5KqWfgjQ3temKhbRDE4exc+SM/tNwfxPuQ=="],
 
-    "@wix/auto_sdk_bookings_attribute-value": ["@wix/auto_sdk_bookings_attribute-value@1.0.10", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-2wDU5pD67Fo333RpdpCOfspfgZ3xy45VRUCpxJwIBYsXdrLg2ryIxc3tAbeLhiSpUQQlFVk6kUWAnbUCHc8TjQ=="],
+    "@wix/auto_sdk_bookings_attribute-value": ["@wix/auto_sdk_bookings_attribute-value@1.0.11", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-3FVDDNRph5ruDwIdpRmMfX0vuYjQR8sVB6Ui6ZkMW90P6LuxU0uvBMtLwPrX7McbfhAGp3wsiZGTNynaRSV13A=="],
 
     "@wix/auto_sdk_bookings_availability-calendar": ["@wix/auto_sdk_bookings_availability-calendar@1.0.199", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-u0fNGf3QGmz5O+SDGPQu3IoGbpRbBHyKawVr/eefOtVP9tGcZyc00liyGNm7e/FSBIKKKUKc75WGkORsYqE14g=="],
 
@@ -351,35 +353,35 @@
 
     "@wix/auto_sdk_bookings_availability-time-slots-configuration": ["@wix/auto_sdk_bookings_availability-time-slots-configuration@1.0.12", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-Q+eBO+3N/hh/TGeSz9dKOIt6eEAzHdvXi8w1LQWckS2XPJWSnpy7xPLZcP2X4DfKj96t99ywZS0ENyGJYiLncg=="],
 
-    "@wix/auto_sdk_bookings_booking-fees": ["@wix/auto_sdk_bookings_booking-fees@1.0.58", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-lrP/Yc/nCP5n6a+4C6RdcK/FAH6dD6jmT36F2zO5XnmXfTf20UZWqRGCW728dIKHh4i3EV3qqHaf9d/ueJjAfw=="],
+    "@wix/auto_sdk_bookings_booking-fees": ["@wix/auto_sdk_bookings_booking-fees@1.0.59", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-EGBPYD+X/O72RLyPsk2TBsKQNVcwJ1M/lrwpHBUW2UAwuwykNZQ+Ixu+mVpWy1pP9VVy4m3xZDyGUYPTHeVmqg=="],
 
-    "@wix/auto_sdk_bookings_booking-policies": ["@wix/auto_sdk_bookings_booking-policies@1.0.145", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-eM+AZRz6JpazcQhquqjR5O18xk5n74Wu6agkCtHNhN/fNkTSAXXHyIAtRedXQ/ctjAQYkjJX8i0riIOBA5f54w=="],
+    "@wix/auto_sdk_bookings_booking-policies": ["@wix/auto_sdk_bookings_booking-policies@1.0.146", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-RMEHLx1r3PWQv+c5PRIp80sjyNsqlmChnG3iEZuojbmdtwH5cVMIBFC+OwMUn8ypQH168Q7P8bKNLBKrpXIULA=="],
 
-    "@wix/auto_sdk_bookings_booking-policy": ["@wix/auto_sdk_bookings_booking-policy@1.0.4", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-F68mZtokbWr9qGg6B+Dz09AhERFOl2eGyNSsfYf7ISrg3Z3dp0qzb6y4Ttu+SAF7SU3EioPDHmsgUcDHvICwOA=="],
+    "@wix/auto_sdk_bookings_booking-policy": ["@wix/auto_sdk_bookings_booking-policy@1.0.5", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-A5FiJCddR351QKEDZkPLVn10yCKUR2H0pkVvAaKhhapANud1EEXgEm8iavJ1Okr8CO88Z1/xj0FNuOS4QcfyTw=="],
 
-    "@wix/auto_sdk_bookings_booking-policy-snapshots": ["@wix/auto_sdk_bookings_booking-policy-snapshots@1.0.53", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-ccIZv9FU/gCzwrBfCAccjj8jU6AteCtvZ7ntzI7Y/kFl/eiStu3xEyUyKhcS9BXXoLTJn1BhuVSR+1deTFQG8Q=="],
+    "@wix/auto_sdk_bookings_booking-policy-snapshots": ["@wix/auto_sdk_bookings_booking-policy-snapshots@1.0.54", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-RRWQkURiVbhQFEU3+l90B90f+kWCHMqOC3CzxsH6YLBNeTrFkdxqEOxn8L3gir+BxOEI+BhbXve2JEBSZODX7Q=="],
 
     "@wix/auto_sdk_bookings_bookings": ["@wix/auto_sdk_bookings_bookings@1.0.235", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-9w+9pDozVQ2UCIaiXvBp+A4QPDMToaI0xXVpRaeks57ew8jSD9DI/2WasFvW9oD181m+mhLnPDhvTwaFt87vYA=="],
 
-    "@wix/auto_sdk_bookings_bookings-provisioner": ["@wix/auto_sdk_bookings_bookings-provisioner@1.0.4", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-kXOLChNJZlhkZytfMEhmlCCR4giLgLSqN347qpZi8xmtB6Lm6JjTEuiP5lsXCz3OvRTsRVyhlUS72h0B0UIUUg=="],
+    "@wix/auto_sdk_bookings_bookings-provisioner": ["@wix/auto_sdk_bookings_bookings-provisioner@1.0.5", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-zMi9CdZThayt086BHPzkJD9GVoCWedcdxbDhO78oxcKjgaraR3A9YgRl2atQOLHW/Ore7mMce256ZbJVs9if8w=="],
 
-    "@wix/auto_sdk_bookings_bookings-settings": ["@wix/auto_sdk_bookings_bookings-settings@1.0.8", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-gDThCYFJzzfHoB/+PUdhSxlVE3RpIQbmaiz7NfMqDaX/voh2UcEs2edu54erPi4O/U8e7k9leNhYtq3opOaiGg=="],
+    "@wix/auto_sdk_bookings_bookings-settings": ["@wix/auto_sdk_bookings_bookings-settings@1.0.9", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-t2+cUtKZXLk6BMxFUx5OrheHVUG5ymPupteGrGqfgmmgMzXnxEDmZ/haZwOzj6gRymzQ4cnbUNLSTUt2zk4ZkA=="],
 
     "@wix/auto_sdk_bookings_bookings-validation": ["@wix/auto_sdk_bookings_bookings-validation@1.0.18", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-i/26aSOEi9KRCbb+WQFEPBp+8jfkn67Hj80tQGVWgqMyNknV1+G4KGdaPWig8Yb2P4f3d2it96dutTU1bFsaDA=="],
 
     "@wix/auto_sdk_bookings_catalog-search": ["@wix/auto_sdk_bookings_catalog-search@1.0.28", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-vHWbCpKncrNaTeHvclPzr6sq87fyAt4/4d42xAbL4XTH5BOWhZZixe1YLRmFVeiAkX8YeB5pw+v2ncfTuDJyxA=="],
 
-    "@wix/auto_sdk_bookings_categories": ["@wix/auto_sdk_bookings_categories@1.0.59", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-euGHbRzyv7B2ThlOMmNDEFLGP32TuH5yvn5F/V7zpuix/QQhlnUVH40VtVvGhHE8rPspYvpET/1oWt1DEIl9mA=="],
+    "@wix/auto_sdk_bookings_categories": ["@wix/auto_sdk_bookings_categories@1.0.60", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-VjNjqNcfqct2RJoXfLYZcTRW0FWOKL2CeOl6vYjNKQJo61i83ITZCGM+6b+fx4R3b2Cyhv5QxhdFDmyTZRBz6Q=="],
 
-    "@wix/auto_sdk_bookings_categories-v-2": ["@wix/auto_sdk_bookings_categories-v-2@1.0.58", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-qE6GpJmI3T1QBDDVhTADF9ZilC7/J+H5qMZ2IfFsYac2UTgsRr4LvsgjLWNP0B4Xz2THypmlnRmDW95x2KheEw=="],
+    "@wix/auto_sdk_bookings_categories-v-2": ["@wix/auto_sdk_bookings_categories-v-2@1.0.59", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-gwcsmvwqfWl57rdpRznxboYdR6PnpKOLqIEjNQTfqfmM7+ekBTvDX2RsI252B+a2pIP9MRVAYRwMW1WWQyB/AA=="],
 
-    "@wix/auto_sdk_bookings_display-settings": ["@wix/auto_sdk_bookings_display-settings@1.0.10", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-jpIS/HYL6rph4wPLam8wn/TIJynpd2OPxMeLssLuwJENbnegszE20hBkimQClsn4MkmWTm/ESRY51bwoVTVYew=="],
+    "@wix/auto_sdk_bookings_display-settings": ["@wix/auto_sdk_bookings_display-settings@1.0.11", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-LvT8lYdMnwXCDeKP9/e6WbTSRI04BcLq8PjCaRim7b5MLLGSd0jk2Omki1RsLRsItZcEvT+Z/dL3HsYUj7SR0A=="],
 
     "@wix/auto_sdk_bookings_event-time-slots": ["@wix/auto_sdk_bookings_event-time-slots@1.0.136", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-wVC0/7b4DrD+R5FogMzl9ur7AP3Lmd4OQbXDQV4R9ADTNARI0sqdlZDQI6OOuT+I2yRc53146dtYHqt1TFNong=="],
 
     "@wix/auto_sdk_bookings_extended-bookings": ["@wix/auto_sdk_bookings_extended-bookings@1.0.130", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-WCRe9MKsul9HOqaruLVmSFhx1qvQaV8nUDvZgyMiiLDPF8A+NvSXpJkBlVJ+osodvocmcV2UaWVy5rdyfieqgw=="],
 
-    "@wix/auto_sdk_bookings_external-calendars": ["@wix/auto_sdk_bookings_external-calendars@1.0.58", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-CjuYqzHCqjt+3U5At84umisu+muD3xXEv/8bzVvL/dE6wOPwxGZqf1jnT+PwGvxgP1rRpCRGfcnvgTlcVfROjQ=="],
+    "@wix/auto_sdk_bookings_external-calendars": ["@wix/auto_sdk_bookings_external-calendars@1.0.59", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-2NYI64MYIYUiPCS5dJUFRKt4j7xciXmLuzb8xrZbhkecYQDKWiJuU7EXYD4YZC+NF9vCQKhCrMs89yOqX0tv9Q=="],
 
     "@wix/auto_sdk_bookings_multi-service-availability-time-slots": ["@wix/auto_sdk_bookings_multi-service-availability-time-slots@1.0.262", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-ayP8bxW06YinGee84anuENr8hz349iDdolsBtQUcnZ4fkDpx/AStSWhPCUyNo+zR/6HH/QGrAIX0G2bqSkf2pw=="],
 
@@ -387,25 +389,137 @@
 
     "@wix/auto_sdk_bookings_pricing-provider": ["@wix/auto_sdk_bookings_pricing-provider@1.0.32", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-XQjfasdtNSlAJaL0d87kto/Utz/u66UTZiZ4KVU96KAt4AShF0PT8o3cPEJ7E8o5Lei+Q2qI+Ijc84D6wWsBUQ=="],
 
-    "@wix/auto_sdk_bookings_related-products": ["@wix/auto_sdk_bookings_related-products@1.0.3", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-YLbVGwYqZzY5UFOMyUHanPcelEnhRwkl9vIccy2w1b1o/5IDiqnwhBJlj0wuQBSnaDG4QvmuZsITtwvjcPzc4A=="],
+    "@wix/auto_sdk_bookings_related-products": ["@wix/auto_sdk_bookings_related-products@1.0.4", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-EV0jCQFTDnPTsDFXdiA3CvXIOvBfWFJnTUrJ8My2xXZnnu/ynV7pAMeztYqEA1w4Hf7zZc2p6uINoOCA53x/GA=="],
 
-    "@wix/auto_sdk_bookings_resource-types": ["@wix/auto_sdk_bookings_resource-types@1.0.83", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-FUHRXjxbv6lawH3cMwzEwkMBd/AHZNc/itRot7RKSW+satmJQluu+tTm9mnHS5kW9cboH3qYyJ5sDeOZ+89QXA=="],
+    "@wix/auto_sdk_bookings_resource-types": ["@wix/auto_sdk_bookings_resource-types@1.0.84", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-H5WASDujtwpMx1D1J1aXgY2vVED4Q5e/0FVpmUgFWlsmsnZcEbsgHy0K7I+DC6jpZodCqnvjZohc9HtZs+E3eg=="],
 
-    "@wix/auto_sdk_bookings_resources": ["@wix/auto_sdk_bookings_resources@1.0.90", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-9vBg5oCnLJmLfT6gPtXQJahzeRGKpXqVBn5JWHwMxkQw0TEY7EMKHFZL5RhGMRwF7ix+LKjrsaNZY+7B0wiLsA=="],
+    "@wix/auto_sdk_bookings_resources": ["@wix/auto_sdk_bookings_resources@1.0.91", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-ci3Kt7OQPJiLs2T2iMO4AV1NjuSQx9eAFlC3mdqAmCyMH9cP3Zf5EbUMui3Nb04PkA1+rfkRB8THaRBoFzjsvw=="],
 
     "@wix/auto_sdk_bookings_service-options-and-variants": ["@wix/auto_sdk_bookings_service-options-and-variants@1.0.92", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-RNMbA3cPX1fdBHaTvtf1rEwhttAB1s2uSOI+M+WnEcrncoNtSWEhqhLjG+52eaj5DkIsi2VGWsyE4VHiB+cgjQ=="],
 
     "@wix/auto_sdk_bookings_services": ["@wix/auto_sdk_bookings_services@1.0.282", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-HWAzHBqqR47VXcQMeQSDNXzhDKx+B35T/mOoYPwplVzCk0fofXcGPGf+D1IEjqzCvf2ptTY4wMC4FqN6AWUpjA=="],
 
-    "@wix/auto_sdk_bookings_staff-member-settings": ["@wix/auto_sdk_bookings_staff-member-settings@1.0.23", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-+JR8aEKan8ZxKv3hJT9NOJPaS4moMyhoA14PKYn4HVrAHqzJvc2gazztxzmfjB/sdwhzih7INCfVX9YKW5aE3g=="],
+    "@wix/auto_sdk_bookings_staff-member-settings": ["@wix/auto_sdk_bookings_staff-member-settings@1.0.24", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-cl0CBNbm+SbgRomkeLtDMa8miBXrK/bzWv90xTtk4JrK7kI+YdOsexuv/3biYhu4ridMSgfzGgTovopPb/FUag=="],
 
-    "@wix/auto_sdk_bookings_staff-members": ["@wix/auto_sdk_bookings_staff-members@1.0.127", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-ucoskeW38w53o9STnUeob6Nb3Tan5kLC4C/MXYPWgluC6OQ1mQBVJKHzgm2+DHXqSr6YSySjMPBDWDvSLrIBlA=="],
+    "@wix/auto_sdk_bookings_staff-members": ["@wix/auto_sdk_bookings_staff-members@1.0.128", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-UjkD24scAMYgTCKg0QOMeYe0p6drFREpuIHJcnbqBhEIkKde7goooUo4ZJ23Woz9UUe8FR3ujo9lZyR6pKHpxg=="],
 
-    "@wix/auto_sdk_bookings_staff-sorting": ["@wix/auto_sdk_bookings_staff-sorting@1.0.8", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-UAwdLzTY5bPAQbWZoBsDmFnq4UF8zKptWAHNlOVIgMbITv00d+V5IOp05JtWRpXB3rp7uGBjNpncZUNO6PMmyw=="],
+    "@wix/auto_sdk_bookings_staff-sorting": ["@wix/auto_sdk_bookings_staff-sorting@1.0.9", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-rhNH2v7IjHA04tnYHi0sw8YZaVKRxsLxvYheJy74lyy+59Ww11bL2/+org5XOW0pDviRec8VlQgiWJqCca461Q=="],
 
-    "@wix/auto_sdk_bookings_time-slots-configuration": ["@wix/auto_sdk_bookings_time-slots-configuration@1.0.7", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-vL5VwdFqvg+ot1kDK7hZWSXBDfWlggZBf11BVWDMFACiAl/TK3SCuXFzFgbN7KGJuA/rC/lYsPpweyIL5Oke+w=="],
+    "@wix/auto_sdk_bookings_time-slots-configuration": ["@wix/auto_sdk_bookings_time-slots-configuration@1.0.8", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-X1MWE4eZnrCYSbxL2nwvavvlUAHxeF1ZJ6pi+cQw/UO2e/pJ78+up6CFNF1P43l6E5lzFRZnUH2Y1xbPKq71rg=="],
+
+    "@wix/auto_sdk_ecom_abandoned-checkouts": ["@wix/auto_sdk_ecom_abandoned-checkouts@1.0.85", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-L0IsLrBL4klvZXiOyKyD5mBFTNGolLZEVEJxDt8m4LDsG7mlUw2ME7XKcLnCMnZA84wBBTop5Q7St72IYsCcOg=="],
+
+    "@wix/auto_sdk_ecom_additional-fees": ["@wix/auto_sdk_ecom_additional-fees@1.0.51", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-eUCciKLrO4MtL+QwwKB2hbhBusNsMPQuc6Lor6TqObL2LYy5T362Dy48uczDVEOeEM8dfDVBNnbAbe0u6kvp1Q=="],
+
+    "@wix/auto_sdk_ecom_back-in-stock-notifications": ["@wix/auto_sdk_ecom_back-in-stock-notifications@1.0.65", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-t1mq5ZPigFKQMoytv21g/4K1trnpfWV6tcyD6wIxZGn1dq3AaoXL9WTdm60pAGNc3LnGRmaT7+5uXyP/bHLlPw=="],
+
+    "@wix/auto_sdk_ecom_back-in-stock-settings": ["@wix/auto_sdk_ecom_back-in-stock-settings@1.0.44", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-WJPX5J0HAoq8VtucXuQlB47QnySAB6lUHRgVF5cqCiJXXpOFZiV8fbbcJ0RHongvnIwSQvIeKCDGucfm97w5NQ=="],
+
+    "@wix/auto_sdk_ecom_cart": ["@wix/auto_sdk_ecom_cart@1.0.176", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-4gDZeISbBMpJVXs69a9+safiw3eLhA6xU09E9f92xef9Q6lp87J/tbD94NdRENU7d9NgxtOJ9byj51dccor5Gg=="],
 
     "@wix/auto_sdk_ecom_cart-v-2": ["@wix/auto_sdk_ecom_cart-v-2@1.0.196", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-xOqzkfc8/S44/ZsrM70GqcUkfY5oRPtkP+5r61fDO8z8rDr9QauViw6+9h7w2Q5iZSQ8MeyOKZf9tGjYUnrbFQ=="],
+
+    "@wix/auto_sdk_ecom_catalog": ["@wix/auto_sdk_ecom_catalog@1.0.66", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-oL32eKKQECEw1o/k18EQuUrYWbnj92s3Ds+gbtYZcPDqmIV76iU1lXEqg7pPdAbbeY+sqha4x5D3wnR7kA0Gmg=="],
+
+    "@wix/auto_sdk_ecom_checkout": ["@wix/auto_sdk_ecom_checkout@1.0.170", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-OT0RbCgmznGY0pHnzSe/5Hlk5aTfLotdgoqk+UpcBofca07lv83qqmeHsdndFwyQjNaYJooY8wqwpC9C1z318w=="],
+
+    "@wix/auto_sdk_ecom_checkout-content": ["@wix/auto_sdk_ecom_checkout-content@1.0.39", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-sIL6rMMip8tJ0/Xp74qjLngvsRXd1XXl1301j9WAEueF9aBgo/gRkpXmwvUX7z+QR41OwtSa8MFGwIfvIPziIw=="],
+
+    "@wix/auto_sdk_ecom_checkout-settings": ["@wix/auto_sdk_ecom_checkout-settings@1.0.75", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-N7XJ8XO9JqD+jGh4KPhRLW6jb6Kx1Dx/lskXY533/heNyoBu89aT3e/MXLOSA4IB8Ztkq+AGTk+eIATbaG6d2g=="],
+
+    "@wix/auto_sdk_ecom_checkout-templates": ["@wix/auto_sdk_ecom_checkout-templates@1.0.152", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-+Ry+rYkkIuw4Q+ugJOaagAiPKKBynYpT0t2QQeHzqCnCAabtxfuExkiuyLCU3RpBwXl0wU+5tqk6gsmI9xO0eA=="],
+
+    "@wix/auto_sdk_ecom_contact-tax-details": ["@wix/auto_sdk_ecom_contact-tax-details@1.0.5", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-jJ+ypsLQQlyemPXb+9hV+K2HLD72wrk6QDKJjroyOJq6vIO6uOcUpvs6kUwxN4fgozwigFyCuXuCWbFfb91Y0w=="],
+
+    "@wix/auto_sdk_ecom_currencies": ["@wix/auto_sdk_ecom_currencies@1.0.37", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-jDS5tn0Fhns6fn2BpY1HGAgqMZT6YiTg0uKac65mkQk7EsnsQTRj/t9gliAyhfzobFnJyTkbXRd5RryGDQr/2w=="],
+
+    "@wix/auto_sdk_ecom_current-cart": ["@wix/auto_sdk_ecom_current-cart@1.0.186", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-20cg1d7qFDtKVX/mYttXq/zwxZCgZnw0I9kSzybkzYSxcabvRxsNDwbVgMJVrjRLMQ3Eogz5tW80EHbzpF/xlw=="],
+
+    "@wix/auto_sdk_ecom_current-cart-v-2": ["@wix/auto_sdk_ecom_current-cart-v-2@1.0.197", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-NTakJGL/LAQZtuqy8MuBFx5ugNHYoUk8aGrPqOtQlg71IBFVDx9hctqxLL912GPz2T7vw7AF+xqtiHLMJhksIQ=="],
+
+    "@wix/auto_sdk_ecom_custom-triggers": ["@wix/auto_sdk_ecom_custom-triggers@1.0.42", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-vhRQZ6PPmDnBnZ6CSeKjV9n3v5DOAWUomA3LJdQ3Nek3FViHS93UYMMZh4sByh8PzmixOThSyOB5fTvKk62vRg=="],
+
+    "@wix/auto_sdk_ecom_delivery-profile": ["@wix/auto_sdk_ecom_delivery-profile@1.0.443", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-KvYliIRf4G7GBfZFr9fWcgbbdvn/BXglS2AXmTS6RaSKL9f6nws7BIE6M6cF41//hIaZVm7wCp1gqxPNVahOwA=="],
+
+    "@wix/auto_sdk_ecom_delivery-solutions": ["@wix/auto_sdk_ecom_delivery-solutions@1.0.64", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-v56HFOWubxJT8cJJPVPvOfebn3niii6aQyvZ8txcXjAfUfiO2MRZwjuWL+mXZirfbqgtMfJddWhAenRZZ7c73A=="],
+
+    "@wix/auto_sdk_ecom_discount-rules": ["@wix/auto_sdk_ecom_discount-rules@1.0.117", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-zeUA+qRl29aJW6JL3m+pCGPcvwSpIQNXG4bzEZ52XEkSlF1wHmf9L5bTgczpc2f5ZPdKfji7c1d80n+zbeHlYw=="],
+
+    "@wix/auto_sdk_ecom_discounts": ["@wix/auto_sdk_ecom_discounts@1.0.36", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-Gpw28Ah5J9WyxrDYNgOkzJ2dEDUZsKsTgyu0Pm7Q1ru7+pAa3Id1/Uu6Lv9gqBds9QwnhO5XNyH8Mx9OKGjxqA=="],
+
+    "@wix/auto_sdk_ecom_discounts-custom-trigger": ["@wix/auto_sdk_ecom_discounts-custom-trigger@1.0.47", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-3sTpsSVIE/wUuc/nwEVnsXEcn//uwU17kmNgR1CvqqgZLC83TQhO0O24lTQoYiojqG2EjIUo8jEvAzPKgtMVSQ=="],
+
+    "@wix/auto_sdk_ecom_draft-orders": ["@wix/auto_sdk_ecom_draft-orders@1.0.173", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-5dV8hokkqs4wVliCaSTjYwLT5Ceq5p76ieTs8VkYvcNcUr0Y3Cn9toTt9DvizOofaNLE3Tmv00vEJ70I3/JTtQ=="],
+
+    "@wix/auto_sdk_ecom_draft-subscription-contracts": ["@wix/auto_sdk_ecom_draft-subscription-contracts@1.0.12", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-WMqYYfVAxE9VrWZPEw3V7NR7T8P8x9Uije5CcFWjHeyq77MdYPCB44vYOyaCECv9+HeARWh4dcmpY7L27M1Vbg=="],
+
+    "@wix/auto_sdk_ecom_ecommerce-settings": ["@wix/auto_sdk_ecom_ecommerce-settings@1.0.35", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-gUDBxpYIG9n7oGGOALW0gxYYd9++dOMU63a+O4Hl99OyQ2TLThE9ObZV8VuEQTeqfH1XX051PoKed9bT7r8p8A=="],
+
+    "@wix/auto_sdk_ecom_gift-vouchers": ["@wix/auto_sdk_ecom_gift-vouchers@1.0.47", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-pvY2mP8NFmsagvr1/DUFzGdEeRHZSIwcw8eVdeIKUzLOaaVXBybYAIYUbi2MOZvDX6+hc+WJnnKXXpIsslWQig=="],
+
+    "@wix/auto_sdk_ecom_gift-vouchers-provider": ["@wix/auto_sdk_ecom_gift-vouchers-provider@1.0.37", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-hFCEaazn3E321tCoYit2SducY//3aTU3ZcOwcpeWsM5b1CmPO60I7wE9nPgl/ZnQpztlk3cFwMGovj3ZBh4LKA=="],
+
+    "@wix/auto_sdk_ecom_inventory": ["@wix/auto_sdk_ecom_inventory@1.0.26", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-OP94P0HvK33sKwahnIBUIOwK2jRxobc035Jgg9VR1GhuWC3SA+xbMtC7JEYN3rtjCB6SqpIV3unc7EQ18eKknA=="],
+
+    "@wix/auto_sdk_ecom_local-delivery-options": ["@wix/auto_sdk_ecom_local-delivery-options@1.0.55", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-usRYlVzr5q6eVuby7csKoDSs/02eZ9WFfOhKUORG9gAgpRUhDlCM3+PouyJTUODMG5706aycq0Q/9EVTtuqDpg=="],
+
+    "@wix/auto_sdk_ecom_manual-tax-mappings": ["@wix/auto_sdk_ecom_manual-tax-mappings@1.0.45", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-CchvTSfLF83e04iodBV2PsTDi1hjaV8JWbE4imIUV20xgHq14KTsxfBLHVXyVDoiwnW/Hl3KewXOsff6y46S0w=="],
+
+    "@wix/auto_sdk_ecom_memberships": ["@wix/auto_sdk_ecom_memberships@1.0.68", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-gAuEuqBmMBZvL0XmV68NprEcvHYTUTYnBpg1Lp31gE3euLjs1G1XlXeqZKwGnI5d544mI4Z/6bIl07V9niXS7A=="],
+
+    "@wix/auto_sdk_ecom_order-billing": ["@wix/auto_sdk_ecom_order-billing@1.0.107", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-CmZbNanwHm6bIPaSzJjddd7FvdJeP3h5OpsKmLTxSHDP8srh7vK7urAUjQ25MdwNnhDBI1M+LVYu2t1WA1qy7A=="],
+
+    "@wix/auto_sdk_ecom_order-fulfillments": ["@wix/auto_sdk_ecom_order-fulfillments@1.0.64", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-J6HbkVRaM0U3ONRHfxNqBGSM9B48QKPsxbV1MMnhBCvA9+L24wqAwTDotui1NHS6D3G/nir8aZUHy/r6f5L6Dg=="],
+
+    "@wix/auto_sdk_ecom_order-invoices": ["@wix/auto_sdk_ecom_order-invoices@1.0.54", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-frfw8L28U59K/fJz7yAreGXx9v5GPVx2NfUT578xkD0/UD/s6V7Lcfr2STNbi8iavaNBnQm3/AOhWtQ1E0KH3A=="],
+
+    "@wix/auto_sdk_ecom_order-payment-requests": ["@wix/auto_sdk_ecom_order-payment-requests@1.0.69", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-C7BGA2qaT5cVmlpNNaf+FKLivUcEDhAlxOGTrh3pBy6fh1NvRyxUo7Pkz26BQ05EpoV14JnftKmz5ZsVvM1Gww=="],
+
+    "@wix/auto_sdk_ecom_order-transactions": ["@wix/auto_sdk_ecom_order-transactions@1.0.107", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-Nq/dKgGrH5xsRe0bPrDSvY2WtsmEDsziBiMmvpEYttZfXlFTfUDcgOhmEA8FihdzJ/1icfgr3juJ+72ltL+Fxg=="],
+
+    "@wix/auto_sdk_ecom_orders": ["@wix/auto_sdk_ecom_orders@1.0.291", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-EdXyZT58Cj6frkyFusBxCmsvvbK35GXnkd/9eIlsMxSQDd2+8W/CCVbWmCOgog0FvJ3B4XvFgBrdIzTmNHq6SQ=="],
+
+    "@wix/auto_sdk_ecom_orders-settings": ["@wix/auto_sdk_ecom_orders-settings@1.0.57", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-zoQ55iR1WK6QvA7e6y99SGsIFoorS0pinqIv1BNdgGa/ZjJgEv36z4FQxPwjWr+FXIJtu7emIlrDJWAvU/VMaQ=="],
+
+    "@wix/auto_sdk_ecom_payment-settings": ["@wix/auto_sdk_ecom_payment-settings@1.0.146", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-rMDr46xSdebvFtIkgMOlhk+7KcI6XPM7QqPRcNXPydkunNCaAubUAW/U6dkBydRM4d7PxHs52uzXd2hN+xetyA=="],
+
+    "@wix/auto_sdk_ecom_pickup-locations": ["@wix/auto_sdk_ecom_pickup-locations@1.0.54", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-3VbhTr6QDM6cJ9qenyExXqNA06kNxQHFGCvGFDx6cSOMtPpYNJVS3Mhvm78pfzf2x8MLXfWvj2tUk1XiWwfN+Q=="],
+
+    "@wix/auto_sdk_ecom_recommendations": ["@wix/auto_sdk_ecom_recommendations@1.0.49", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-I4lQw2WP1YOu668Z97hZpNfKVrx4qnn6X19J/L8j7WSQwxdpz1Et3AY2QYVmQ9NszKXpCU97VMR9+ioyU0VhQw=="],
+
+    "@wix/auto_sdk_ecom_recommendations-provider": ["@wix/auto_sdk_ecom_recommendations-provider@1.0.35", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-5uD4J2wplfL0W/eBEKpKDFvcM0fCGQsrqMVxZDIYGGCAOCKo1Oc2GRf+mqYx7dKk0jC45leLToH/1hiY+T+poQ=="],
+
+    "@wix/auto_sdk_ecom_shipping-options": ["@wix/auto_sdk_ecom_shipping-options@1.0.237", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-dY8zI4nxjcmJ8Inx71+S2ilIsmQqptk9ohfm2VrS2q3R7xlzu9joRjVva1e+9uOL7/Lte62M5zvUx4XC7t04Hg=="],
+
+    "@wix/auto_sdk_ecom_shipping-rates": ["@wix/auto_sdk_ecom_shipping-rates@1.0.41", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-BdMUfB641eYAHZLtrPkQ+7xNuO4gnXHeaaOQkrcY/F/PdwS/aGULpAA6DAgbDquUSHThabD8cb3f33dRvfBSVw=="],
+
+    "@wix/auto_sdk_ecom_shippo-configurations": ["@wix/auto_sdk_ecom_shippo-configurations@1.0.73", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-2VI/kyBilgY2Hk09nseu6bb2TobTsEtBEuJPw++X+fmk09v/KJMUsSv18Eix+THe5sWt7ahSY89UjJ9nA1Ibpg=="],
+
+    "@wix/auto_sdk_ecom_subscription-contracts": ["@wix/auto_sdk_ecom_subscription-contracts@1.0.128", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-5xlGJcoQIxQrdw55+7Kk6USr0XB6GqkSuv4yLUXvBPNFcSYgFKZ5hGRmal7GkaBOrRwuiqBjMcdX+8Utfe9X3w=="],
+
+    "@wix/auto_sdk_ecom_tax-calculation": ["@wix/auto_sdk_ecom_tax-calculation@1.0.56", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-AfcVf3PEiXIDhXvI5ULU74z3YsOtCxBXhy/5ThJUxuPC1/Jfj7xLTNBzK0owz6ugAVZlP9/KSQ/NbPoNtPV+Bg=="],
+
+    "@wix/auto_sdk_ecom_tax-calculation-provider": ["@wix/auto_sdk_ecom_tax-calculation-provider@1.0.33", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-TfTdhs+KQKOQNGS9x6DyZbkMpZmgVqiRsKYl2dYT+9I5FfDKg5DZgDOL9qc16sUi4dJUTZ5EfIVgIOJ3h9DyEQ=="],
+
+    "@wix/auto_sdk_ecom_tax-exempt-groups": ["@wix/auto_sdk_ecom_tax-exempt-groups@1.0.6", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-7L3s9eALxGraTWxrn74g1906wr0V14loydUcG9cslO3cNBBNYY67JscNL2po3sb57kYGJeTZkURw6sk6kA5sBA=="],
+
+    "@wix/auto_sdk_ecom_tax-groups": ["@wix/auto_sdk_ecom_tax-groups@1.0.66", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-esB7t1XAcOwdeES/OUnq92UscLDYmTfOxnNEYPhv1SzwVHWrXKiN4I8bT9r/t2vVDEHjbGlUH0AvH1VLBvGeHQ=="],
+
+    "@wix/auto_sdk_ecom_tax-regions": ["@wix/auto_sdk_ecom_tax-regions@1.0.63", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-2V0107QcpNNDvH/iFmOQ3qBtGgCyK1e8mK/WazDQFywldEfBe5qTKzsMFmfg4TgEy34kQ9K42SGXgh2YvYb5bg=="],
+
+    "@wix/auto_sdk_ecom_tax-settings": ["@wix/auto_sdk_ecom_tax-settings@1.0.4", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-QzNsVDaA1dYoFacdg6ByP/xuRWc/WRMet5SawbcWH+Hccj6hy0LxOymh5hZ0CUuq2C9s58o5VTO8i5f5xWbpRQ=="],
+
+    "@wix/auto_sdk_ecom_tip-settings": ["@wix/auto_sdk_ecom_tip-settings@1.0.56", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-fcNCaEP5r6y7kCUg5iOJSRs9X19WbdoCCzlfXC22JdYKLDvJ2o0/JrtVFHhnCu3Or21RsO7eoEsPdYaCDQe6Vg=="],
+
+    "@wix/auto_sdk_ecom_tippable-staff": ["@wix/auto_sdk_ecom_tippable-staff@1.0.42", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-fM9UXvG8+0yZsMHbpxkhMU+d9fue2dcMNmHJDuq7fG/rcMyOi4ac7aVztjziqUbReUacjGc+2lZ2JZvevNF8Ww=="],
+
+    "@wix/auto_sdk_ecom_tips": ["@wix/auto_sdk_ecom_tips@1.0.64", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-QX+kb6J6pudvXE59xO97bBIM71W1DPgILvZPlFSI1yXenUZWbWX8PvYq1H0RRZQFOvwSLaBg9P678PDYe4nZDA=="],
+
+    "@wix/auto_sdk_ecom_totals-calculator": ["@wix/auto_sdk_ecom_totals-calculator@1.0.118", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-sxEU1f7lQlX3ESEcvTc4+2FgHpw8kt1KiXAA4Jx/T4PSFKzHp8qss7At190aU1xOV662iHZeFDZ+mbY5mXH1oA=="],
+
+    "@wix/auto_sdk_ecom_validations": ["@wix/auto_sdk_ecom_validations@1.0.60", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-5/3okzAmyoEmBxcoPklJyUxRhpCWft9QD0M+Opt8Ru3SOtZiwbrs0bqO+dj2BtIFqO9Zz0VUnbR1U7BTwyDT8w=="],
+
+    "@wix/auto_sdk_ecom_wishlists": ["@wix/auto_sdk_ecom_wishlists@1.0.4", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-4oXInNygGNCUPN6yMuTxcgVtiRrrpRM3huL/vvS8FuiU9fFH6U6G6y4InYKDL2tFRkMR0umYhbYGU72JDAlR+w=="],
 
     "@wix/auto_sdk_forms_chat-settings": ["@wix/auto_sdk_forms_chat-settings@1.0.27", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.19", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-xCXsDzVnRqf2X7FKYl0TCweL75eCkZk4v3DRGVoB6/I2OWze3Jh4wKp/No1ZorvTIK/kfqRURqrl45xlw+ACpw=="],
 
@@ -431,9 +545,13 @@
 
     "@wix/auto_sdk_redirects_redirects": ["@wix/auto_sdk_redirects_redirects@1.0.53", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.19", "@wix/sdk-types": "^1.17.11", "zod": "^4.3.6" } }, "sha512-qznx4OUgasP7MZ/YPhcNQPVg40FhGHIAXMsCo0cK18yefTLgLH6tKpJn9NlD0MonVsJi6HEcW4NUogN4clRBxA=="],
 
-    "@wix/bookings": ["@wix/bookings@1.0.1671", "", { "dependencies": { "@wix/auto_sdk_bookings_add-ons": "1.0.35", "@wix/auto_sdk_bookings_attendance": "1.0.70", "@wix/auto_sdk_bookings_attribute-definition": "1.0.9", "@wix/auto_sdk_bookings_attribute-value": "1.0.10", "@wix/auto_sdk_bookings_availability-calendar": "1.0.199", "@wix/auto_sdk_bookings_availability-time-slots": "1.0.269", "@wix/auto_sdk_bookings_availability-time-slots-configuration": "1.0.12", "@wix/auto_sdk_bookings_booking-fees": "1.0.58", "@wix/auto_sdk_bookings_booking-policies": "1.0.145", "@wix/auto_sdk_bookings_booking-policy": "1.0.4", "@wix/auto_sdk_bookings_booking-policy-snapshots": "1.0.53", "@wix/auto_sdk_bookings_bookings": "1.0.235", "@wix/auto_sdk_bookings_bookings-provisioner": "1.0.4", "@wix/auto_sdk_bookings_bookings-settings": "1.0.8", "@wix/auto_sdk_bookings_bookings-validation": "1.0.18", "@wix/auto_sdk_bookings_catalog-search": "1.0.28", "@wix/auto_sdk_bookings_categories": "1.0.59", "@wix/auto_sdk_bookings_categories-v-2": "1.0.58", "@wix/auto_sdk_bookings_display-settings": "1.0.10", "@wix/auto_sdk_bookings_event-time-slots": "1.0.136", "@wix/auto_sdk_bookings_extended-bookings": "1.0.130", "@wix/auto_sdk_bookings_external-calendars": "1.0.58", "@wix/auto_sdk_bookings_multi-service-availability-time-slots": "1.0.262", "@wix/auto_sdk_bookings_pricing": "1.0.104", "@wix/auto_sdk_bookings_pricing-provider": "1.0.32", "@wix/auto_sdk_bookings_related-products": "1.0.3", "@wix/auto_sdk_bookings_resource-types": "1.0.83", "@wix/auto_sdk_bookings_resources": "1.0.90", "@wix/auto_sdk_bookings_service-options-and-variants": "1.0.92", "@wix/auto_sdk_bookings_services": "1.0.282", "@wix/auto_sdk_bookings_staff-member-settings": "1.0.23", "@wix/auto_sdk_bookings_staff-members": "1.0.127", "@wix/auto_sdk_bookings_staff-sorting": "1.0.8", "@wix/auto_sdk_bookings_time-slots-configuration": "1.0.7", "@wix/bookings_app-extensions": "1.0.107", "@wix/headless-bookings": "^1.0.0" } }, "sha512-R3yvSSnnW8UIkU3tKcvzlqfWOQy2wZzLoGUkvEzF3PxU/a/vR3HD0z2djYraqRgELAzUKpTO46bSjOGXYlTe2A=="],
+    "@wix/bookings": ["@wix/bookings@1.0.1672", "", { "dependencies": { "@wix/auto_sdk_bookings_add-ons": "1.0.36", "@wix/auto_sdk_bookings_attendance": "1.0.71", "@wix/auto_sdk_bookings_attribute-definition": "1.0.10", "@wix/auto_sdk_bookings_attribute-value": "1.0.11", "@wix/auto_sdk_bookings_availability-calendar": "1.0.199", "@wix/auto_sdk_bookings_availability-time-slots": "1.0.269", "@wix/auto_sdk_bookings_availability-time-slots-configuration": "1.0.12", "@wix/auto_sdk_bookings_booking-fees": "1.0.59", "@wix/auto_sdk_bookings_booking-policies": "1.0.146", "@wix/auto_sdk_bookings_booking-policy": "1.0.5", "@wix/auto_sdk_bookings_booking-policy-snapshots": "1.0.54", "@wix/auto_sdk_bookings_bookings": "1.0.235", "@wix/auto_sdk_bookings_bookings-provisioner": "1.0.5", "@wix/auto_sdk_bookings_bookings-settings": "1.0.9", "@wix/auto_sdk_bookings_bookings-validation": "1.0.18", "@wix/auto_sdk_bookings_catalog-search": "1.0.28", "@wix/auto_sdk_bookings_categories": "1.0.60", "@wix/auto_sdk_bookings_categories-v-2": "1.0.59", "@wix/auto_sdk_bookings_display-settings": "1.0.11", "@wix/auto_sdk_bookings_event-time-slots": "1.0.136", "@wix/auto_sdk_bookings_extended-bookings": "1.0.130", "@wix/auto_sdk_bookings_external-calendars": "1.0.59", "@wix/auto_sdk_bookings_multi-service-availability-time-slots": "1.0.262", "@wix/auto_sdk_bookings_pricing": "1.0.104", "@wix/auto_sdk_bookings_pricing-provider": "1.0.32", "@wix/auto_sdk_bookings_related-products": "1.0.4", "@wix/auto_sdk_bookings_resource-types": "1.0.84", "@wix/auto_sdk_bookings_resources": "1.0.91", "@wix/auto_sdk_bookings_service-options-and-variants": "1.0.92", "@wix/auto_sdk_bookings_services": "1.0.282", "@wix/auto_sdk_bookings_staff-member-settings": "1.0.24", "@wix/auto_sdk_bookings_staff-members": "1.0.128", "@wix/auto_sdk_bookings_staff-sorting": "1.0.9", "@wix/auto_sdk_bookings_time-slots-configuration": "1.0.8", "@wix/bookings_app-extensions": "1.0.107", "@wix/headless-bookings": "^1.0.0" } }, "sha512-Qf9w221CMfdrPpBEu+qgSCPoh3l1EJMFyqd8MlofS6C88Q7BZGA4xalTGat6FqNaYapBKZhVJtZfdbjJeW9Gwg=="],
 
     "@wix/bookings_app-extensions": ["@wix/bookings_app-extensions@1.0.107", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-UFkZkkkuVtlhO265VWd9fh5z6Bmdzx50lKZzj8TrtBh/d5aAZC/RHx0Ffhj2KSr9YHDn7Eji6CDK3KkfmmknRA=="],
+
+    "@wix/ecom": ["@wix/ecom@1.0.2472", "", { "dependencies": { "@wix/auto_sdk_ecom_abandoned-checkouts": "1.0.85", "@wix/auto_sdk_ecom_additional-fees": "1.0.51", "@wix/auto_sdk_ecom_back-in-stock-notifications": "1.0.65", "@wix/auto_sdk_ecom_back-in-stock-settings": "1.0.44", "@wix/auto_sdk_ecom_cart": "1.0.176", "@wix/auto_sdk_ecom_cart-v-2": "1.0.196", "@wix/auto_sdk_ecom_catalog": "1.0.66", "@wix/auto_sdk_ecom_checkout": "1.0.170", "@wix/auto_sdk_ecom_checkout-content": "1.0.39", "@wix/auto_sdk_ecom_checkout-settings": "1.0.75", "@wix/auto_sdk_ecom_checkout-templates": "1.0.152", "@wix/auto_sdk_ecom_contact-tax-details": "1.0.5", "@wix/auto_sdk_ecom_currencies": "1.0.37", "@wix/auto_sdk_ecom_current-cart": "1.0.186", "@wix/auto_sdk_ecom_current-cart-v-2": "1.0.197", "@wix/auto_sdk_ecom_custom-triggers": "1.0.42", "@wix/auto_sdk_ecom_delivery-profile": "1.0.443", "@wix/auto_sdk_ecom_delivery-solutions": "1.0.64", "@wix/auto_sdk_ecom_discount-rules": "1.0.117", "@wix/auto_sdk_ecom_discounts": "1.0.36", "@wix/auto_sdk_ecom_discounts-custom-trigger": "1.0.47", "@wix/auto_sdk_ecom_draft-orders": "1.0.173", "@wix/auto_sdk_ecom_draft-subscription-contracts": "1.0.12", "@wix/auto_sdk_ecom_ecommerce-settings": "1.0.35", "@wix/auto_sdk_ecom_gift-vouchers": "1.0.47", "@wix/auto_sdk_ecom_gift-vouchers-provider": "1.0.37", "@wix/auto_sdk_ecom_inventory": "1.0.26", "@wix/auto_sdk_ecom_local-delivery-options": "1.0.55", "@wix/auto_sdk_ecom_manual-tax-mappings": "1.0.45", "@wix/auto_sdk_ecom_memberships": "1.0.68", "@wix/auto_sdk_ecom_order-billing": "1.0.107", "@wix/auto_sdk_ecom_order-fulfillments": "1.0.64", "@wix/auto_sdk_ecom_order-invoices": "1.0.54", "@wix/auto_sdk_ecom_order-payment-requests": "1.0.69", "@wix/auto_sdk_ecom_order-transactions": "1.0.107", "@wix/auto_sdk_ecom_orders": "1.0.291", "@wix/auto_sdk_ecom_orders-settings": "1.0.57", "@wix/auto_sdk_ecom_payment-settings": "1.0.146", "@wix/auto_sdk_ecom_pickup-locations": "1.0.54", "@wix/auto_sdk_ecom_recommendations": "1.0.49", "@wix/auto_sdk_ecom_recommendations-provider": "1.0.35", "@wix/auto_sdk_ecom_shipping-options": "1.0.237", "@wix/auto_sdk_ecom_shipping-rates": "1.0.41", "@wix/auto_sdk_ecom_shippo-configurations": "1.0.73", "@wix/auto_sdk_ecom_subscription-contracts": "1.0.128", "@wix/auto_sdk_ecom_tax-calculation": "1.0.56", "@wix/auto_sdk_ecom_tax-calculation-provider": "1.0.33", "@wix/auto_sdk_ecom_tax-exempt-groups": "1.0.6", "@wix/auto_sdk_ecom_tax-groups": "1.0.66", "@wix/auto_sdk_ecom_tax-regions": "1.0.63", "@wix/auto_sdk_ecom_tax-settings": "1.0.4", "@wix/auto_sdk_ecom_tip-settings": "1.0.56", "@wix/auto_sdk_ecom_tippable-staff": "1.0.42", "@wix/auto_sdk_ecom_tips": "1.0.64", "@wix/auto_sdk_ecom_totals-calculator": "1.0.118", "@wix/auto_sdk_ecom_validations": "1.0.60", "@wix/auto_sdk_ecom_wishlists": "1.0.4", "@wix/ecom_app-extensions": "1.0.108", "@wix/headless-ecom": "0.0.41" } }, "sha512-zmXNnEdld8fws9xXqi77kJPdk3dJePNMzILia6yl382xmNJKL5M94wxSYosh8Cc83Jw3EK3qdlhJtng81qvJkA=="],
+
+    "@wix/ecom_app-extensions": ["@wix/ecom_app-extensions@1.0.108", "", { "dependencies": { "@wix/sdk-runtime": "^1.0.24", "@wix/sdk-types": "^1.17.11" } }, "sha512-sHk8kbImL3+FzNXFXt4311XV65eDkNXmj1wTDAi/cpArVrqXRvftPG9Zj5DfekTXkqMU889QosTpZdFjZE1K2A=="],
 
     "@wix/error-handler": ["@wix/error-handler@1.68.0", "", { "dependencies": { "@babel/runtime": "^7.28.4", "@wix/error-handler-core": "1.20.0", "events": "^3.3.0", "http-status-codes": "^2.3.0", "uuid": "^11.0.3" }, "peerDependencies": { "@wix/fe-essentials": "^1.233.0", "i18next": ">=19.9.2", "i18next-icu": ">=2.3.0", "intl-messageformat": ">=7.8.4" }, "optionalPeers": ["@wix/fe-essentials", "i18next", "i18next-icu", "intl-messageformat"] }, "sha512-DGP/C3Uv5cpGQX4OxDgXmSvDPJxQPjOkD3vpe+50kVm6CDd2UAvnvkMnvA/6SpvVJwowHeqBLC8DKqzBe5YuHA=="],
 
@@ -450,6 +568,8 @@
     "@wix/headless-bookings": ["@wix/headless-bookings@1.0.18", "", { "dependencies": { "@wix/auto_sdk_bookings_availability-time-slots": "^1.0.244", "@wix/auto_sdk_bookings_bookings": "^1.0.192", "@wix/auto_sdk_bookings_catalog-search": "^1.0.2", "@wix/auto_sdk_bookings_event-time-slots": "^1.0.112", "@wix/auto_sdk_bookings_pricing": "^1.0.87", "@wix/auto_sdk_bookings_services": "^1.0.265", "@wix/auto_sdk_ecom_cart-v-2": "^1.0.86", "@wix/forms": "^1.0.384", "@wix/headless-media": "0.0.25", "@wix/headless-utils": "0.0.12", "@wix/sdk-runtime": "^1.0.12", "@wix/sdk-types": "^1.17.7", "@wix/services-definitions": "^1.0.1", "@wix/services-manager-react": "^1.0.3", "date-fns": "^4.1.0" }, "peerDependencies": { "@wix/headless-components": "^0.0.0", "react": ">=16.3.0" } }, "sha512-XBWu8m6kFMZc4zkNms45nK3wT0a8nNOglc6+d7vr9/FdMVdB/Vlm9HAsGAbUKJQjBUte5t1wc86qudGV0yEDSw=="],
 
     "@wix/headless-components": ["@wix/headless-components@0.0.0", "", { "dependencies": { "@radix-ui/react-select": "^2.2.6", "@radix-ui/react-slider": "^1.3.6", "@radix-ui/react-toggle-group": "^1.1.11", "@wix/headless-utils": "0.0.0" } }, "sha512-Ny+mygXkuSPPRuLtvpA0cfau7oChp8uD5mrvuvQojkLNmTcuVKAJQg5gKDMBnPxq3rvvVqqewYDxHWNfTfK8YA=="],
+
+    "@wix/headless-ecom": ["@wix/headless-ecom@0.0.41", "", { "dependencies": { "@radix-ui/react-slot": "^1.1.0", "@wix/auto_sdk_ecom_checkout": "^1.0.61", "@wix/auto_sdk_ecom_current-cart": "^1.0.56", "@wix/headless-media": "0.0.21", "@wix/redirects": "^1.0.0", "@wix/sdk": "^1.15.24", "@wix/services-definitions": "^1.0.1", "@wix/services-manager-react": "^1.0.3" }, "peerDependencies": { "@wix/headless-components": "^0.0.0" } }, "sha512-YYZZtCLvY+2vcS0FxSJuuro8aWF8jnINHQRafxYwkZXQNvPMbewKpx1MF97/UiSaGyeSCJyZZoOTdSldEo7Vtw=="],
 
     "@wix/headless-forms": ["@wix/headless-forms@0.0.45", "", { "dependencies": { "@wix/form-public": "^0.145.0", "@wix/forms": "^1.0.399", "@wix/headless-utils": "0.0.12", "@wix/services-definitions": "^1.0.1", "@wix/services-manager-react": "^1.0.3", "react-aria-components": "^1.13.0" } }, "sha512-I/uXQlR6r7af7iWm5E4xXICXaUbqGmTziApXDlxlMeTOP+zqUyTFSXWcUL4uT683yRfcXH46jog4f8e2NVSHsg=="],
 
@@ -1113,19 +1233,11 @@
 
     "@wix/auto_sdk_bookings_add-ons/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_add-ons/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_attendance/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_attendance/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_attribute-definition/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_attribute-definition/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_attribute-value/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_attribute-value/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_availability-calendar/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
@@ -1135,29 +1247,17 @@
 
     "@wix/auto_sdk_bookings_booking-fees/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_booking-fees/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_booking-policies/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_booking-policies/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_booking-policy/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_booking-policy/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_booking-policy-snapshots/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_booking-policy-snapshots/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_bookings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/auto_sdk_bookings_bookings-provisioner/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_bookings-provisioner/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_bookings-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_bookings-settings/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_bookings-validation/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
@@ -1165,23 +1265,15 @@
 
     "@wix/auto_sdk_bookings_categories/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_categories/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_categories-v-2/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_categories-v-2/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_display-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_display-settings/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_event-time-slots/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/auto_sdk_bookings_extended-bookings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/auto_sdk_bookings_external-calendars/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_external-calendars/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_multi-service-availability-time-slots/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
@@ -1191,15 +1283,9 @@
 
     "@wix/auto_sdk_bookings_related-products/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_related-products/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_resource-types/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_resource-types/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_resources/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_resources/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_service-options-and-variants/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
@@ -1207,21 +1293,125 @@
 
     "@wix/auto_sdk_bookings_staff-member-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_staff-member-settings/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_staff-members/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
-
-    "@wix/auto_sdk_bookings_staff-members/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "@wix/auto_sdk_bookings_staff-sorting/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_staff-sorting/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
     "@wix/auto_sdk_bookings_time-slots-configuration/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
-    "@wix/auto_sdk_bookings_time-slots-configuration/zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
+    "@wix/auto_sdk_ecom_abandoned-checkouts/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_additional-fees/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_back-in-stock-notifications/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_back-in-stock-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_cart/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/auto_sdk_ecom_cart-v-2/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_catalog/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_checkout/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_checkout-content/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_checkout-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_checkout-templates/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_contact-tax-details/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_currencies/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_current-cart/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_current-cart-v-2/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_custom-triggers/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_delivery-profile/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_delivery-solutions/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_discount-rules/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_discounts/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_discounts-custom-trigger/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_draft-orders/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_draft-subscription-contracts/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_ecommerce-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_gift-vouchers/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_gift-vouchers-provider/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_inventory/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_local-delivery-options/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_manual-tax-mappings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_memberships/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_order-billing/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_order-fulfillments/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_order-invoices/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_order-payment-requests/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_order-transactions/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_orders/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_orders-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_payment-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_pickup-locations/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_recommendations/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_recommendations-provider/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_shipping-options/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_shipping-rates/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_shippo-configurations/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_subscription-contracts/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-calculation/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-calculation-provider/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-exempt-groups/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-groups/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-regions/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tax-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tip-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tippable-staff/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_tips/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_totals-calculator/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_validations/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
+    "@wix/auto_sdk_ecom_wishlists/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/auto_sdk_forms_chat-settings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
@@ -1267,6 +1457,8 @@
 
     "@wix/bookings_app-extensions/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
+    "@wix/ecom_app-extensions/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
+
     "@wix/essentials/@wix/sdk-runtime": ["@wix/sdk-runtime@0.3.62", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "^1.13.41" } }, "sha512-5imt9mSEaceX365iLGzMJ7jS4qr4lJj+2DZox86Ge8P7V9IeuPYLsQ+0PN9wN6XgMfjNLHt4G6hJUIi3bdglGA=="],
 
     "@wix/essentials/i18next": ["i18next@25.10.10", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-cqUW2Z3EkRx7NqSyywjkgCLK7KLCL6IFVFcONG7nVYIJ3ekZ1/N5jUsihHV6Bq37NfhgtczxJcxduELtjTwkuQ=="],
@@ -1274,6 +1466,8 @@
     "@wix/headless-bookings/@wix/sdk-runtime": ["@wix/sdk-runtime@1.0.24", "", { "dependencies": { "@wix/sdk-context": "0.0.1", "@wix/sdk-types": "1.17.11" } }, "sha512-1R0CC+vYX/pSVPqyDnKmsTxkZisrq8DeidYQxxnRyYk5EfxNlLRNjX1auE/Lj+Mhs6qQPY/doayUhtCBaOkL+Q=="],
 
     "@wix/headless-components/@wix/headless-utils": ["@wix/headless-utils@0.0.0", "", { "dependencies": { "@radix-ui/react-slot": "^1.2.3" }, "peerDependencies": { "react": ">=16.3.0" } }, "sha512-Pz4UZfMRCTfHf/nRmJ20vVVVPzjcz6VuiRpTzBgsjML9fI/ulviR6oV0ZAReMiyflptqGGl0PU/pTrj/fnhcow=="],
+
+    "@wix/headless-ecom/@wix/headless-media": ["@wix/headless-media@0.0.21", "", { "dependencies": { "@wix/sdk": "^1.17.1", "@wix/services-definitions": "^1.0.1", "@wix/services-manager-react": "^1.0.3" } }, "sha512-7o9ctPfQsQwfLwLCjs4RDO9Ns900Hv+BNVc301tShulKeitxgMKTrFqUxCsCuSQqqgQYaOhm5hDB+994LtBozg=="],
 
     "body-parser/content-type": ["content-type@2.1.0", "", {}, "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag=="],
 

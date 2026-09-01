@@ -10,7 +10,9 @@
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@tanstack/react-query": "^5.102.8",
-    "@wix/bookings": "^1.0.1671",
+    "@wix/bookings": "^1.0.1672",
+    "@wix/ecom": "^1.0.2472",
+    "@wix/redirects": "^1.0.125",
     "@wix/sdk": "^1.21.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
