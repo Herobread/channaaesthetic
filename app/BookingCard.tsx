@@ -39,7 +39,7 @@ export default function BookingCard({
       <div className="space-y-2">
         <label
           htmlFor="clinic-select"
-          className="text-xs font-semibold uppercase tracking-wider text-[#8C827A] block"
+          className="text-xs font-semibold tracking-wider text-[#8C827A] block"
         >
           Clinic Location
         </label>
