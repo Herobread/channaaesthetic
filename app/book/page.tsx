@@ -1,19 +1,17 @@
 "use client";
 
-import Navbar from "@/components/ui/NavBar";
-import heroBg from "@/public/DP4-Treatment.jpg";
+import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import {
+  CheckCircle2,
   ChevronRight,
   Clock,
   MapPin,
   Minus,
   Plus,
   Search,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 interface Treatment {
@@ -180,37 +178,34 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <Navbar />
+      <NavBarLogoOnly />
 
       {/* Atmospheric Hero */}
-      <section className="relative text-white pt-28 pb-16 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={heroBg}
-            alt="Clinical Precision"
-            fill
-            priority
-            quality={90}
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1C1917]/85 via-[#1C1917]/90 to-[#FAFAF8]" />
-        </div>
-
-        <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] uppercase tracking-widest text-[#DFC095] font-medium border border-white/10">
-            <Sparkles className="w-3 h-3" /> Doctor-Led Treatment Menu
+      <header className="pt-24 pb-4 max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
+              Select Your Treatments
+            </h1>
+            <p className="text-xs sm:text-sm text-[#666666] font-light">
+              Consultation included • Combine treatments for tailored
+              rejuvenation
+            </p>
           </div>
 
-          <h1 className="font-serif text-4xl sm:text-6xl font-normal tracking-tight">
-            Select Your Treatments
-          </h1>
-
-          <p className="text-sm sm:text-base text-white/80 font-light max-w-md mx-auto">
-            Choose single procedures or stack multiple treatments for your
-            bespoke appointment.
-          </p>
+          <div className="flex items-center gap-3 text-xs text-[#78716C]">
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#B8925D]" /> GMC
+              Registered
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#B8925D]" /> Zero
+              Obligation
+            </span>
+          </div>
         </div>
-      </section>
+      </header>
 
       {/* Main Feed */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 pb-36 space-y-6">
