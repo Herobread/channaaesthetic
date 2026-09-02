@@ -1,7 +1,6 @@
 "use client";
 
 import { wixClient } from "@/lib/wixClient";
-import { checkout } from "@wix/ecom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface FormattedSlot {
@@ -15,6 +14,7 @@ export interface FormattedSlot {
   locationName: string;
   locationId?: string;
   rawSlot: any;
+  rawEntry: any;
 }
 
 interface UseAvailabilityOptions {
@@ -22,7 +22,6 @@ interface UseAvailabilityOptions {
   startDate?: Date;
   endDate?: Date;
   locationId?: string;
-  resourceId?: string;
 }
 
 export function useAvailability({
@@ -30,33 +29,30 @@ export function useAvailability({
   startDate,
   endDate,
   locationId,
-  resourceId,
 }: UseAvailabilityOptions) {
-  const [rawSlots, setRawSlots] = useState<any[]>([]);
+  const [rawEntries, setRawEntries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Stabilize array reference with a string key
   const serviceIdsKey = serviceIds.filter(Boolean).sort().join(",");
 
-  // 2. Stabilize ISO date strings so they don't regenerate every render
   const startIso = useMemo(() => {
     return (startDate || new Date()).toISOString();
-  }, [startDate?.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [startDate?.getTime()]);
 
   const endIso = useMemo(() => {
     if (endDate) return endDate.toISOString();
     const d = new Date();
     d.setDate(d.getDate() + 14);
     return d.toISOString();
-  }, [endDate?.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [endDate?.getTime()]);
 
-  // 3. Fetch availability using primitive string dependencies
+  // 1. Query availability entries
   const fetchAvailability = useCallback(async () => {
     const ids = serviceIdsKey ? serviceIdsKey.split(",") : [];
     if (!ids.length) {
-      setRawSlots([]);
+      setRawEntries([]);
       setIsLoading(false);
       return;
     }
@@ -70,27 +66,25 @@ export function useAvailability({
           serviceId: ids,
           startDate: startIso,
           endDate: endIso,
-          ...(locationId ? { locationId: [locationId] } : {}),
-          ...(resourceId ? { resourceId: [resourceId] } : {}),
         },
       });
 
-      setRawSlots(response.availabilityEntries || []);
+      setRawEntries(response.availabilityEntries || []);
     } catch (err: any) {
       console.error("Failed to fetch Wix availability:", err);
       setError(err?.message || "Failed to load slots");
     } finally {
       setIsLoading(false);
     }
-  }, [serviceIdsKey, startIso, endIso, locationId, resourceId]);
+  }, [serviceIdsKey, startIso, endIso]);
 
   useEffect(() => {
     fetchAvailability();
   }, [fetchAvailability]);
 
-  // 4. Format and organize slots
+  // 2. Format slots for the UI
   const formattedSlots = useMemo<FormattedSlot[]>(() => {
-    return rawSlots
+    return rawEntries
       .filter((entry) => entry.bookable)
       .map((entry) => {
         const slot = entry.slot;
@@ -114,21 +108,12 @@ export function useAvailability({
           locationName: slot.location?.name || "Clinic",
           locationId: slot.location?._id,
           rawSlot: slot,
+          rawEntry: entry,
         };
       });
-  }, [rawSlots]);
+  }, [rawEntries]);
 
-  // 5. Group slots by date string: { "2026-09-01": [Slot, Slot] }
-  const slotsByDate = useMemo(() => {
-    const map: Record<string, FormattedSlot[]> = {};
-    for (const slot of formattedSlots) {
-      if (!map[slot.dateKey]) map[slot.dateKey] = [];
-      map[slot.dateKey].push(slot);
-    }
-    return map;
-  }, [formattedSlots]);
-
-  // 6. Extract unique locations
+  // 3. Extract clinic locations
   const availableLocations = useMemo(() => {
     const locs = new Map<string, string>();
     formattedSlots.forEach((s) => {
@@ -137,49 +122,100 @@ export function useAvailability({
     return Array.from(locs.entries()).map(([id, name]) => ({ id, name }));
   }, [formattedSlots]);
 
-  // 7. Checkout redirect handler
-  const bookAndCheckout = useCallback(
-    async (slot: FormattedSlot, returnPath: string = "/booking-success") => {
-      try {
-        setIsRedirecting(true);
+  // 4. Group by date with client-side location filter
+  const slotsByDate = useMemo(() => {
+    const map: Record<string, FormattedSlot[]> = {};
 
-        const bookingCheckout = await wixClient.checkout.createCheckout({
-          channelType: checkout.ChannelType.WEB,
-          lineItems: [
-            {
-              catalogReference: {
-                appId: "13d21c63-b5ec-4e68-bc25-24f333333333",
-                catalogItemId: slot.rawSlot.serviceId,
-                options: {
-                  slot: slot.rawSlot,
-                },
-              },
-              quantity: 1,
-            },
-          ],
+    for (const slot of formattedSlots) {
+      if (locationId && slot.locationId !== locationId) continue;
+      if (!map[slot.dateKey]) map[slot.dateKey] = [];
+      map[slot.dateKey].push(slot);
+    }
+
+    return map;
+  }, [formattedSlots, locationId]);
+
+  // 5. Official Wix Headless Redirect
+  async function bookAndCheckout(
+    slot: FormattedSlot,
+    returnPath: string = "/booking-success",
+  ) {
+    try {
+      setIsRedirecting(true);
+      const raw = slot.rawSlot;
+
+      // 1. Build the exact slot payload the Wix backend demands
+      const slotPayload: any = {
+        serviceId: raw.serviceId,
+        scheduleId: raw.scheduleId,
+        startDate: raw.startDate,
+        endDate: raw.endDate,
+        timezone:
+          raw.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+
+      if (raw.resource) {
+        slotPayload.resource = { id: raw.resource._id || raw.resource.id };
+      }
+      if (raw.location) {
+        slotPayload.location = {
+          id: raw.location._id || raw.location.id,
+          locationType: raw.location.locationType || "OWNER_BUSINESS",
+        };
+      }
+
+      // 2. Create the booking and EXPLICITLY demand an online payment session
+      const bookingRes = await wixClient.bookings.createBooking({
+        bookedEntity: { slot: slotPayload },
+        // Hardcoded for immediate testing - you can connect your form state here later
+        contactDetails: {
+          firstName: "Jane",
+          lastName: "Doe",
+          email: "jane.doe@example.com",
+          phone: "+447123456789",
+        },
+        selectedPaymentOption: "ONLINE", // <-- THE MAGIC KEY
+        numberOfParticipants: 1,
+      } as any);
+
+      console.log("Raw Wix Booking:", bookingRes.booking);
+
+      // 3. Extract the generated Checkout ID
+      const checkoutId =
+        (bookingRes.booking as any)?.paymentDetails?.checkoutId ||
+        (bookingRes.booking as any)?.checkoutId;
+
+      if (!checkoutId) {
+        console.error(
+          "Missing Checkout ID. Full response:",
+          bookingRes.booking,
+        );
+        throw new Error(
+          "Booking created, but Wix didn't return a checkout session.",
+        );
+      }
+
+      // 4. Redirect straight to the Wix eCom Payment Gateway (Bypasses the buggy form)
+      const { redirectSession } =
+        await wixClient.redirects.createRedirectSession({
+          callbacks: {
+            postFlowUrl: `${window.location.origin}${returnPath}`,
+          },
+          ecomCheckout: { checkoutId },
         });
 
-        const { redirectSession } =
-          await wixClient.redirects.createRedirectSession({
-            ecomCheckout: { checkoutId: bookingCheckout._id! },
-            callbacks: {
-              postFlowUrl: `${window.location.origin}${returnPath}`,
-            },
-          });
-
-        if (redirectSession?.fullUrl) {
-          window.location.href = redirectSession.fullUrl;
-        } else {
-          throw new Error("Failed to generate checkout session URL");
-        }
-      } catch (err: any) {
-        console.error("Booking error:", err);
-        setIsRedirecting(false);
-        throw err;
+      if (redirectSession?.fullUrl) {
+        window.location.href = redirectSession.fullUrl;
+        return;
       }
-    },
-    [],
-  );
+
+      throw new Error("No payment redirect URL returned.");
+    } catch (err: any) {
+      console.error("Direct booking error:", err);
+      setIsRedirecting(false);
+      throw err;
+    }
+  }
 
   return {
     slots: formattedSlots,

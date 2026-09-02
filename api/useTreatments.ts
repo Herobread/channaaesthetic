@@ -1,5 +1,5 @@
 import { wixClient } from "@/lib/wixClient";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { media } from "@wix/sdk";
 
 export interface ClinicLocation {
@@ -24,18 +24,15 @@ export interface MappedTreatment {
   featured?: boolean;
 }
 
-// Helper to convert Wix media URI to public static CDN URL
 function parseWixImageUrl(rawUri?: string): string | undefined {
   if (!rawUri) return undefined;
   if (rawUri.startsWith("http://") || rawUri.startsWith("https://")) {
     return rawUri;
   }
   try {
-    // Generates a proper https://static.wixstatic.com/media/... URL
     const resolved = media.getImageUrl(rawUri);
     return resolved.url;
   } catch {
-    // Regex fallback if SDK helper fails
     const match = rawUri.match(/v1\/([^/~#]+)/);
     if (match && match[1]) {
       return `https://static.wixstatic.com/media/${match[1]}`;
@@ -44,10 +41,28 @@ function parseWixImageUrl(rawUri?: string): string | undefined {
   }
 }
 
-export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
-  const { items = [] } = await wixClient.services.queryServices().find();
+const PAGE_SIZE = 50;
 
-  return items
+export async function fetchWixTreatmentsPage({
+  pageParam = 0,
+}: {
+  pageParam?: number;
+}): Promise<{
+  items: MappedTreatment[];
+  nextCursor?: number;
+  totalCount: number;
+}> {
+  const result = await wixClient.services
+    .queryServices()
+    .skip(pageParam)
+    .limit(PAGE_SIZE)
+    .find();
+
+  const totalCount =
+    (result as any).totalCount || (result as any)._totalCount || 0;
+  const rawItems = result.items || [];
+
+  const mappedItems: MappedTreatment[] = rawItems
     .filter((s: any) => !s.hidden && s.onlineBooking?.enabled !== false)
     .map((service: any) => {
       const priceVal = service.payment?.fixed?.price?.value || "0";
@@ -55,7 +70,6 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
       const priceNum = parseFloat(priceVal) || 0;
       const isFree = priceNum === 0;
 
-      // Extract raw image URI from media payload
       const rawImageUri =
         service.media?.mainMedia?.image ||
         service.media?.items?.[0]?.image ||
@@ -65,7 +79,7 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
 
       const rawLocations = service.locations || [];
       const locations: ClinicLocation[] = rawLocations.map((loc: any) => {
-        const id = loc._id || loc.business?._id || "";
+        const id = loc._id || loc.business?._id || loc.locationId || "";
         const city =
           loc.calculatedAddress?.city || loc.business?.address?.city || "";
         const street = loc.calculatedAddress?.streetAddress?.name
@@ -89,7 +103,9 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
         title: service.name || "Untitled Treatment",
         desc: service.description || "Bespoke clinical treatment.",
         category: service.category?.name || "Other",
-        time: "45 min",
+        time: service.schedule?.duration
+          ? `${service.schedule.duration} min`
+          : "45 min",
         price: isFree ? "Free" : `£${priceNum}`,
         priceNum,
         deposit: depositVal ? `£${depositVal}` : undefined,
@@ -99,22 +115,40 @@ export async function fetchWixTreatments(): Promise<MappedTreatment[]> {
         featured: isFree,
       };
     });
+
+  const nextSkip = pageParam + rawItems.length;
+  const hasMore =
+    rawItems.length === PAGE_SIZE && (!totalCount || nextSkip < totalCount);
+
+  return {
+    items: mappedItems,
+    nextCursor: hasMore ? nextSkip : undefined,
+    totalCount,
+  };
 }
 
-export const treatmentsQueryOptions = () =>
-  queryOptions({
-    queryKey: ["treatments"],
-    queryFn: fetchWixTreatments,
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
+export const treatmentsInfiniteQueryOptions = () =>
+  infiniteQueryOptions({
+    queryKey: ["treatments-infinite"],
+    queryFn: ({ pageParam }) =>
+      fetchWixTreatmentsPage({ pageParam: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 1000 * 60 * 5,
   });
 
-export function useTreatments() {
-  return useQuery(treatmentsQueryOptions());
+export function useInfiniteTreatments() {
+  const query = useInfiniteQuery(treatmentsInfiniteQueryOptions());
+  const treatments = query.data?.pages.flatMap((page) => page.items) || [];
+
+  return {
+    ...query,
+    treatments,
+  };
 }
 
 export function useLocations() {
-  const { data: treatments = [], ...rest } = useTreatments();
+  const { treatments, ...rest } = useInfiniteTreatments();
 
   const locations = treatments.reduce<ClinicLocation[]>((acc, treatment) => {
     treatment.locations.forEach((loc) => {

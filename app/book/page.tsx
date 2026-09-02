@@ -1,43 +1,69 @@
 "use client";
 
-import { useLocations, useTreatments } from "@/api/useTreatments";
+import { useInfiniteTreatments, useLocations } from "@/api/useTreatments";
 import CheckoutBar from "@/components/booking/CheckoutBar";
 import SearchCategoryDock from "@/components/booking/SearchCategoryDock";
 import TreatmentCard from "@/components/booking/TreatmentCard";
 import LocationPicker from "@/components/shared/LocationPicker";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
+import { useAppStore } from "@/store/useAppStore";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function BookingPage() {
   const {
-    data: treatments = [],
+    treatments = [],
     isLoading,
     isError,
     error,
     refetch,
-  } = useTreatments();
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteTreatments();
+
   const { locations } = useLocations();
-  const {
-    cart,
-    handleIncrement,
-    handleDecrement,
-    clearCart,
-    totalQuantity,
-    totalPrice,
-  } = useCart();
+  const { cart, handleIncrement, handleDecrement, totalQuantity, totalPrice } =
+    useCart();
+
+  // Use global location store so it syncs across the app
+  const selectedLocationId = useAppStore((state) => state.selectedLocationId);
+  const setSelectedLocationId = useAppStore(
+    (state) => state.setSelectedLocationId,
+  );
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocationId, setSelectedLocationId] = useState<string>("");
 
+  // Sentinel ref for infinite scroll triggering
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // Set default location if none selected
   useEffect(() => {
     if (!selectedLocationId && locations.length > 0) {
       setSelectedLocationId(locations[0].id);
     }
-  }, [locations, selectedLocationId]);
+  }, [locations, selectedLocationId, setSelectedLocationId]);
 
+  // Infinite scroll trigger
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "250px" },
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Deduplicated Categories
   const categories = useMemo(() => {
     const cats = Array.from(
       new Set(treatments.map((t) => t.category).filter(Boolean)),
@@ -45,13 +71,19 @@ export default function BookingPage() {
     return ["All", ...cats];
   }, [treatments]);
 
+  // Filter treatments by Category, Search Query, and Location
   const filteredTreatments = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
     return treatments.filter((item) => {
       const matchesCategory =
         activeCategory === "All" || item.category === activeCategory;
+
       const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.desc.toLowerCase().includes(searchQuery.toLowerCase());
+        !query ||
+        item.title.toLowerCase().includes(query) ||
+        item.desc.toLowerCase().includes(query);
+
       const matchesLocation =
         !selectedLocationId ||
         item.locationIds.length === 0 ||
@@ -73,7 +105,7 @@ export default function BookingPage() {
               Select Your Treatments
             </h1>
             <p className="text-xs sm:text-sm text-[#666666] font-light">
-              Doctor-led clinical appointments • Stack multiple procedures as
+              Doctor-led clinical appointments • Add multiple procedures as
               needed
             </p>
           </div>
@@ -114,7 +146,7 @@ export default function BookingPage() {
             </p>
             <button
               onClick={() => refetch()}
-              className="mt-2 text-xs font-medium text-[#B8925D] hover:underline"
+              className="mt-2 text-xs font-medium text-[#B8925D] hover:underline cursor-pointer"
             >
               Try again
             </button>
@@ -132,21 +164,36 @@ export default function BookingPage() {
         )}
 
         {!isLoading && !isError && filteredTreatments.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {filteredTreatments.map((treatment) => {
-              const cartItem = cart.find(
-                (i) => i.treatment.id === treatment.id,
-              );
-              return (
-                <TreatmentCard
-                  key={treatment.id}
-                  treatment={treatment}
-                  quantity={cartItem?.quantity || 0}
-                  onIncrement={handleIncrement}
-                  onDecrement={handleDecrement}
-                />
-              );
-            })}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {filteredTreatments.map((treatment) => {
+                const cartItem = cart.find(
+                  (i) => i.treatment.id === treatment.id,
+                );
+                return (
+                  <TreatmentCard
+                    key={treatment.id}
+                    treatment={treatment}
+                    quantity={cartItem?.quantity || 0}
+                    onIncrement={handleIncrement}
+                    onDecrement={handleDecrement}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Infinite Scroll Trigger */}
+            <div
+              ref={loadMoreRef}
+              className="py-6 flex justify-center items-center"
+            >
+              {isFetchingNextPage && (
+                <div className="flex items-center gap-2 text-xs text-[#8C827A]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#B8925D]" />
+                  <span>Loading more treatments...</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -157,13 +204,6 @@ export default function BookingPage() {
         totalPrice={totalPrice}
         onIncrement={handleIncrement}
         onDecrement={handleDecrement}
-        onCheckout={() =>
-          alert(
-            `Proceeding to calendar for: ${cart
-              .map((c) => `${c.quantity}x ${c.treatment.title}`)
-              .join(", ")}`,
-          )
-        }
       />
     </div>
   );
