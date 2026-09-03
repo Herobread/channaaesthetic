@@ -1,6 +1,7 @@
-import { wixClient } from "@/lib/wixClient";
+import { sanityClient } from "@/sanity/lib/sanityClient";
+import { createImageUrlBuilder } from "@sanity/image-url";
 import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
-import { media } from "@wix/sdk";
+import { useMemo } from "react";
 
 export interface ClinicLocation {
   id: string;
@@ -24,26 +25,16 @@ export interface MappedTreatment {
   featured?: boolean;
 }
 
-function parseWixImageUrl(rawUri?: string): string | undefined {
-  if (!rawUri) return undefined;
-  if (rawUri.startsWith("http://") || rawUri.startsWith("https://")) {
-    return rawUri;
-  }
-  try {
-    const resolved = media.getImageUrl(rawUri);
-    return resolved.url;
-  } catch {
-    const match = rawUri.match(/v1\/([^/~#]+)/);
-    if (match && match[1]) {
-      return `https://static.wixstatic.com/media/${match[1]}`;
-    }
-    return undefined;
-  }
+const imageBuilder = createImageUrlBuilder(sanityClient);
+
+function urlFor(source: any): string | undefined {
+  if (!source?.asset) return undefined;
+  return imageBuilder.image(source).auto("format").fit("max").url();
 }
 
 const PAGE_SIZE = 50;
 
-export async function fetchWixTreatmentsPage({
+export async function fetchTreatmentsPage({
   pageParam = 0,
 }: {
   pageParam?: number;
@@ -52,73 +43,64 @@ export async function fetchWixTreatmentsPage({
   nextCursor?: number;
   totalCount: number;
 }> {
-  const result = await wixClient.services
-    .queryServices()
-    .skip(pageParam)
-    .limit(PAGE_SIZE)
-    .find();
+  const start = pageParam;
+  const end = pageParam + PAGE_SIZE;
 
-  const totalCount =
-    (result as any).totalCount || (result as any)._totalCount || 0;
-  const rawItems = result.items || [];
+  const query = `{
+    "totalCount": count(*[_type == "treatment"]),
+    "rawItems": *[_type == "treatment"] | order(_createdAt desc) [${start}...${end}] {
+      _id,
+      title,
+      category,
+      desc,
+      durationMinutes,
+      priceNum,
+      deposit,
+      featured,
+      image,
+      "locations": locations[]-> {
+        _id,
+        name,
+        city,
+        address
+      }
+    }
+  }`;
 
-  const mappedItems: MappedTreatment[] = rawItems
-    .filter((s: any) => !s.hidden && s.onlineBooking?.enabled !== false)
-    .map((service: any) => {
-      const priceVal = service.payment?.fixed?.price?.value || "0";
-      const depositVal = service.payment?.fixed?.deposit?.value;
-      const priceNum = parseFloat(priceVal) || 0;
-      const isFree = priceNum === 0;
+  const { totalCount, rawItems } = await sanityClient.fetch(query);
 
-      const rawImageUri =
-        service.media?.mainMedia?.image ||
-        service.media?.items?.[0]?.image ||
-        undefined;
+  const mappedItems: MappedTreatment[] = (rawItems || []).map((item: any) => {
+    const priceNum = item.priceNum ?? 0;
+    const isFree = priceNum === 0;
 
-      const imageUrl = parseWixImageUrl(rawImageUri);
+    // Filter out nulls just in case a location reference was deleted in Sanity
+    const locations: ClinicLocation[] = (item.locations || [])
+      .filter(Boolean)
+      .map((loc: any) => ({
+        id: loc._id || "",
+        name: loc.name || "Clinic",
+        city: loc.city || "",
+        address: loc.address || "",
+      }));
 
-      const rawLocations = service.locations || [];
-      const locations: ClinicLocation[] = rawLocations.map((loc: any) => {
-        const id = loc._id || loc.business?._id || loc.locationId || "";
-        const city =
-          loc.calculatedAddress?.city || loc.business?.address?.city || "";
-        const street = loc.calculatedAddress?.streetAddress?.name
-          ? `${loc.calculatedAddress.streetAddress.number || ""} ${loc.calculatedAddress.streetAddress.name}`.trim()
-          : loc.calculatedAddress?.formatted || "";
+    return {
+      id: item._id,
+      title: item.title || "Untitled Treatment",
+      desc: item.desc || "Bespoke clinical treatment.",
+      category: item.category || "Other",
+      time: item.durationMinutes ? `${item.durationMinutes} min` : "45 min",
+      price: isFree ? "Free" : `£${priceNum}`,
+      priceNum,
+      deposit: item.deposit ? `£${item.deposit}` : undefined,
+      imageUrl: urlFor(item.image),
+      locationIds: locations.map((l) => l.id),
+      locations,
+      featured: item.featured ?? isFree,
+    };
+  });
 
-        const businessName = loc.business?.name || "Clinic";
-        const displayName =
-          city && street ? `${city} (${street})` : businessName;
-
-        return {
-          id,
-          name: displayName,
-          city: city || businessName,
-          address: loc.calculatedAddress?.formatted || "",
-        };
-      });
-
-      return {
-        id: service._id || "",
-        title: service.name || "Untitled Treatment",
-        desc: service.description || "Bespoke clinical treatment.",
-        category: service.category?.name || "Other",
-        time: service.schedule?.duration
-          ? `${service.schedule.duration} min`
-          : "45 min",
-        price: isFree ? "Free" : `£${priceNum}`,
-        priceNum,
-        deposit: depositVal ? `£${depositVal}` : undefined,
-        imageUrl,
-        locationIds: locations.map((l) => l.id),
-        locations,
-        featured: isFree,
-      };
-    });
-
-  const nextSkip = pageParam + rawItems.length;
-  const hasMore =
-    rawItems.length === PAGE_SIZE && (!totalCount || nextSkip < totalCount);
+  const nextSkip = pageParam + mappedItems.length;
+  const hasMore = mappedItems.length === PAGE_SIZE && nextSkip < totalCount;
 
   return {
     items: mappedItems,
@@ -131,7 +113,7 @@ export const treatmentsInfiniteQueryOptions = () =>
   infiniteQueryOptions({
     queryKey: ["treatments-infinite"],
     queryFn: ({ pageParam }) =>
-      fetchWixTreatmentsPage({ pageParam: pageParam as number }),
+      fetchTreatmentsPage({ pageParam: pageParam as number }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 5,
@@ -150,14 +132,16 @@ export function useInfiniteTreatments() {
 export function useLocations() {
   const { treatments, ...rest } = useInfiniteTreatments();
 
-  const locations = treatments.reduce<ClinicLocation[]>((acc, treatment) => {
-    treatment.locations.forEach((loc) => {
-      if (loc.id && !acc.some((existing) => existing.id === loc.id)) {
-        acc.push(loc);
-      }
-    });
-    return acc;
-  }, []);
+  const locations = useMemo(() => {
+    return treatments.reduce<ClinicLocation[]>((acc, treatment) => {
+      treatment.locations.forEach((loc) => {
+        if (loc.id && !acc.some((existing) => existing.id === loc.id)) {
+          acc.push(loc);
+        }
+      });
+      return acc;
+    }, []);
+  }, [treatments]);
 
   return {
     locations,

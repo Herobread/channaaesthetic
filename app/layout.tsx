@@ -26,6 +26,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // migrate();
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="font-sans bg-[#FAF8F5] text-[#1C1917] antialiased">

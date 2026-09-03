@@ -27,7 +27,6 @@ export default function BookingPage() {
   const { cart, handleIncrement, handleDecrement, totalQuantity, totalPrice } =
     useCart();
 
-  // Use global location store so it syncs across the app
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const setSelectedLocationId = useAppStore(
     (state) => state.setSelectedLocationId,
@@ -35,18 +34,25 @@ export default function BookingPage() {
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Sentinel ref for infinite scroll triggering
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Set default location if none selected
+  // FIX: Guard against unnecessary updates
   useEffect(() => {
-    if (!selectedLocationId && locations.length > 0) {
+    if (locations.length === 0) return;
+
+    const isValid = locations.some((loc) => loc.id === selectedLocationId);
+
+    // Only update if current ID is null or genuinely invalid,
+    // AND make sure we don't re-set to the exact same value
+    if (
+      !isValid &&
+      locations[0]?.id &&
+      selectedLocationId !== locations[0].id
+    ) {
       setSelectedLocationId(locations[0].id);
     }
   }, [locations, selectedLocationId, setSelectedLocationId]);
 
-  // Infinite scroll trigger
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
 
@@ -63,7 +69,6 @@ export default function BookingPage() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Deduplicated Categories
   const categories = useMemo(() => {
     const cats = Array.from(
       new Set(treatments.map((t) => t.category).filter(Boolean)),
@@ -71,7 +76,6 @@ export default function BookingPage() {
     return ["All", ...cats];
   }, [treatments]);
 
-  // Filter treatments by Category, Search Query, and Location
   const filteredTreatments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -97,7 +101,6 @@ export default function BookingPage() {
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
       <NavBarLogoOnly theme="dark" />
 
-      {/* Header */}
       <header className="pt-24 max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
           <div>
@@ -112,7 +115,6 @@ export default function BookingPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-36 space-y-4">
         <LocationPicker />
 
@@ -139,7 +141,7 @@ export default function BookingPage() {
               <AlertCircle className="w-5 h-5" />
             </div>
             <p className="text-sm font-medium text-[#1A1A1A]">
-              Failed to load treatments from Wix
+              Failed to load treatments
             </p>
             <p className="text-xs text-[#666666] max-w-sm mx-auto">
               {(error as Error)?.message || "An unexpected error occurred."}
@@ -182,7 +184,6 @@ export default function BookingPage() {
               })}
             </div>
 
-            {/* Infinite Scroll Trigger */}
             <div
               ref={loadMoreRef}
               className="py-6 flex justify-center items-center"

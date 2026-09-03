@@ -5,8 +5,12 @@ import { Select } from "@base-ui-components/react/select";
 import { Check, ChevronDown, MapPin } from "lucide-react";
 
 export default function LocationPicker() {
-  const { locations, isLoading, selectedLocationId, setLocationId } =
-    useClinicLocations();
+  const {
+    locations = [],
+    isLoading,
+    selectedLocationId,
+    setLocationId,
+  } = useClinicLocations();
 
   if (isLoading) {
     return (
@@ -23,13 +27,20 @@ export default function LocationPicker() {
     );
   }
 
-  if (locations.length === 0) return null;
+  if (!locations || locations.length === 0) return null;
+
+  // Find active location or fallback safely to first location without triggering effects
+  const activeLocation =
+    locations.find((l) => l.id === selectedLocationId) || locations[0];
 
   return (
     <Select.Root
-      value={selectedLocationId || ""}
+      value={activeLocation?.id || ""}
       onValueChange={(val) => {
-        if (val) setLocationId(val);
+        // Prevent triggering store re-renders if value is empty or already selected
+        if (val && val !== selectedLocationId) {
+          setLocationId(val);
+        }
       }}
     >
       {/* 1. Full-Width Trigger */}
@@ -40,19 +51,14 @@ export default function LocationPicker() {
           </div>
 
           <Select.Value>
-            {(value) => {
-              const current = locations.find((l) => l.id === value);
-              return (
-                <div className="text-left min-w-0">
-                  <p className="text-sm font-semibold text-[#1A1A1A] truncate leading-tight">
-                    {current?.name || "Select Clinic Location"}
-                  </p>
-                  <p className="text-xs text-[#8C827A] font-normal tracking-wide mt-0.5">
-                    {current?.city || "Tap to switch location"}
-                  </p>
-                </div>
-              );
-            }}
+            <div className="text-left min-w-0">
+              <p className="text-sm font-semibold text-[#1A1A1A] truncate leading-tight">
+                {activeLocation?.name || "Select Clinic Location"}
+              </p>
+              <p className="text-xs text-[#8C827A] font-normal tracking-wide mt-0.5">
+                {activeLocation?.city || "Tap to switch location"}
+              </p>
+            </div>
           </Select.Value>
         </div>
 

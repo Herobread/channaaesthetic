@@ -2,24 +2,26 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface AppState {
-  // Generic location state
   selectedLocationId: string | null;
-  setLocationId: (id: string) => void;
-
-  // Future proofing: You can easily add cart or user state here later
-  // cart: SelectedItem[];
-  // clearCart: () => void;
+  setSelectedLocationId: (id: string | null) => void;
+  // Keep setLocationId as an alias for backwards compatibility
+  setLocationId: (id: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       selectedLocationId: null,
+      setSelectedLocationId: (id) => set({ selectedLocationId: id }),
       setLocationId: (id) => set({ selectedLocationId: id }),
     }),
     {
-      name: "channa-app-storage", // The key used in localStorage
-      // Only save specific fields to local storage so we don't cache stale data
+      name: "channa-app-storage",
+      version: 2, // Incremented version to purge stale Wix IDs
+      migrate: () => {
+        // Reset cached location on version bump
+        return { selectedLocationId: null };
+      },
       partialize: (state) => ({ selectedLocationId: state.selectedLocationId }),
     },
   ),

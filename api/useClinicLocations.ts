@@ -1,6 +1,6 @@
 "use client";
 
-import { wixClient } from "@/lib/wixClient";
+import { sanityClient } from "@/sanity/lib/sanityClient";
 import { useAppStore } from "@/store/useAppStore";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -9,53 +9,32 @@ export interface ClinicLocation {
   id: string;
   name: string;
   city: string;
+  address?: string;
 }
 
 async function fetchClinicLocations(): Promise<ClinicLocation[]> {
-  // 1. Get an active service to check availability against
-  const servicesRes = await wixClient.services.queryServices().find();
-  if (!servicesRes.items.length) return [];
+  const query = `*[_type == "clinicLocation"] | order(name asc) {
+    "_id": _id,
+    "name": name,
+    "city": city,
+    "address": address
+  }`;
 
-  const activeServiceId = servicesRes.items[0]._id!;
+  const rawLocations = await sanityClient.fetch(query);
 
-  // 2. Query 30 days of slots to extract all available clinic locations
-  const now = new Date();
-  const nextMonth = new Date();
-  nextMonth.setDate(now.getDate() + 30);
-
-  const availabilityRes =
-    await wixClient.availabilityCalendar.queryAvailability({
-      filter: {
-        serviceId: [activeServiceId],
-        startDate: now.toISOString(),
-        endDate: nextMonth.toISOString(),
-      },
-    });
-
-  // 3. Extract unique locations from slot entries
-  const locMap = new Map<string, ClinicLocation>();
-
-  availabilityRes.availabilityEntries?.forEach((entry: any) => {
-    const loc = entry.slot?.location;
-    if (loc && loc._id && !locMap.has(loc._id)) {
-      locMap.set(loc._id, {
-        id: loc._id,
-        name: loc.name,
-        city: loc.name.includes("Glasgow")
-          ? "Glasgow"
-          : loc.name.includes("London")
-            ? "London"
-            : loc.name,
-      });
-    }
-  });
-
-  return Array.from(locMap.values());
+  return (rawLocations || []).map((loc: any) => ({
+    id: loc._id,
+    name: loc.name || "Clinic Location",
+    city: loc.city || "",
+    address: loc.address || "",
+  }));
 }
 
 export function useClinicLocations() {
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
-  const setLocationId = useAppStore((state) => state.setLocationId);
+  const setSelectedLocationId = useAppStore(
+    (state) => state.setSelectedLocationId,
+  );
 
   const {
     data: locations = [],
@@ -64,23 +43,27 @@ export function useClinicLocations() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["clinic-locations"],
+    queryKey: ["clinic-locations-sanity"],
     queryFn: fetchClinicLocations,
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 
-  // Auto-select the first location if none is set or if the cached selection is invalid
+  // Guarded auto-select: only runs when locations load and selection is invalid
   useEffect(() => {
-    if (locations.length > 0) {
-      const isSelectedValid = locations.some(
-        (loc) => loc.id === selectedLocationId,
-      );
-      if (!selectedLocationId || !isSelectedValid) {
-        setLocationId(locations[0].id);
+    if (locations.length === 0) return;
+
+    const isSelectedValid = locations.some(
+      (loc) => loc.id === selectedLocationId,
+    );
+
+    if (!selectedLocationId || !isSelectedValid) {
+      const fallbackId = locations[0].id;
+      if (selectedLocationId !== fallbackId) {
+        setSelectedLocationId(fallbackId);
       }
     }
-  }, [locations, selectedLocationId, setLocationId]);
+  }, [locations, selectedLocationId, setSelectedLocationId]);
 
   return {
     locations,
@@ -89,6 +72,6 @@ export function useClinicLocations() {
     error,
     refetch,
     selectedLocationId,
-    setLocationId,
+    setLocationId: setSelectedLocationId,
   };
 }
