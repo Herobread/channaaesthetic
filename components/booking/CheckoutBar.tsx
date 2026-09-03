@@ -2,16 +2,7 @@
 
 import { MappedTreatment } from "@/api/useTreatments";
 import { SelectedItem } from "@/hooks/useCart";
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Minus,
-  Plus,
-  Stethoscope,
-  Trash2,
-} from "lucide-react";
+import { ArrowRight, ChevronUp, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -19,7 +10,7 @@ interface CheckoutBarProps {
   cart: SelectedItem[];
   totalQuantity: number;
   totalPrice: number;
-  onIncrement: (treatment: MappedTreatment) => void;
+  onIncrement?: (treatment: MappedTreatment) => void;
   onDecrement: (treatmentId: string) => void;
   onCheckout?: () => void;
 }
@@ -28,7 +19,6 @@ export default function CheckoutBar({
   cart,
   totalQuantity,
   totalPrice,
-  onIncrement,
   onDecrement,
   onCheckout,
 }: CheckoutBarProps) {
@@ -40,20 +30,19 @@ export default function CheckoutBar({
   useEffect(() => {
     if (totalQuantity > 0) {
       setShouldRender(true);
-      const timer = setTimeout(() => setIsVisible(true), 10);
+      const timer = setTimeout(() => setIsVisible(true), 15);
       return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
       setIsExpanded(false);
-      const timer = setTimeout(() => setShouldRender(false), 500);
+      const timer = setTimeout(() => setShouldRender(false), 300);
       return () => clearTimeout(timer);
     }
   }, [totalQuantity]);
 
-  const handleSelectDate = () => {
-    if (onCheckout) {
-      onCheckout();
-    }
+  const handleSelectDate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCheckout) onCheckout();
     router.push("/book/time");
   };
 
@@ -63,159 +52,139 @@ export default function CheckoutBar({
     const depVal = curr.treatment.deposit
       ? parseFloat(curr.treatment.deposit.replace(/[^0-9.]/g, "")) || 0
       : 0;
-    return acc + depVal * curr.quantity;
+    return acc + depVal;
   }, 0);
 
   return (
-    <>
-      {/* Floating Dock Container */}
-      <div
-        className={`fixed bottom-6 inset-x-4 max-w-xl mx-auto z-50 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          isVisible
-            ? "opacity-100 translate-y-0 scale-100"
-            : "opacity-0 translate-y-12 scale-90 pointer-events-none"
-        }`}
-      >
-        <div className="bg-white rounded-3xl border border-[#EBE5DF] shadow-xl overflow-hidden">
-          {/* Animated Review Sheet */}
-          <div
-            id="review-sheet"
-            role="region"
-            aria-label="Selected procedures review"
-            aria-hidden={!isExpanded}
-            className={`grid transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-              isExpanded
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="overflow-hidden">
-              <div className="p-4 border-b border-[#EBE5DF] bg-white max-h-64 overflow-y-auto space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#8C827A]">
+    <div
+      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 transition-all duration-300 ease-out ${
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-6 pointer-events-none"
+      }`}
+    >
+      <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
+        {/* Animated Review Sheet */}
+        <div
+          id="review-sheet"
+          role="region"
+          aria-label="Selected treatments overview"
+          aria-hidden={!isExpanded}
+          className={`grid transition-all duration-300 ease-out ${
+            isExpanded
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden bg-[#24211E] border-b border-[#38332E]">
+            <div className="p-5 sm:p-6 max-h-[60vh] overflow-y-auto space-y-4">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h4 className="font-sans font-bold text-2xl text-[#F5F2EB] leading-tight">
                     Selected Procedures
-                  </span>
-                  <button
-                    type="button"
-                    tabIndex={isExpanded ? 0 : -1}
-                    onClick={() => setIsExpanded(false)}
-                    className="text-xs font-medium text-[#1A1A1A] hover:text-[#B8925D] transition cursor-pointer"
-                  >
-                    Done
-                  </button>
+                  </h4>
+                  <p className="text-base text-[#B8AEA4] font-light mt-1">
+                    {totalQuantity}{" "}
+                    {totalQuantity === 1 ? "treatment" : "treatments"} in plan
+                  </p>
                 </div>
 
-                <div className="divide-y divide-[#EBE5DF]">
-                  {cart.map(({ treatment, quantity }) => (
-                    <div
-                      key={treatment.id}
-                      className="py-3 flex items-center justify-between gap-4 first:pt-0 last:pb-0"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[#1A1A1A] truncate">
-                          {treatment.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-[#8C827A] mt-0.5">
-                          <span className="font-semibold text-[#1A1A1A]">
-                            {treatment.price}
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-[#B8925D]" />{" "}
-                            {treatment.time}
-                          </span>
-                        </div>
-                      </div>
+                <button
+                  type="button"
+                  tabIndex={isExpanded ? 0 : -1}
+                  onClick={() => setIsExpanded(false)}
+                  aria-label="Close overview"
+                  className="w-11 h-11 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                      <div className="flex items-center gap-1.5 bg-[#FAFAF8] border border-[#EBE5DF] rounded-xl p-1 shrink-0">
-                        <button
-                          type="button"
-                          tabIndex={isExpanded ? 0 : -1}
-                          onClick={() => onDecrement(treatment.id)}
-                          aria-label="Decrease quantity"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#78716C] hover:bg-white hover:text-red-500 transition cursor-pointer"
-                        >
-                          {quantity === 1 ? (
-                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                          ) : (
-                            <Minus className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        <span className="text-xs font-semibold px-2 text-center min-w-5 text-[#1A1A1A]">
-                          {quantity}
+              {/* Items List */}
+              <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
+                {cart.map(({ treatment }) => (
+                  <div
+                    key={treatment.id}
+                    className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
+                  >
+                    {/* Title wraps cleanly, never truncates */}
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <p className="text-base font-medium text-[#F5F2EB] leading-snug break-words">
+                        {treatment.title}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base text-[#B8AEA4]">
+                        <span className="text-[#DFC095] font-semibold">
+                          {treatment.price}
                         </span>
-                        <button
-                          type="button"
-                          tabIndex={isExpanded ? 0 : -1}
-                          onClick={() => onIncrement(treatment)}
-                          aria-label="Increase quantity"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#B8925D] text-white hover:bg-[#9E7B4C] transition shadow-xs cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                        <span>•</span>
+                        <span className="flex items-center gap-1.5 font-normal">
+                          <Clock className="w-4 h-4 text-[#DFC095] shrink-0" />{" "}
+                          {treatment.time}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    {/* Remove Action Button */}
+                    <button
+                      type="button"
+                      tabIndex={isExpanded ? 0 : -1}
+                      onClick={() => onDecrement(treatment.id)}
+                      aria-label={`Remove ${treatment.title}`}
+                      className="h-11 px-4 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-2 text-base font-normal transition active:scale-95 cursor-pointer shrink-0 mt-0.5"
+                    >
+                      <X className="w-4 h-4 text-[#A8A096]" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Main Dock Bar */}
-          <div className="p-4 flex items-center justify-between gap-4 bg-white">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-xl bg-[#FAFAF8] border border-[#EBE5DF] flex items-center justify-center shrink-0">
-                <Stethoscope className="w-5 h-5 text-[#B8925D]" />
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-[#8C827A]">
-                    {totalQuantity}{" "}
-                    {totalQuantity === 1 ? "treatment" : "treatments"}
-                  </span>
-
-                  <button
-                    type="button"
-                    aria-expanded={isExpanded}
-                    aria-controls="review-sheet"
-                    onClick={() => setIsExpanded((prev) => !prev)}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#FAFAF8] hover:bg-[#EBE5DF] border border-[#EBE5DF] text-xs font-medium text-[#1A1A1A] transition cursor-pointer"
-                  >
-                    <span>{isExpanded ? "Close" : "Review"}</span>
-                    {isExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-[#8C827A]" />
-                    ) : (
-                      <ChevronUp className="w-3.5 h-3.5 text-[#8C827A]" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="font-serif text-xl font-bold text-[#1A1A1A] leading-tight">
-                    £{totalPrice}
-                  </span>
-                  {totalDeposit > 0 && (
-                    <span className="text-xs text-[#78716C] font-normal">
-                      (£{totalDeposit} deposit)
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Select Date Button */}
-            <button
-              type="button"
-              onClick={handleSelectDate}
-              className="h-12 px-6 rounded-xl bg-[#B8925D] hover:bg-[#9E7B4C] text-white text-sm font-bold tracking-wider flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer shrink-0"
-            >
-              <span>Select Date</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
+
+        {/* Solid Bar Section */}
+        <div
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-4 cursor-pointer select-none"
+        >
+          {/* Left: Summary with breathing room */}
+          <div className="flex flex-col min-w-0 space-y-1">
+            <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+              <span className="font-bold tracking-tight text-white leading-tight">
+                £{totalPrice}
+              </span>
+              {totalDeposit > 0 && (
+                <span className="text-base text-[#B8AEA4] font-light">
+                  (£{totalDeposit} deposit)
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-base text-[#DFC095] font-medium">
+              <span>
+                {totalQuantity}{" "}
+                {totalQuantity === 1 ? "treatment" : "treatments"}
+              </span>
+              <ChevronUp
+                className={`w-5 h-5 transition-transform duration-300 ease-out ${
+                  isExpanded ? "rotate-180 text-white" : ""
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Right: Continue CTA */}
+          <button
+            type="button"
+            onClick={handleSelectDate}
+            className="h-13 px-6 sm:px-7 rounded-2xl bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.98] text-white text-base font-semibold tracking-wide flex items-center gap-2.5 transition-all shadow-md cursor-pointer shrink-0"
+          >
+            <span>Continue</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
