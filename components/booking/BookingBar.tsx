@@ -34,26 +34,35 @@ export default function BookingBar() {
     totalMinutes,
     totalDeposit,
     handleDecrement,
-    clearCart,
     maxMinutes = 180,
   } = useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const {
     selectedSlot,
+    eventTypeId,
+    duration,
+    locationAddress,
     customerDetails,
     isSubmitting,
     setIsSubmitting,
-    resetFlow,
   } = useBookingFlowStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Mode detection based on route
-  const isDateTimePage = pathname.includes("/datetime");
+  const isStep1Treatments = pathname === "/book";
+  const isStep2DateTime = pathname.includes("/datetime");
+  const isStep3Details = pathname.includes("/details");
+
   const isOverLimit = totalMinutes > maxMinutes;
+  const hasPickedSlot = Boolean(selectedSlot);
+  const hasFilledDetails = Boolean(
+    customerDetails.name?.trim() &&
+    customerDetails.email?.trim() &&
+    customerDetails.phone?.trim(),
+  );
 
   useEffect(() => {
     if (totalQuantity > 0) {
@@ -68,49 +77,61 @@ export default function BookingBar() {
     }
   }, [totalQuantity]);
 
-  // Handle action depending on current route
   const handleAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOverLimit) return;
 
-    if (!isDateTimePage) {
-      // Transition from step 1 to step 2 smoothly
+    if (isStep1Treatments) {
       router.push("/book/datetime");
       return;
     }
 
-    // Step 2 Booking submission
-    if (!selectedSlot || isSubmitting) return;
+    if (isStep2DateTime) {
+      if (!hasPickedSlot) return;
+      router.push("/book/details");
+      return;
+    }
 
-    try {
+    if (isStep3Details) {
       setIsSubmitting(true);
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          start: selectedSlot,
-          duration: totalMinutes,
-          name: customerDetails.name,
-          email: customerDetails.email,
-          phoneNumber: customerDetails.phone,
-          notes: customerDetails.notes,
-          locationId: selectedLocationId,
-          cart,
-          totalPrice,
-          totalDeposit,
-        }),
-      });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to reserve");
+      const finalPayload = {
+        start: selectedSlot,
+        eventTypeId: Number(eventTypeId),
+        duration: duration || totalMinutes,
+        locationAddress: locationAddress || undefined,
+        name: customerDetails.name.trim(),
+        email: customerDetails.email.trim(),
+        phoneNumber: customerDetails.phone.trim(),
+        notes: customerDetails.notes?.trim() || "",
+        locationId: selectedLocationId,
+        cart,
+        totalPrice,
+        totalDeposit,
+      };
 
-      clearCart();
-      resetFlow();
-      router.push(`/book/confirmation?bookingId=${data.id || data.uid || ""}`);
-    } catch (err: any) {
-      alert(err.message || "An error occurred while reserving your slot.");
-    } finally {
-      setIsSubmitting(false);
+      try {
+        const response = await fetch("/api/bookings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(finalPayload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to complete reservation.");
+        }
+
+        alert("Booking Successful! Check your email for confirmation.");
+      } catch (err: any) {
+        console.error("Booking error:", err);
+        alert(err.message || "Failed to submit booking.");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -118,11 +139,8 @@ export default function BookingBar() {
 
   const isButtonDisabled =
     isOverLimit ||
-    (isDateTimePage &&
-      (!selectedSlot ||
-        !customerDetails.name ||
-        !customerDetails.email ||
-        isSubmitting));
+    (isStep2DateTime && !hasPickedSlot) ||
+    (isStep3Details && (!hasFilledDetails || !eventTypeId || isSubmitting));
 
   return (
     <div
@@ -170,7 +188,7 @@ export default function BookingBar() {
                 </button>
               </div>
 
-              {/* Items List */}
+              {/* Treatment list */}
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
                 {cart.map(({ treatment, quantity }) => (
                   <div
@@ -195,7 +213,7 @@ export default function BookingBar() {
                       </div>
                     </div>
 
-                    {!isDateTimePage && (
+                    {isStep1Treatments && (
                       <button
                         type="button"
                         tabIndex={isExpanded ? 0 : -1}
@@ -214,19 +232,18 @@ export default function BookingBar() {
           </div>
         </div>
 
-        {/* Warning Banner */}
+        {/* Clinical limit warning */}
         {isOverLimit && (
           <div className="bg-[#2B1414] border-b border-red-900/60 px-5 py-3 flex items-start gap-2.5 text-xs text-red-200">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span className="leading-relaxed">
               Maximum single-session limit is {formatMinutes(maxMinutes)} for
-              clinical safety. Please remove a procedure to continue, or book a
-              Consultation if you are planning a full multi-treatment makeover.
+              clinical safety. Please remove a procedure to continue.
             </span>
           </div>
         )}
 
-        {/* Solid Floating Bar Section */}
+        {/* Action bar section */}
         <div
           onClick={() => setIsExpanded((prev) => !prev)}
           className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between gap-4 cursor-pointer select-none"
@@ -270,27 +287,45 @@ export default function BookingBar() {
             type="button"
             disabled={isButtonDisabled}
             onClick={handleAction}
-            className={`h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 transition-all duration-200 shadow-md shrink-0 ${
+            className={`relative h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-md shrink-0 select-none ${
               isButtonDisabled
-                ? "bg-[#2A2622] text-[#6E665D] border border-[#3D3833] cursor-not-allowed"
+                ? "bg-[#2A2622] text-[#6E665D] border border-[#3D3833] cursor-not-allowed shadow-none"
                 : "bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.98] text-white cursor-pointer"
             }`}
           >
-            {isSubmitting ? (
-              <>
+            <div className="grid grid-cols-1 grid-rows-1 items-center justify-items-center">
+              <div
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
+                  isSubmitting
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-90 -translate-y-2 pointer-events-none"
+                }`}
+              >
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Reserving...</span>
-              </>
-            ) : isDateTimePage ? (
-              <span>
-                {selectedSlot ? "Confirm & Reserve" : "Select a Time"}
-              </span>
-            ) : (
-              <>
+                <span>Logging...</span>
+              </div>
+
+              <div
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
+                  !isSubmitting && isStep3Details
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-90 translate-y-2 pointer-events-none"
+                }`}
+              >
+                <span>Confirm &amp; Reserve</span>
+              </div>
+
+              <div
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
+                  !isSubmitting && !isStep3Details
+                    ? "opacity-100 scale-100 translate-y-0"
+                    : "opacity-0 scale-90 -translate-y-2 pointer-events-none"
+                }`}
+              >
                 <span>Continue</span>
                 <ArrowRight className="w-4 h-4" />
-              </>
-            )}
+              </div>
+            </div>
           </button>
         </div>
       </div>

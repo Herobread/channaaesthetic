@@ -1,6 +1,6 @@
 import BookingBar from "@/components/booking/BookingBar";
 
-export default function BookingLayout({
+export default function BookLayout({
   children,
 }: {
   children: React.ReactNode;

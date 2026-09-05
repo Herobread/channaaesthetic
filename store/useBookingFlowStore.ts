@@ -1,33 +1,53 @@
 import { create } from "zustand";
 
+export interface CustomerDetails {
+  name: string;
+  email: string;
+  phone: string;
+  notes: string;
+}
+
 interface BookingFlowState {
-  // DateTime & Form data
   selectedSlot: string | null;
   setSelectedSlot: (slot: string | null) => void;
 
-  customerDetails: {
-    name: string;
-    email: string;
-    phone: string;
-    notes: string;
-  };
-  setCustomerDetails: (
-    details: Partial<BookingFlowState["customerDetails"]>,
-  ) => void;
+  eventTypeId: number | string | null;
+  setEventTypeId: (id: number | string | null) => void;
 
-  // Submission signals
+  duration: number;
+  setDuration: (mins: number) => void;
+
+  locationAddress: string | null;
+  setLocationAddress: (addr: string | null) => void;
+
+  customerDetails: CustomerDetails;
+  setCustomerDetails: (details: Partial<CustomerDetails>) => void;
+
   isSubmitting: boolean;
   setIsSubmitting: (loading: boolean) => void;
 
-  // Reset helper
   resetFlow: () => void;
 }
 
-const initialDetails = { name: "", email: "", phone: "", notes: "" };
+const initialDetails: CustomerDetails = {
+  name: "",
+  email: "",
+  phone: "",
+  notes: "",
+};
 
 export const useBookingFlowStore = create<BookingFlowState>((set) => ({
   selectedSlot: null,
   setSelectedSlot: (slot) => set({ selectedSlot: slot }),
+
+  eventTypeId: null,
+  setEventTypeId: (id) => set({ eventTypeId: id }),
+
+  duration: 30,
+  setDuration: (mins) => set({ duration: mins }),
+
+  locationAddress: null,
+  setLocationAddress: (addr) => set({ locationAddress: addr }),
 
   customerDetails: initialDetails,
   setCustomerDetails: (details) =>
@@ -41,6 +61,9 @@ export const useBookingFlowStore = create<BookingFlowState>((set) => ({
   resetFlow: () =>
     set({
       selectedSlot: null,
+      eventTypeId: null,
+      duration: 30,
+      locationAddress: null,
       customerDetails: initialDetails,
       isSubmitting: false,
     }),

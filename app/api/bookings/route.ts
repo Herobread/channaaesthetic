@@ -1,4 +1,3 @@
-// app/api/bookings/route.ts
 import { NextResponse } from "next/server";
 import { CAL_ALLOWED_DURATIONS, CAL_MIN_DURATION } from "../constants";
 
@@ -73,6 +72,9 @@ Phone: ${phoneNumber || "N/A"}
 ${notes ? `\nPATIENT NOTES:\n${notes.trim()}\n` : ""}
 `.trim();
 
+    // Fix: Cal.com metadata strictly rejects strings > 500 chars.
+    // summaryNotes is already passed to bookingFieldsResponses.notes above.
+    // Metadata only contains short string primitives.
     const payload: Record<string, any> = {
       start,
       eventTypeId: Number(eventTypeId),
@@ -87,11 +89,11 @@ ${notes ? `\nPATIENT NOTES:\n${notes.trim()}\n` : ""}
         notes: summaryNotes,
       },
       metadata: {
-        summary: summaryNotes,
-        patientNotes: notes ? String(notes).trim() : "",
         totalPrice: String(totalPrice),
         totalDeposit: String(totalDeposit),
-        treatmentCount: String(cart.length),
+        balanceDue: String(balanceDue),
+        treatmentCount: String(Array.isArray(cart) ? cart.length : 0),
+        patientNotes: notes ? String(notes).trim().slice(0, 450) : "",
       },
     };
 
