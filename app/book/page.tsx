@@ -37,7 +37,9 @@ export default function DateTimePickerPage() {
     isLoading: locationsLoading,
   } = useClinicLocations();
 
-  const [slots, setSlots] = useState<{ start: string; formatted: string }[]>([]);
+  const [slots, setSlots] = useState<{ start: string; formatted: string }[]>(
+    [],
+  );
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
 
@@ -53,7 +55,9 @@ export default function DateTimePickerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeLocation = useMemo(() => {
-    return locations.find((loc) => loc.id === selectedLocationId) || locations[0];
+    return (
+      locations.find((loc) => loc.id === selectedLocationId) || locations[0]
+    );
   }, [locations, selectedLocationId]);
 
   const eventTypeId = activeLocation?.calEventTypeId;
@@ -90,7 +94,8 @@ export default function DateTimePickerPage() {
         eventTypeId: eventTypeId.toString(),
         start: today.toISOString().split("T")[0],
         end: nextWeek.toISOString().split("T")[0],
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London",
+        timeZone:
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London",
         duration: totalDuration.toString(),
       });
 
@@ -222,7 +227,8 @@ export default function DateTimePickerPage() {
               Appointment Reserved
             </h1>
             <p className="text-xs text-[#666666]">
-              Confirmation sent to <strong className="text-[#1A1A1A]">{email}</strong>
+              Confirmation sent to{" "}
+              <strong className="text-[#1A1A1A]">{email}</strong>
             </p>
           </div>
 
@@ -236,17 +242,27 @@ export default function DateTimePickerPage() {
                     day: "numeric",
                     month: "short",
                   })}{" "}
-                  at {bookingDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  at{" "}
+                  {bookingDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
-                <p className="text-[11px] text-[#8C827A]">{totalDuration} mins allocated</p>
+                <p className="text-[11px] text-[#8C827A]">
+                  {totalDuration} mins allocated
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5">
               <MapPin className="w-4 h-4 text-[#B8925D] shrink-0" />
               <div>
-                <p className="font-medium text-[#1A1A1A]">{activeLocation?.name}</p>
-                <p className="text-[11px] text-[#8C827A]">{activeLocation?.address}</p>
+                <p className="font-medium text-[#1A1A1A]">
+                  {activeLocation?.name}
+                </p>
+                <p className="text-[11px] text-[#8C827A]">
+                  {activeLocation?.address}
+                </p>
               </div>
             </div>
           </div>
@@ -279,7 +295,9 @@ export default function DateTimePickerPage() {
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A] truncate">
               <MapPin className="w-3.5 h-3.5 text-[#B8925D] shrink-0" />
-              <span className="truncate">{activeLocation?.name || "Clinic"}</span>
+              <span className="truncate">
+                {activeLocation?.name || "Clinic"}
+              </span>
             </div>
             <p className="text-[11px] text-[#8C827A] flex items-center gap-1">
               <Clock className="w-3 h-3 text-[#B8925D]" />
@@ -288,8 +306,12 @@ export default function DateTimePickerPage() {
           </div>
 
           <div className="text-right shrink-0">
-            <span className="text-xs font-bold text-[#1A1A1A]">£{totalPrice}</span>
-            <p className="text-[10px] text-[#B8925D] font-medium">(£{totalDeposit} deposit)</p>
+            <span className="text-xs font-bold text-[#1A1A1A]">
+              £{totalPrice}
+            </span>
+            <p className="text-[10px] text-[#B8925D] font-medium">
+              (£{totalDeposit} deposit)
+            </p>
           </div>
         </div>
 
@@ -329,19 +351,23 @@ export default function DateTimePickerPage() {
                       setSelectedDayKey(day.dayKey);
                       setSelectedSlot(null);
                     }}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                    className={`shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-xl border transition-all cursor-pointer ${
                       isSelected
                         ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
                         : "bg-white border-[#EBE5DF] text-[#1A1A1A] hover:border-[#1A1A1A]"
                     }`}
                   >
-                    <span className={`text-[10px] uppercase font-medium ${isSelected ? "text-neutral-400" : "text-[#8C827A]"}`}>
+                    <span
+                      className={`text-[10px] uppercase font-medium ${isSelected ? "text-neutral-400" : "text-[#8C827A]"}`}
+                    >
                       {day.weekday}
                     </span>
                     <span className="text-base font-semibold my-0.5">
                       {day.dayNum}
                     </span>
-                    <span className={`text-[9px] uppercase font-medium ${isSelected ? "text-[#B8925D]" : "text-[#8C827A]"}`}>
+                    <span
+                      className={`text-[9px] uppercase font-medium ${isSelected ? "text-[#B8925D]" : "text-[#8C827A]"}`}
+                    >
                       {day.month}
                     </span>
                   </button>
@@ -431,7 +457,9 @@ export default function DateTimePickerPage() {
         selectedSlot={selectedSlot}
         locationName={activeLocation?.name}
         isSubmitting={isSubmitting}
-        canSubmit={Boolean(selectedSlot && name.trim() && email.trim() && phone.trim())}
+        canSubmit={Boolean(
+          selectedSlot && name.trim() && email.trim() && phone.trim(),
+        )}
         onSubmit={handleBooking}
       />
     </div>

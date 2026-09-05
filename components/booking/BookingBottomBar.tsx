@@ -35,7 +35,7 @@ export default function BookingBottomBar({
       <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
         {/* Expandable Order Details Drawer */}
         <div
-          className={`grid origin-bottom transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+          className={`grid origin-bottom transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isExpanded
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"

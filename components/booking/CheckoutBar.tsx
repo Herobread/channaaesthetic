@@ -57,7 +57,7 @@ export default function CheckoutBar({
 
   return (
     <div
-      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 origin-bottom transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 origin-bottom transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isVisible
           ? "opacity-100 scale-100 translate-y-0"
           : "opacity-0 scale-[0.88] translate-y-8 pointer-events-none"
@@ -70,7 +70,7 @@ export default function CheckoutBar({
           role="region"
           aria-label="Selected treatments overview"
           aria-hidden={!isExpanded}
-          className={`grid origin-bottom transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+          className={`grid origin-bottom transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isExpanded
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
@@ -109,7 +109,7 @@ export default function CheckoutBar({
                     className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
                   >
                     <div className="min-w-0 flex-1 space-y-2">
-                      <p className="text-base font-medium text-[#F5F2EB] leading-snug break-words">
+                      <p className="text-base font-medium text-[#F5F2EB] leading-snug wrap-break-word">
                         {treatment.title}
                       </p>
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base text-[#B8AEA4]">
@@ -164,7 +164,7 @@ export default function CheckoutBar({
                 {totalQuantity === 1 ? "treatment" : "treatments"}
               </span>
               <ChevronUp
-                className={`w-5 h-5 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+                className={`w-5 h-5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                   isExpanded ? "rotate-180 text-white" : ""
                 }`}
               />

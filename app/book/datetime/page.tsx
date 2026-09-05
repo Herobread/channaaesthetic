@@ -351,7 +351,7 @@ export default function DateTimePickerPage() {
                       setSelectedDayKey(day.dayKey);
                       setSelectedSlot(null);
                     }}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                    className={`shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-xl border transition-all cursor-pointer ${
                       isSelected
                         ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
                         : "bg-white border-[#EBE5DF] text-[#1A1A1A] hover:border-[#1A1A1A]"
