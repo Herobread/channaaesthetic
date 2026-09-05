@@ -3,6 +3,7 @@
 import { useClinicLocations } from "@/api/useClinicLocations";
 import { Select } from "@base-ui-components/react/select";
 import { Check, ChevronDown, MapPin } from "lucide-react";
+import Shimmer from "../ui/Shimmer";
 
 export default function LocationPicker() {
   const {
@@ -14,22 +15,16 @@ export default function LocationPicker() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-16 bg-white/60 backdrop-blur-xl border border-[#EBE5DF] rounded-2xl px-4 flex items-center justify-between shadow-xs animate-pulse">
-        <div className="flex items-center gap-3.5">
-          <div className="w-9 h-9 bg-[#EBE5DF] rounded-xl" />
-          <div className="space-y-1.5">
-            <div className="w-36 h-3.5 bg-[#EBE5DF] rounded-md" />
-            <div className="w-20 h-2.5 bg-[#EBE5DF]/60 rounded-md" />
-          </div>
-        </div>
-        <div className="w-4 h-4 bg-[#EBE5DF] rounded" />
+      <div className="h-9 w-44 bg-white/60 backdrop-blur-md border border-[#EBE5DF] rounded-xl px-2.5 flex items-center gap-2">
+        <Shimmer className="w-3.5 h-3.5 rounded-full shrink-0" />
+        <Shimmer className="h-3 w-24 rounded" />
+        <Shimmer className="w-3 h-3 rounded ml-auto shrink-0" />
       </div>
     );
   }
 
   if (!locations || locations.length === 0) return null;
 
-  // Find active location or fallback safely to first location without triggering effects
   const activeLocation =
     locations.find((l) => l.id === selectedLocationId) || locations[0];
 
@@ -37,60 +32,55 @@ export default function LocationPicker() {
     <Select.Root
       value={activeLocation?.id || ""}
       onValueChange={(val) => {
-        // Prevent triggering store re-renders if value is empty or already selected
         if (val && val !== selectedLocationId) {
           setLocationId(val);
         }
       }}
     >
-      {/* 1. Full-Width Trigger */}
-      <Select.Trigger className="group w-full flex items-center justify-between gap-3 bg-white/80 hover:bg-white/95 active:scale-[0.99] backdrop-blur-xl border border-[#EBE5DF] hover:border-[#DFC095] rounded-2xl px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#B8925D]/20 focus:border-[#B8925D]">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#FAFAF8] border border-[#EBE5DF] group-hover:border-[#DFC095]/60 flex items-center justify-center shrink-0 transition-colors">
-            <MapPin className="w-4 h-4 text-[#B8925D]" />
-          </div>
+      {/* Navbar Trigger */}
+      <Select.Trigger className="group inline-flex items-center gap-2 h-9 px-3 bg-white/70 hover:bg-white/95 border border-[#EBE5DF] hover:border-[#DFC095] rounded-xl shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#B8925D]/20 focus:border-[#B8925D] max-w-[240px]">
+        <MapPin className="w-3.5 h-3.5 text-[#B8925D] shrink-0" />
 
-          <Select.Value>
-            <div className="text-left min-w-0">
-              <p className="text-sm font-semibold text-[#1A1A1A] truncate leading-tight">
-                {activeLocation?.name || "Select Clinic Location"}
-              </p>
-              <p className="text-xs text-[#8C827A] font-normal tracking-wide mt-0.5">
-                {activeLocation?.city || "Tap to switch location"}
-              </p>
-            </div>
-          </Select.Value>
-        </div>
+        <Select.Value className="truncate">
+          <span className="text-xs font-medium text-[#1A1A1A] truncate">
+            {activeLocation?.name || "Location"}
+          </span>
+          {activeLocation?.city && (
+            <span className="text-[11px] text-[#8C827A] ml-1.5 font-normal hidden sm:inline">
+              • {activeLocation.city}
+            </span>
+          )}
+        </Select.Value>
 
         <Select.Icon>
-          <ChevronDown className="w-4 h-4 text-[#8C827A] group-hover:text-[#1A1A1A] transition-transform duration-300 ease-out group-data-[popup-open]:rotate-180 shrink-0" />
+          <ChevronDown className="w-3.5 h-3.5 text-[#8C827A] group-hover:text-[#1A1A1A] group-data-popup-open:rotate-180 shrink-0 ml-0.5" />
         </Select.Icon>
       </Select.Trigger>
 
-      {/* 2. Positioner & Popup matching trigger width */}
+      {/* Dropdown Popup - instant mount/unmount */}
       <Select.Portal>
-        <Select.Positioner sideOffset={6} align="start" className="z-50">
-          <Select.Popup className="w-[var(--anchor-width)] overflow-hidden rounded-2xl bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.12)] ring-1 ring-black/5 p-1.5 origin-top transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0">
-            <Select.List className="space-y-1">
+        <Select.Positioner sideOffset={6} align="end" className="z-50">
+          <Select.Popup className="min-w-55 max-w-70 overflow-hidden rounded-xl bg-white backdrop-blur-2xl border border-[#EBE5DF] shadow-[0_12px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 p-1">
+            <Select.List className="space-y-0.5">
               {locations.map((loc) => (
                 <Select.Item
                   key={loc.id}
                   value={loc.id}
-                  className="group/item flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-left cursor-pointer outline-none transition-all duration-150 data-[highlighted]:bg-[#FAFAF8] data-[selected]:bg-[#FAFAF8]/90"
+                  className="group/item flex items-center justify-between gap-2.5 rounded-lg px-2.5 py-1.5 text-left cursor-pointer outline-none data-[highlighted]:bg-[#FAFAF8] data-[selected]:bg-[#FAFAF8]"
                 >
                   <div className="flex flex-col min-w-0">
-                    <Select.ItemText className="text-sm font-semibold text-[#1A1A1A] truncate leading-tight group-data-[selected]/item:text-[#B8925D]">
+                    <Select.ItemText className="text-xs font-semibold text-[#1A1A1A] truncate group-data-selected/item:text-[#B8925D]">
                       {loc.name}
                     </Select.ItemText>
                     {loc.city && (
-                      <span className="text-xs text-[#8C827A] font-normal mt-0.5">
+                      <span className="text-[11px] text-[#8C827A] leading-tight">
                         {loc.city}
                       </span>
                     )}
                   </div>
 
                   <Select.ItemIndicator>
-                    <Check className="w-4 h-4 text-[#B8925D] shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-[#B8925D] shrink-0" />
                   </Select.ItemIndicator>
                 </Select.Item>
               ))}
