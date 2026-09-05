@@ -30,12 +30,12 @@ export const locationType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "hapioLocationId",
-      title: "Hapio Location ID",
-      type: "string",
-      description: "The location ID returned by Hapio",
-      placeholder: "abcde...",
-      validation: (Rule) => Rule.required(),
+      name: "calEventTypeId",
+      title: "Cal.com Event Type ID",
+      type: "number",
+      description:
+        "The numeric ID found in the URL when editing the event in Cal.com (e.g. cal.com/event-types/123456)",
+      validation: (Rule) => Rule.required().positive().integer(),
     }),
     defineField({
       name: "address",
@@ -53,12 +53,14 @@ export const locationType = defineType({
     select: {
       title: "name",
       subtitle: "city",
-      hapioId: "hapioLocationId",
+      calId: "calEventTypeId",
     },
-    prepare({ title, subtitle, hapioId }) {
+    prepare({ title, subtitle, calId }) {
       return {
         title: title || "Untitled Location",
-        subtitle: `${subtitle || "No City"} • ${hapioId ? `Hapio: ${hapioId}` : "Missing Hapio ID"}`,
+        subtitle: `${subtitle || "No City"} • ${
+          calId ? `Cal Event ID: ${calId}` : "Missing Cal Event ID"
+        }`,
       };
     },
   },

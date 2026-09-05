@@ -35,7 +35,7 @@ export default function CheckoutBar({
     } else {
       setIsVisible(false);
       setIsExpanded(false);
-      const timer = setTimeout(() => setShouldRender(false), 300);
+      const timer = setTimeout(() => setShouldRender(false), 320);
       return () => clearTimeout(timer);
     }
   }, [totalQuantity]);
@@ -43,7 +43,7 @@ export default function CheckoutBar({
   const handleSelectDate = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onCheckout) onCheckout();
-    router.push("/book/time");
+    router.push("/book/datetime");
   };
 
   if (!shouldRender) return null;
@@ -57,10 +57,10 @@ export default function CheckoutBar({
 
   return (
     <div
-      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 transition-all duration-300 ease-out ${
+      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 origin-bottom transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
         isVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-6 pointer-events-none"
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-[0.88] translate-y-8 pointer-events-none"
       }`}
     >
       <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
@@ -70,7 +70,7 @@ export default function CheckoutBar({
           role="region"
           aria-label="Selected treatments overview"
           aria-hidden={!isExpanded}
-          className={`grid transition-all duration-300 ease-out ${
+          className={`grid origin-bottom transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
             isExpanded
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
@@ -95,7 +95,7 @@ export default function CheckoutBar({
                   tabIndex={isExpanded ? 0 : -1}
                   onClick={() => setIsExpanded(false)}
                   aria-label="Close overview"
-                  className="w-11 h-11 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition cursor-pointer shrink-0"
+                  className="w-11 h-11 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition-transform duration-150 cursor-pointer shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -108,7 +108,6 @@ export default function CheckoutBar({
                     key={treatment.id}
                     className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
                   >
-                    {/* Title wraps cleanly, never truncates */}
                     <div className="min-w-0 flex-1 space-y-2">
                       <p className="text-base font-medium text-[#F5F2EB] leading-snug break-words">
                         {treatment.title}
@@ -125,7 +124,6 @@ export default function CheckoutBar({
                       </div>
                     </div>
 
-                    {/* Remove Action Button */}
                     <button
                       type="button"
                       tabIndex={isExpanded ? 0 : -1}
@@ -148,7 +146,6 @@ export default function CheckoutBar({
           onClick={() => setIsExpanded((prev) => !prev)}
           className="px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-4 cursor-pointer select-none"
         >
-          {/* Left: Summary with breathing room */}
           <div className="flex flex-col min-w-0 space-y-1">
             <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
               <span className="font-bold tracking-tight text-white leading-tight">
@@ -167,14 +164,13 @@ export default function CheckoutBar({
                 {totalQuantity === 1 ? "treatment" : "treatments"}
               </span>
               <ChevronUp
-                className={`w-5 h-5 transition-transform duration-300 ease-out ${
+                className={`w-5 h-5 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
                   isExpanded ? "rotate-180 text-white" : ""
                 }`}
               />
             </div>
           </div>
 
-          {/* Right: Continue CTA */}
           <button
             type="button"
             onClick={handleSelectDate}

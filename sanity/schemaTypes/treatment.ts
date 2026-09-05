@@ -73,9 +73,18 @@ export const treatmentType = defineType({
       title: "Duration (Minutes)",
       type: "number",
       fieldset: "logistics",
-      description:
-        "Appointment length (used for patient scheduling estimates).",
-      initialValue: 45,
+      description: "Procedure length in minutes.",
+      initialValue: 30,
+      options: {
+        list: [
+          { title: "15 mins (Quick Add-on)", value: 15 },
+          { title: "30 mins (Standard)", value: 30 },
+          { title: "45 mins", value: 45 },
+          { title: "60 mins (1 Hour)", value: 60 },
+          { title: "90 mins (Long Procedure)", value: 90 },
+        ],
+      },
+      validation: (Rule) => Rule.required().min(10).max(180),
     }),
     defineField({
       name: "featured",

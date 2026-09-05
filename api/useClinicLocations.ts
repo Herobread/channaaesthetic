@@ -10,6 +10,8 @@ export interface ClinicLocation {
   name: string;
   city: string;
   address?: string;
+  calEventTypeId: number; // Added to match Sanity schema
+  phoneNumber?: string;
 }
 
 async function fetchClinicLocations(): Promise<ClinicLocation[]> {
@@ -17,7 +19,9 @@ async function fetchClinicLocations(): Promise<ClinicLocation[]> {
     "_id": _id,
     "name": name,
     "city": city,
-    "address": address
+    "address": address,
+    "calEventTypeId": calEventTypeId,
+    "phoneNumber": phoneNumber
   }`;
 
   const rawLocations = await sanityClient.fetch(query);
@@ -27,6 +31,8 @@ async function fetchClinicLocations(): Promise<ClinicLocation[]> {
     name: loc.name || "Clinic Location",
     city: loc.city || "",
     address: loc.address || "",
+    calEventTypeId: loc.calEventTypeId,
+    phoneNumber: loc.phoneNumber,
   }));
 }
 
