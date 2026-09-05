@@ -1,3 +1,5 @@
+// app/api/bookings/route.ts
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { CAL_ALLOWED_DURATIONS, CAL_MIN_DURATION } from "../constants";
 
@@ -125,6 +127,21 @@ ${notes ? `\nPATIENT NOTES:\n${notes.trim()}\n` : ""}
         },
         { status: res.status },
       );
+    }
+
+    // Extract booking reference/UID
+    const bookingUid = data.data?.uid || data.uid || data.data?.id || data.id;
+
+    // Set secure short-lived cookie for receipt authorization
+    if (bookingUid) {
+      const cookieStore = await cookies();
+      cookieStore.set("booking_session", String(bookingUid), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 30, // 30 minutes
+      });
     }
 
     return NextResponse.json(data);

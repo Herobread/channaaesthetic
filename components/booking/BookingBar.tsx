@@ -1,3 +1,4 @@
+// components/BookingBar.tsx
 "use client";
 
 import { useCart } from "@/hooks/useCart";
@@ -34,6 +35,7 @@ export default function BookingBar() {
     totalMinutes,
     totalDeposit,
     handleDecrement,
+    clearCart,
     maxMinutes = 180,
   } = useCart();
 
@@ -46,6 +48,7 @@ export default function BookingBar() {
     customerDetails,
     isSubmitting,
     setIsSubmitting,
+    resetFlow,
   } = useBookingFlowStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -125,7 +128,19 @@ export default function BookingBar() {
           throw new Error(data.error || "Failed to complete reservation.");
         }
 
-        alert("Booking Successful! Check your email for confirmation.");
+        const bookingId =
+          data.data?.uid ||
+          data.uid ||
+          data.data?.id ||
+          data.id ||
+          "Unknown ID";
+
+        // 1. Clear the client cart/state
+        if (typeof clearCart === "function") clearCart();
+        if (typeof resetFlow === "function") resetFlow();
+
+        // 2. Force a hard browser navigation to the new root-level success page
+        window.location.href = `/success/${bookingId}`;
       } catch (err: any) {
         console.error("Booking error:", err);
         alert(err.message || "Failed to submit booking.");
