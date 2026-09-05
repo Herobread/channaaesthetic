@@ -1,7 +1,6 @@
 "use client";
 
 import { useInfiniteTreatments, useLocations } from "@/api/useTreatments";
-import CheckoutBar from "@/components/booking/CheckoutBar";
 import SearchCategoryDock from "@/components/booking/SearchCategoryDock";
 import TreatmentCard from "@/components/booking/TreatmentCard";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
@@ -23,8 +22,15 @@ export default function BookingPage() {
   } = useInfiniteTreatments();
 
   const { locations } = useLocations();
-  const { cart, handleIncrement, handleDecrement, totalQuantity, totalPrice } =
-    useCart();
+  const {
+    cart,
+    handleIncrement,
+    handleDecrement,
+    totalMinutes,
+    totalQuantity,
+    totalDeposit,
+    totalPrice,
+  } = useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const setSelectedLocationId = useAppStore(
@@ -195,14 +201,6 @@ export default function BookingPage() {
           </div>
         )}
       </main>
-
-      <CheckoutBar
-        cart={cart}
-        totalQuantity={totalQuantity}
-        totalPrice={totalPrice}
-        onIncrement={handleIncrement}
-        onDecrement={handleDecrement}
-      />
     </div>
   );
 }

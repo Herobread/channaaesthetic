@@ -1,21 +1,18 @@
 "use client";
 
-import { MappedTreatment } from "@/api/useTreatments";
-import { SelectedItem } from "@/hooks/useCart";
-import { AlertCircle, ArrowRight, ChevronUp, Clock, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useCart } from "@/hooks/useCart";
+import { useAppStore } from "@/store/useAppStore";
+import { useBookingFlowStore } from "@/store/useBookingFlowStore";
+import {
+  AlertCircle,
+  ArrowRight,
+  ChevronUp,
+  Clock,
+  Loader2,
+  X,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-interface CheckoutBarProps {
-  cart: SelectedItem[];
-  totalQuantity: number;
-  totalPrice: number;
-  totalMinutes: number;
-  maxMinutes?: number;
-  onIncrement?: (treatment: MappedTreatment) => void;
-  onDecrement: (treatmentId: string) => void;
-  onCheckout?: () => void;
-}
 
 function formatMinutes(minutes: number): string {
   const safeMinutes = Math.max(0, isNaN(minutes) ? 0 : minutes);
@@ -26,20 +23,36 @@ function formatMinutes(minutes: number): string {
   return `${hrs}h ${mins}m`;
 }
 
-export default function CheckoutBar({
-  cart,
-  totalQuantity,
-  totalPrice,
-  totalMinutes,
-  maxMinutes = 180,
-  onDecrement,
-  onCheckout,
-}: CheckoutBarProps) {
+export default function BookingBar() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const {
+    cart,
+    totalQuantity,
+    totalPrice,
+    totalMinutes,
+    totalDeposit,
+    handleDecrement,
+    clearCart,
+    maxMinutes = 180,
+  } = useCart();
+
+  const selectedLocationId = useAppStore((state) => state.selectedLocationId);
+  const {
+    selectedSlot,
+    customerDetails,
+    isSubmitting,
+    setIsSubmitting,
+    resetFlow,
+  } = useBookingFlowStore();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
 
+  // Mode detection based on route
+  const isDateTimePage = pathname.includes("/datetime");
   const isOverLimit = totalMinutes > maxMinutes;
 
   useEffect(() => {
@@ -55,21 +68,61 @@ export default function CheckoutBar({
     }
   }, [totalQuantity]);
 
-  const handleSelectDate = (e: React.MouseEvent) => {
+  // Handle action depending on current route
+  const handleAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOverLimit) return;
-    if (onCheckout) onCheckout();
-    router.push("/book/datetime");
+
+    if (!isDateTimePage) {
+      // Transition from step 1 to step 2 smoothly
+      router.push("/book/datetime");
+      return;
+    }
+
+    // Step 2 Booking submission
+    if (!selectedSlot || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start: selectedSlot,
+          duration: totalMinutes,
+          name: customerDetails.name,
+          email: customerDetails.email,
+          phoneNumber: customerDetails.phone,
+          notes: customerDetails.notes,
+          locationId: selectedLocationId,
+          cart,
+          totalPrice,
+          totalDeposit,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reserve");
+
+      clearCart();
+      resetFlow();
+      router.push(`/book/confirmation?bookingId=${data.id || data.uid || ""}`);
+    } catch (err: any) {
+      alert(err.message || "An error occurred while reserving your slot.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!shouldRender) return null;
 
-  const totalDeposit = cart.reduce((acc, curr) => {
-    const depVal = curr.treatment.deposit
-      ? parseFloat(curr.treatment.deposit.replace(/[^0-9.]/g, "")) || 0
-      : 0;
-    return acc + depVal * curr.quantity;
-  }, 0);
+  const isButtonDisabled =
+    isOverLimit ||
+    (isDateTimePage &&
+      (!selectedSlot ||
+        !customerDetails.name ||
+        !customerDetails.email ||
+        isSubmitting));
 
   return (
     <div
@@ -111,13 +164,13 @@ export default function CheckoutBar({
                   tabIndex={isExpanded ? 0 : -1}
                   onClick={() => setIsExpanded(false)}
                   aria-label="Close overview"
-                  className="w-10 h-10 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0"
+                  className="w-10 h-10 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Selected List */}
+              {/* Items List */}
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
                 {cart.map(({ treatment, quantity }) => (
                   <div
@@ -142,16 +195,18 @@ export default function CheckoutBar({
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      tabIndex={isExpanded ? 0 : -1}
-                      onClick={() => onDecrement(treatment.id)}
-                      aria-label={`Remove ${treatment.title}`}
-                      className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0"
-                    >
-                      <X className="w-3.5 h-3.5 text-[#A8A096]" />
-                      <span>Remove</span>
-                    </button>
+                    {!isDateTimePage && (
+                      <button
+                        type="button"
+                        tabIndex={isExpanded ? 0 : -1}
+                        onClick={() => handleDecrement(treatment.id)}
+                        aria-label={`Remove ${treatment.title}`}
+                        className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5 text-[#A8A096]" />
+                        <span>Remove</span>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -159,7 +214,7 @@ export default function CheckoutBar({
           </div>
         </div>
 
-        {/* Warning Banner - Only renders if exceeding max time */}
+        {/* Warning Banner */}
         {isOverLimit && (
           <div className="bg-[#2B1414] border-b border-red-900/60 px-5 py-3 flex items-start gap-2.5 text-xs text-red-200">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
@@ -171,7 +226,7 @@ export default function CheckoutBar({
           </div>
         )}
 
-        {/* Solid Bar Section */}
+        {/* Solid Floating Bar Section */}
         <div
           onClick={() => setIsExpanded((prev) => !prev)}
           className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between gap-4 cursor-pointer select-none"
@@ -213,16 +268,29 @@ export default function CheckoutBar({
 
           <button
             type="button"
-            disabled={isOverLimit}
-            onClick={handleSelectDate}
-            className={`h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 transition shadow-md shrink-0 ${
-              isOverLimit
+            disabled={isButtonDisabled}
+            onClick={handleAction}
+            className={`h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 transition-all duration-200 shadow-md shrink-0 ${
+              isButtonDisabled
                 ? "bg-[#2A2622] text-[#6E665D] border border-[#3D3833] cursor-not-allowed"
                 : "bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.98] text-white cursor-pointer"
             }`}
           >
-            <span>Continue</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>Reserving...</span>
+              </>
+            ) : isDateTimePage ? (
+              <span>
+                {selectedSlot ? "Confirm & Reserve" : "Select a Time"}
+              </span>
+            ) : (
+              <>
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

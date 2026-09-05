@@ -2,7 +2,6 @@
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
-import BookingBottomBar from "@/components/booking/BookingBottomBar";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
 import {
@@ -30,7 +29,8 @@ function snapToCalDuration(minutes: number): number {
 
 export default function DateTimePickerPage() {
   const router = useRouter();
-  const { cart, clearCart, totalPrice, totalQuantity } = useCart();
+  const { cart, clearCart, totalPrice, totalQuantity, totalMinutes } =
+    useCart();
   const {
     locations,
     selectedLocationId,
@@ -447,21 +447,6 @@ export default function DateTimePickerPage() {
           </div>
         </div>
       </main>
-
-      {/* Fixed Luxury Mobile Bottom Bar */}
-      <BookingBottomBar
-        cart={cart}
-        totalQuantity={totalQuantity}
-        totalPrice={totalPrice}
-        totalDeposit={totalDeposit}
-        selectedSlot={selectedSlot}
-        locationName={activeLocation?.name}
-        isSubmitting={isSubmitting}
-        canSubmit={Boolean(
-          selectedSlot && name.trim() && email.trim() && phone.trim(),
-        )}
-        onSubmit={handleBooking}
-      />
     </div>
   );
 }

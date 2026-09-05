@@ -16,6 +16,7 @@ export interface MappedTreatment {
   title: string;
   desc: string;
   time: string;
+  durationMinutes: number;
   price: string;
   priceNum: number;
   deposit?: string;
@@ -89,6 +90,7 @@ export async function fetchTreatmentsPage({
       desc: item.desc || "Bespoke clinical treatment.",
       category: item.category || "Other",
       time: item.durationMinutes ? `${item.durationMinutes} min` : "45 min",
+      durationMinutes: item.durationMinutes,
       price: isFree ? "Free" : `£${priceNum}`,
       priceNum,
       deposit: item.deposit ? `£${item.deposit}` : undefined,
