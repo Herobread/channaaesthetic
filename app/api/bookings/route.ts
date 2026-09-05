@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       name,
       email,
       phoneNumber,
+      notes, // Extracted from client form
       locationAddress,
       cart = [],
       totalPrice = 0,
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
 
     const balanceDue = Math.max(0, Number(totalPrice) - Number(totalDeposit));
 
+    // Combines the automated cart summary with the patient's clinical note
     const summaryNotes = `
 CLINIC ORDER SUMMARY
 ----------------------------------
@@ -68,9 +70,9 @@ Financials:
 • Balance Due at Clinic: £${balanceDue}
 ----------------------------------
 Phone: ${phoneNumber || "N/A"}
+${notes ? `\nPATIENT NOTES:\n${notes.trim()}\n` : ""}
 `.trim();
 
-    // Top-level description removed; placed in metadata and bookingFieldsResponses
     const payload: Record<string, any> = {
       start,
       eventTypeId: Number(eventTypeId),
@@ -86,6 +88,7 @@ Phone: ${phoneNumber || "N/A"}
       },
       metadata: {
         summary: summaryNotes,
+        patientNotes: notes ? String(notes).trim() : "",
         totalPrice: String(totalPrice),
         totalDeposit: String(totalDeposit),
         treatmentCount: String(cart.length),
