@@ -1,4 +1,5 @@
 // app/success/[uid]/page.tsx
+import HistoryReset from "@/components/shared/HistoryReset";
 import {
   ArrowRight,
   Calendar as CalendarIcon,
@@ -107,6 +108,7 @@ export default async function BookingSuccessPage({
 
   return (
     <main className="min-h-screen bg-[#141210] text-[#F5F2EB] px-4 py-12 sm:py-20">
+      <HistoryReset />
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">

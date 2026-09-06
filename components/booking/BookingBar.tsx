@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ChevronUp,
   Clock,
+  CreditCard,
   Loader2,
   X,
 } from "lucide-react";
@@ -98,52 +99,30 @@ export default function BookingBar() {
     if (isStep3Details) {
       setIsSubmitting(true);
 
-      const finalPayload = {
-        start: selectedSlot,
-        eventTypeId: Number(eventTypeId),
-        duration: duration || totalMinutes,
-        locationAddress: locationAddress || undefined,
-        name: customerDetails.name.trim(),
-        email: customerDetails.email.trim(),
-        phoneNumber: customerDetails.phone.trim(),
-        notes: customerDetails.notes?.trim() || "",
-        locationId: selectedLocationId,
-        cart,
-        totalPrice,
-        totalDeposit,
-      };
-
       try {
-        const response = await fetch("/api/bookings", {
+        const response = await fetch("/api/checkout", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(finalPayload),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            totalDeposit,
+            totalPrice,
+            selectedSlot,
+            eventTypeId,
+            locationAddress,
+            customerDetails,
+            cart,
+          }),
         });
 
-        const data = await response.json();
+        const { url, error } = await response.json();
+        if (error || !url) throw new Error(error || "Payment failed to start.");
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to complete reservation.");
-        }
-
-        const bookingId =
-          data.data?.uid ||
-          data.uid ||
-          data.data?.id ||
-          data.id ||
-          "Unknown ID";
-
-        // 1. Clear the client cart/state
         if (typeof clearCart === "function") clearCart();
         if (typeof resetFlow === "function") resetFlow();
 
-        // 2. Force a hard browser navigation to the new root-level success page
-        window.location.href = `/success/${bookingId}`;
+        window.location.href = url; // Sends client to Stripe
       } catch (err: any) {
-        console.error("Booking error:", err);
-        alert(err.message || "Failed to submit booking.");
+        alert(err.message || "Failed to proceed to payment.");
       } finally {
         setIsSubmitting(false);
       }
@@ -269,8 +248,8 @@ export default function BookingBar() {
                 £{totalPrice}
               </span>
               {totalDeposit > 0 && (
-                <span className="text-xs text-[#B8AEA4]">
-                  (£{totalDeposit} dep)
+                <span className="text-xs text-[#DFC095]">
+                  (£{totalDeposit} deposit due)
                 </span>
               )}
             </div>
@@ -309,6 +288,7 @@ export default function BookingBar() {
             }`}
           >
             <div className="grid grid-cols-1 grid-rows-1 items-center justify-items-center">
+              {/* State: Submitting */}
               <div
                 className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
                   isSubmitting
@@ -317,9 +297,10 @@ export default function BookingBar() {
                 }`}
               >
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Logging...</span>
+                <span>Securing Slot...</span>
               </div>
 
+              {/* State: Step 3 (Payment / Finalize) */}
               <div
                 className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
                   !isSubmitting && isStep3Details
@@ -327,9 +308,15 @@ export default function BookingBar() {
                     : "opacity-0 scale-90 translate-y-2 pointer-events-none"
                 }`}
               >
-                <span>Confirm &amp; Reserve</span>
+                <CreditCard className="w-4 h-4 text-[#F5F2EB]" />
+                <span>
+                  {totalDeposit > 0
+                    ? `Pay £${totalDeposit} Deposit`
+                    : "Pay & Confirm"}
+                </span>
               </div>
 
+              {/* State: Steps 1 & 2 */}
               <div
                 className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
                   !isSubmitting && !isStep3Details
