@@ -1,39 +1,23 @@
 "use client";
 
-import { sanityClient } from "@/sanity/lib/sanityClient";
 import { useAppStore } from "@/store/useAppStore";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export interface ClinicLocation {
   id: string;
   name: string;
   city: string;
   address?: string;
-  calEventTypeId: number; // Added to match Sanity schema
   phoneNumber?: string;
 }
 
 async function fetchClinicLocations(): Promise<ClinicLocation[]> {
-  const query = `*[_type == "clinicLocation"] | order(name asc) {
-    "_id": _id,
-    "name": name,
-    "city": city,
-    "address": address,
-    "calEventTypeId": calEventTypeId,
-    "phoneNumber": phoneNumber
-  }`;
-
-  const rawLocations = await sanityClient.fetch(query);
-
-  return (rawLocations || []).map((loc: any) => ({
-    id: loc._id,
-    name: loc.name || "Clinic Location",
-    city: loc.city || "",
-    address: loc.address || "",
-    calEventTypeId: loc.calEventTypeId,
-    phoneNumber: loc.phoneNumber,
-  }));
+  const res = await fetch("/api/locations");
+  if (!res.ok) {
+    throw new Error("Failed to load clinic locations from Square");
+  }
+  return res.json();
 }
 
 export function useClinicLocations() {
@@ -49,27 +33,33 @@ export function useClinicLocations() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["clinic-locations-sanity"],
+    queryKey: ["clinic-locations-square"],
     queryFn: fetchClinicLocations,
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 
-  // Guarded auto-select: only runs when locations load and selection is invalid
+  // Stable string key of IDs (e.g. "LOC_1,LOC_2")
+  const locationIdsKey = useMemo(
+    () => locations.map((l) => l.id).join(","),
+    [locations],
+  );
+
   useEffect(() => {
-    if (locations.length === 0) return;
+    if (!locations.length) return;
 
-    const isSelectedValid = locations.some(
-      (loc) => loc.id === selectedLocationId,
-    );
+    const currentSavedId = useAppStore.getState().selectedLocationId;
+    const isSelectedValid = locations.some((loc) => loc.id === currentSavedId);
 
-    if (!selectedLocationId || !isSelectedValid) {
+    // Fall back to the first available location if missing or invalid
+    if (!currentSavedId || !isSelectedValid) {
       const fallbackId = locations[0].id;
-      if (selectedLocationId !== fallbackId) {
+      if (fallbackId && fallbackId !== currentSavedId) {
         setSelectedLocationId(fallbackId);
       }
     }
-  }, [locations, selectedLocationId, setSelectedLocationId]);
+  }, [locationIdsKey, setSelectedLocationId, locations]);
+  // Dependency strictly tracks key changes, not reference mutations
 
   return {
     locations,

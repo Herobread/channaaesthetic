@@ -1,8 +1,8 @@
-import Image from "next/image";
-import heroBg from "@/public/DP4-Treatment.jpg";
 import Navbar from "@/components/ui/NavBar";
-import BookingCard from "./BookingCard";
+import heroBg from "@/public/DP4-Treatment.jpg";
+import Image from "next/image";
 import AboutCard from "./AboutCard";
+import BookingCard from "./BookingCard";
 
 export default function Home() {
   return (
@@ -24,9 +24,6 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded bg-white/10 backdrop-blur-xs text-xs uppercase tracking-widest text-[#DFC095] font-medium border border-white/10">
-            Doctor-Led Medical Aesthetics
-          </div>
           <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1.1] tracking-tight">
             Subtle Aesthetics. <br className="hidden sm:inline" />
             Undetectable Precision.

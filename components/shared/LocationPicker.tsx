@@ -25,6 +25,7 @@ export default function LocationPicker() {
 
   if (!locations || locations.length === 0) return null;
 
+  // Resolve current active location or fall back to primary
   const activeLocation =
     locations.find((l) => l.id === selectedLocationId) || locations[0];
 
@@ -43,7 +44,7 @@ export default function LocationPicker() {
 
         <Select.Value className="truncate">
           <span className="text-xs font-medium text-[#1A1A1A] truncate">
-            {activeLocation?.name || "Location"}
+            {activeLocation?.name || "Select Location"}
           </span>
           {activeLocation?.city && (
             <span className="text-[11px] text-[#8C827A] ml-1.5 font-normal hidden sm:inline">
@@ -57,7 +58,7 @@ export default function LocationPicker() {
         </Select.Icon>
       </Select.Trigger>
 
-      {/* Dropdown Popup - instant mount/unmount */}
+      {/* Dropdown Popup */}
       <Select.Portal>
         <Select.Positioner sideOffset={6} align="end" className="z-50">
           <Select.Popup className="min-w-55 max-w-70 overflow-hidden rounded-xl bg-white backdrop-blur-2xl border border-[#EBE5DF] shadow-[0_12px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 p-1">

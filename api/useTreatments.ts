@@ -1,5 +1,5 @@
-import { sanityClient } from "@/sanity/lib/sanityClient";
-import { createImageUrlBuilder } from "@sanity/image-url";
+"use client";
+
 import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
@@ -26,99 +26,35 @@ export interface MappedTreatment {
   featured?: boolean;
 }
 
-const imageBuilder = createImageUrlBuilder(sanityClient);
-
-function urlFor(source: any): string | undefined {
-  if (!source?.asset) return undefined;
-  return imageBuilder.image(source).auto("format").fit("max").url();
-}
-
-const PAGE_SIZE = 50;
-
 export async function fetchTreatmentsPage({
-  pageParam = 0,
+  pageParam,
 }: {
-  pageParam?: number;
+  pageParam?: string;
 }): Promise<{
   items: MappedTreatment[];
-  nextCursor?: number;
+  nextCursor?: string;
   totalCount: number;
 }> {
-  const start = pageParam;
-  const end = pageParam + PAGE_SIZE;
+  const url = pageParam
+    ? `/api/treatments?cursor=${encodeURIComponent(pageParam)}`
+    : `/api/treatments`;
 
-  const query = `{
-    "totalCount": count(*[_type == "treatment"]),
-    "rawItems": *[_type == "treatment"] | order(_createdAt desc) [${start}...${end}] {
-      _id,
-      title,
-      category,
-      desc,
-      durationMinutes,
-      priceNum,
-      deposit,
-      featured,
-      image,
-      "locations": locations[]-> {
-        _id,
-        name,
-        city,
-        address
-      }
-    }
-  }`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Failed to fetch treatments from Square");
+  }
 
-  const { totalCount, rawItems } = await sanityClient.fetch(query);
-
-  const mappedItems: MappedTreatment[] = (rawItems || []).map((item: any) => {
-    const priceNum = item.priceNum ?? 0;
-    const isFree = priceNum === 0;
-
-    // Filter out nulls just in case a location reference was deleted in Sanity
-    const locations: ClinicLocation[] = (item.locations || [])
-      .filter(Boolean)
-      .map((loc: any) => ({
-        id: loc._id || "",
-        name: loc.name || "Clinic",
-        city: loc.city || "",
-        address: loc.address || "",
-      }));
-
-    return {
-      id: item._id,
-      title: item.title || "Untitled Treatment",
-      desc: item.desc || "Bespoke clinical treatment.",
-      category: item.category || "Other",
-      time: item.durationMinutes ? `${item.durationMinutes} min` : "45 min",
-      durationMinutes: item.durationMinutes,
-      price: isFree ? "Free" : `£${priceNum}`,
-      priceNum,
-      deposit: item.deposit ? `£${item.deposit}` : undefined,
-      imageUrl: urlFor(item.image),
-      locationIds: locations.map((l) => l.id),
-      locations,
-      featured: item.featured ?? isFree,
-    };
-  });
-
-  const nextSkip = pageParam + mappedItems.length;
-  const hasMore = mappedItems.length === PAGE_SIZE && nextSkip < totalCount;
-
-  return {
-    items: mappedItems,
-    nextCursor: hasMore ? nextSkip : undefined,
-    totalCount,
-  };
+  return res.json();
 }
 
 export const treatmentsInfiniteQueryOptions = () =>
   infiniteQueryOptions({
     queryKey: ["treatments-infinite"],
     queryFn: ({ pageParam }) =>
-      fetchTreatmentsPage({ pageParam: pageParam as number }),
-    initialPageParam: 0,
+      fetchTreatmentsPage({ pageParam: pageParam as string | undefined }),
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
 export function useInfiniteTreatments() {

@@ -1,36 +1,32 @@
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
+import CheckoutBar from "@/components/booking/CheckoutBar";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
 import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import { AlertCircle, ArrowLeft, Clock, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const CAL_ALLOWED_DURATIONS = [15, 30, 45, 60, 75, 90, 120, 180];
-
-function snapToCalDuration(minutes: number): number {
-  if (minutes <= 0) return 30;
-  const match = CAL_ALLOWED_DURATIONS.find((d) => d >= minutes);
-  return match || 180;
-}
-
 export default function DateTimePickerPage() {
-  const { cart, totalPrice, totalDeposit } = useCart();
+  const router = useRouter();
+  const {
+    cart,
+    totalPrice,
+    totalMinutes,
+    totalQuantity,
+    totalDeposit,
+    removeFromCart,
+  } = useCart();
 
-  // FIX: Read selectedLocationId directly from persisted useAppStore
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const { locations, isLoading: locationsLoading } = useClinicLocations();
 
-  const {
-    selectedSlot,
-    setSelectedSlot,
-    setEventTypeId,
-    setLocationAddress,
-    setDuration,
-  } = useBookingFlowStore();
+  const { selectedSlot, setSelectedSlot, setLocationAddress, setDuration } =
+    useBookingFlowStore();
 
   const [slots, setSlots] = useState<{ start: string; formatted: string }[]>(
     [],
@@ -39,78 +35,52 @@ export default function DateTimePickerPage() {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
-  // Resolves the exact active clinic chosen on Step 1
   const activeLocation = useMemo(() => {
     if (!locations || locations.length === 0) return null;
-    return (
-      locations.find((loc) => loc.id === selectedLocationId) || locations[0]
-    );
+    return locations.find((l) => l.id === selectedLocationId) || locations[0];
   }, [locations, selectedLocationId]);
 
-  const eventTypeId = activeLocation?.calEventTypeId;
-
-  const totalDuration = useMemo(() => {
-    const rawMins = cart.reduce((acc, item) => {
-      const parsed = item.treatment.durationMinutes || 30;
-      return acc + parsed * item.quantity;
-    }, 0);
-    return snapToCalDuration(rawMins);
-  }, [cart]);
-
-  // Synchronize the resolved eventTypeId & duration into the booking store
   useEffect(() => {
-    if (activeLocation?.calEventTypeId) {
-      setEventTypeId(activeLocation.calEventTypeId);
-    }
     if (activeLocation?.address || activeLocation?.name) {
       setLocationAddress(activeLocation.address || activeLocation.name);
     }
-    setDuration(totalDuration);
-  }, [
-    activeLocation,
-    totalDuration,
-    setEventTypeId,
-    setLocationAddress,
-    setDuration,
-  ]);
+    setDuration(totalMinutes);
+  }, [activeLocation, totalMinutes, setLocationAddress, setDuration]);
 
+  // Fetch slots from Square
   useEffect(() => {
-    if (!eventTypeId) return;
+    const locId = activeLocation?.id;
+    if (!locId || cart.length === 0) return;
 
     async function fetchAvailability() {
       setLoadingSlots(true);
       setSlotError(null);
 
-      const today = new Date();
-      const nextWeek = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
-
-      const params = new URLSearchParams({
-        eventTypeId: eventTypeId.toString(),
-        start: today.toISOString().split("T")[0],
-        end: nextWeek.toISOString().split("T")[0],
-        timeZone:
-          Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London",
-        duration: totalDuration.toString(),
-      });
+      const serviceVariationIds = cart
+        .map((c) => c.treatment.variationId || c.treatment.id)
+        .filter(Boolean);
 
       try {
-        const res = await fetch(`/api/slots?${params.toString()}`);
+        const res = await fetch("/api/slots", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locationId: locId,
+            serviceVariationIds,
+          }),
+        });
+
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed to load slots");
 
-        const raw = json.data?.slots || json.data || {};
-        const flattened = Array.isArray(raw) ? raw : Object.values(raw).flat();
-
-        const formatted = flattened.map((slot: any) => {
-          const iso = typeof slot === "string" ? slot : slot.start || slot.time;
-          return {
-            start: iso,
-            formatted: new Date(iso).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-        });
+        const rawSlots = json.slots || [];
+        const formatted = rawSlots.map((slot: any) => ({
+          start: slot.start,
+          formatted: new Date(slot.start).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }));
 
         setSlots(formatted);
       } catch (err: any) {
@@ -122,8 +92,9 @@ export default function DateTimePickerPage() {
     }
 
     fetchAvailability();
-  }, [eventTypeId, totalDuration]);
+  }, [activeLocation?.id, cart]);
 
+  // Group slots by date
   const groupedDays = useMemo(() => {
     const map: Record<
       string,
@@ -172,7 +143,7 @@ export default function DateTimePickerPage() {
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
       <NavBarLogoOnly theme="dark" />
 
-      <main className="max-w-xl mx-auto px-4 pt-20 pb-36 space-y-5">
+      <main className="max-w-xl mx-auto px-4 pt-20 pb-40 space-y-5">
         <Link
           href="/book"
           className="inline-flex items-center text-xs text-[#8C827A] gap-1 hover:text-black transition-colors"
@@ -180,7 +151,7 @@ export default function DateTimePickerPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Treatments
         </Link>
 
-        {/* Clinical Context Header */}
+        {/* Clinic Summary Bar */}
         <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A] truncate">
@@ -191,7 +162,7 @@ export default function DateTimePickerPage() {
             </div>
             <p className="text-[11px] text-[#8C827A] flex items-center gap-1">
               <Clock className="w-3 h-3 text-[#B8925D]" />
-              {totalDuration}m appointment window
+              {totalMinutes}m appointment window
             </p>
           </div>
 
@@ -199,9 +170,11 @@ export default function DateTimePickerPage() {
             <span className="text-xs font-bold text-[#1A1A1A]">
               £{totalPrice}
             </span>
-            <p className="text-[10px] text-[#B8925D] font-medium">
-              (£{totalDeposit} deposit)
-            </p>
+            {totalDeposit > 0 && (
+              <p className="text-[10px] text-[#B8925D] font-medium">
+                (£{totalDeposit} deposit)
+              </p>
+            )}
           </div>
         </div>
 
@@ -224,15 +197,15 @@ export default function DateTimePickerPage() {
         {loadingSlots || locationsLoading ? (
           <div className="py-20 flex flex-col items-center justify-center text-[#8C827A] gap-2.5 bg-white rounded-2xl border border-[#EBE5DF]">
             <Loader2 className="w-5 h-5 animate-spin text-[#B8925D]" />
-            <span className="text-xs">Finding available times...</span>
+            <span className="text-xs">Finding open times in Square...</span>
           </div>
         ) : groupedDays.length === 0 ? (
           <div className="py-14 text-center bg-white rounded-2xl border border-[#EBE5DF] p-6 text-xs text-[#8C827A]">
-            No openings found in the next 10 days for this duration.
+            No openings found in the next 10 days.
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Horizontal Day Selector */}
+            {/* Day Selector */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
               {groupedDays.map((day) => {
                 const isSelected = selectedDayKey === day.dayKey;
@@ -295,6 +268,20 @@ export default function DateTimePickerPage() {
           </div>
         )}
       </main>
+
+      {/* Floating CheckoutBar Controller */}
+      <CheckoutBar
+        cart={cart}
+        totalQuantity={totalQuantity}
+        totalPrice={totalPrice}
+        totalMinutes={totalMinutes}
+        totalDeposit={totalDeposit}
+        selectedSlot={selectedSlot}
+        ctaText={selectedSlot ? "Enter Details" : "Select a Time"}
+        isDisabled={!selectedSlot}
+        onDecrement={(id) => removeFromCart(id)}
+        onAction={() => router.push("/book/details")}
+      />
     </div>
   );
 }

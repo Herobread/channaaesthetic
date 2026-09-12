@@ -2,8 +2,16 @@
 
 import { MappedTreatment } from "@/api/useTreatments";
 import { SelectedItem } from "@/hooks/useCart";
-import { AlertCircle, ArrowRight, ChevronUp, Clock, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  AlertCircle,
+  ArrowRight,
+  Calendar,
+  ChevronUp,
+  Clock,
+  Loader2,
+  Lock,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface CheckoutBarProps {
@@ -11,10 +19,14 @@ interface CheckoutBarProps {
   totalQuantity: number;
   totalPrice: number;
   totalMinutes: number;
+  totalDeposit?: number;
   maxMinutes?: number;
-  onIncrement?: (treatment: MappedTreatment) => void;
+  selectedSlot?: string | null;
+  ctaText?: string;
+  isSubmitting?: boolean;
+  isDisabled?: boolean;
   onDecrement: (treatmentId: string) => void;
-  onCheckout?: () => void;
+  onAction: () => void;
 }
 
 function formatMinutes(minutes: number): string {
@@ -31,11 +43,15 @@ export default function CheckoutBar({
   totalQuantity,
   totalPrice,
   totalMinutes,
+  totalDeposit = 0,
   maxMinutes = 180,
+  selectedSlot,
+  ctaText = "Continue",
+  isSubmitting = false,
+  isDisabled = false,
   onDecrement,
-  onCheckout,
+  onAction,
 }: CheckoutBarProps) {
-  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
@@ -55,21 +71,15 @@ export default function CheckoutBar({
     }
   }, [totalQuantity]);
 
-  const handleSelectDate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOverLimit) return;
-    if (onCheckout) onCheckout();
-    router.push("/book/datetime");
-  };
-
   if (!shouldRender) return null;
 
-  const totalDeposit = cart.reduce((acc, curr) => {
-    const depVal = curr.treatment.deposit
-      ? parseFloat(curr.treatment.deposit.replace(/[^0-9.]/g, "")) || 0
-      : 0;
-    return acc + depVal * curr.quantity;
-  }, 0);
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isOverLimit || isDisabled || isSubmitting) return;
+    onAction();
+  };
+
+  const slotDate = selectedSlot ? new Date(selectedSlot) : null;
 
   return (
     <div
@@ -82,7 +92,6 @@ export default function CheckoutBar({
       <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
         {/* Animated Review Sheet */}
         <div
-          id="review-sheet"
           role="region"
           aria-label="Selected treatments overview"
           aria-hidden={!isExpanded}
@@ -93,7 +102,7 @@ export default function CheckoutBar({
           }`}
         >
           <div className="overflow-hidden bg-[#24211E] border-b border-[#38332E]">
-            <div className="p-5 sm:p-6 max-h-[60vh] overflow-y-auto space-y-4">
+            <div className="p-5 sm:p-6 max-h-[50vh] overflow-y-auto space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h4 className="font-sans font-bold text-2xl text-[#F5F2EB] leading-tight">
@@ -109,70 +118,82 @@ export default function CheckoutBar({
                 <button
                   type="button"
                   tabIndex={isExpanded ? 0 : -1}
-                  onClick={() => setIsExpanded(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(false);
+                  }}
                   aria-label="Close overview"
-                  className="w-10 h-10 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0"
+                  className="w-10 h-10 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Selected List */}
+              {/* Selected Items List */}
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
-                {cart.map(({ treatment, quantity }) => (
-                  <div
-                    key={treatment.id}
-                    className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
-                  >
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="text-sm font-medium text-[#F5F2EB] leading-snug wrap-break-word">
-                        {quantity > 1 ? `${quantity}x ` : ""}
-                        {treatment.title}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
-                        <span className="text-[#DFC095] font-semibold">
-                          {treatment.price}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1.5 font-normal">
-                          <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
-                          {treatment.time ||
-                            `${treatment.durationMinutes || 30} mins`}
-                        </span>
-                      </div>
-                    </div>
+                {cart.map(({ treatment, quantity }) => {
+                  const targetId = treatment.variationId || treatment.id;
 
-                    <button
-                      type="button"
-                      tabIndex={isExpanded ? 0 : -1}
-                      onClick={() => onDecrement(treatment.id)}
-                      aria-label={`Remove ${treatment.title}`}
-                      className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0"
+                  return (
+                    <div
+                      key={targetId}
+                      className="py-4 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
                     >
-                      <X className="w-3.5 h-3.5 text-[#A8A096]" />
-                      <span>Remove</span>
-                    </button>
-                  </div>
-                ))}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className="text-sm font-medium text-[#F5F2EB] leading-snug break-words">
+                          {quantity > 1 ? `${quantity}x ` : ""}
+                          {treatment.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-[#B8AEA4]">
+                          <span className="text-[#DFC095] font-semibold">
+                            {treatment.price}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 font-normal">
+                            <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
+                            {treatment.time ||
+                              `${treatment.durationMinutes || 30} mins`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        tabIndex={isExpanded ? 0 : -1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDecrement(targetId);
+                        }}
+                        aria-label={`Remove ${treatment.title}`}
+                        className="h-8 px-2.5 rounded-lg bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1 text-xs transition active:scale-95 shrink-0 cursor-pointer"
+                      >
+                        <X className="w-3 h-3 text-[#A8A096]" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Warning Banner - Only renders if exceeding max time */}
+        {/* Clinical Safety Warning */}
         {isOverLimit && (
           <div className="bg-[#2B1414] border-b border-red-900/60 px-5 py-3 flex items-start gap-2.5 text-xs text-red-200">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              Maximum single-session limit is {formatMinutes(maxMinutes)} for
-              clinical safety. Please remove a procedure to continue, or book a
-              Consultation if you are planning a full multi-treatment makeover.
+              Maximum single-session limit is {formatMinutes(maxMinutes)}.
+              Please remove a procedure or book a consultation first.
             </span>
           </div>
         )}
 
-        {/* Solid Bar Section */}
+        {/* Trigger Bar */}
         <div
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
           onClick={() => setIsExpanded((prev) => !prev)}
           className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between gap-4 cursor-pointer select-none"
         >
@@ -189,19 +210,38 @@ export default function CheckoutBar({
             </div>
 
             <div className="flex items-center gap-2 text-xs text-[#DFC095] font-medium mt-0.5">
-              <span>
-                {totalQuantity}{" "}
-                {totalQuantity === 1 ? "treatment" : "treatments"}
-              </span>
-              <span className="text-[#59524B]">•</span>
-              <span
-                className={`inline-flex items-center gap-1 ${
-                  isOverLimit ? "text-red-400 font-semibold" : "text-[#B8AEA4]"
-                }`}
-              >
-                <Clock className="w-3 h-3" />
-                {formatMinutes(totalMinutes)}
-              </span>
+              {slotDate ? (
+                <span className="inline-flex items-center gap-1 text-white">
+                  <Calendar className="w-3 h-3 text-[#B8925D]" />
+                  {slotDate.toLocaleDateString("en-GB", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  })}{" "}
+                  {slotDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : (
+                <>
+                  <span>
+                    {totalQuantity}{" "}
+                    {totalQuantity === 1 ? "treatment" : "treatments"}
+                  </span>
+                  <span className="text-[#59524B]">•</span>
+                  <span
+                    className={`inline-flex items-center gap-1 ${
+                      isOverLimit
+                        ? "text-red-400 font-semibold"
+                        : "text-[#B8AEA4]"
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    {formatMinutes(totalMinutes)}
+                  </span>
+                </>
+              )}
 
               <ChevronUp
                 className={`w-4 h-4 ml-0.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
@@ -213,16 +253,25 @@ export default function CheckoutBar({
 
           <button
             type="button"
-            disabled={isOverLimit}
-            onClick={handleSelectDate}
+            disabled={isOverLimit || isDisabled || isSubmitting}
+            onClick={handleButtonClick}
             className={`h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 transition shadow-md shrink-0 ${
-              isOverLimit
+              isOverLimit || isDisabled || isSubmitting
                 ? "bg-[#2A2622] text-[#6E665D] border border-[#3D3833] cursor-not-allowed"
                 : "bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.98] text-white cursor-pointer"
             }`}
           >
-            <span>Continue</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>Securing...</span>
+              </>
+            ) : (
+              <>
+                <span>{ctaText}</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

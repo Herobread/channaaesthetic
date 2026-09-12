@@ -10,10 +10,19 @@ import {
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SquareClient, SquareEnvironment } from "square";
 
 export const metadata = {
   robots: { index: false, follow: false },
 };
+
+const square = new SquareClient({
+  token: process.env.SQUARE_ACCESS_TOKEN,
+  environment:
+    process.env.SQUARE_ENVIRONMENT?.toLowerCase() === "production"
+      ? SquareEnvironment.Production
+      : SquareEnvironment.Sandbox,
+});
 
 function maskEmail(email: string): string {
   if (!email || !email.includes("@")) return email || "your email";
@@ -29,82 +38,92 @@ export default async function BookingSuccessPage({
   const { uid } = await params;
   if (!uid) redirect("/book");
 
-  const apiKey = process.env.CAL_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing CAL_API_KEY environment variable.");
+  let booking: any = null;
+  let customer: any = null;
+  let location: any = null;
+
+  try {
+    // 1. Fetch booking record from Square
+    const bookingRes = await square.bookings.get({ bookingId: uid });
+    booking = (bookingRes as any).booking;
+
+    if (!booking) redirect("/book");
+
+    // 2. Fetch Customer Details
+    if (booking.customerId) {
+      try {
+        const customerRes = await square.customers.get({
+          customerId: booking.customerId,
+        });
+        customer = (customerRes as any).customer;
+      } catch (e) {
+        console.warn("Could not fetch customer details for booking:", uid);
+      }
+    }
+
+    // 3. Fetch Clinic Location Name & Address
+    if (booking.locationId) {
+      try {
+        const locRes = await square.locations.get({
+          locationId: booking.locationId,
+        });
+        location = (locRes as any).location;
+      } catch (e) {
+        console.warn("Could not fetch location for booking:", uid);
+      }
+    }
+  } catch (err) {
+    console.error("Square booking retrieval failed:", err);
+    redirect("/book");
   }
 
-  const calRes = await fetch(`https://api.cal.com/v2/bookings/${uid}`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "cal-api-version": "2024-08-13",
-    },
-    cache: "no-store",
-  });
-
-  if (!calRes.ok) redirect("/book");
-
-  const bookingResponse = await calRes.json();
-  const booking = bookingResponse.data || bookingResponse;
-
-  // 1. Robust authorization check
+  // 4. Authorization check against session cookie
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("booking_session")?.value;
 
   const isAuthorizedBooker = Boolean(
     sessionToken &&
     (String(sessionToken) === String(uid) ||
-      String(sessionToken) === String(booking.uid) ||
-      String(sessionToken) === String(booking.id)),
+      String(sessionToken) === String(booking?.id) ||
+      String(sessionToken) === String(booking?.customerId)),
   );
 
-  // 2. Format Dates
-  const dateObj = new Date(booking.start);
-  const formattedDate = dateObj.toLocaleDateString("en-GB", {
+  // 5. Format Appointment Date & Duration
+  const startDate = booking.startAt ? new Date(booking.startAt) : new Date();
+  const formattedDate = startDate.toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const formattedTime = dateObj.toLocaleTimeString("en-GB", {
+  const formattedTime = startDate.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  // 3. Extract attendee email
-  const rawEmail =
-    booking.attendees?.[0]?.email ||
-    booking.user?.email ||
-    booking.responses?.email ||
-    "";
+  // Calculate total duration across appointment segments
+  const segments = booking.appointmentSegments || [];
+  const durationMinutes =
+    segments.reduce(
+      (acc: number, seg: any) => acc + (seg.durationMinutes || 0),
+      0,
+    ) || 45;
 
-  // Show the real email if authorized, masked only if unauthorized
+  const rawEmail = customer?.emailAddress || "";
   const displayEmail = isAuthorizedBooker
     ? rawEmail || "your email"
     : maskEmail(rawEmail);
 
-  // 4. Extract metadata & treatments breakdown
-  const metadata = booking.metadata || {};
-  const notesText =
-    booking.bookingFieldsResponses?.notes || booking.description || "";
-
-  const treatmentLines: string[] = [];
-  if (notesText.includes("Treatments:")) {
-    const afterTreatments = notesText.split("Treatments:")[1];
-    const section = afterTreatments.split("Financials:")[0];
-    for (const line of section.split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("•")) {
-        treatmentLines.push(trimmed.replace(/^•\s*/, ""));
-      }
-    }
-  }
-
-  const totalPrice = metadata.totalPrice || "0";
-  const totalDeposit = metadata.totalDeposit || "0";
-  const balanceDue =
-    metadata.balanceDue ||
-    String(Math.max(0, Number(totalPrice) - Number(totalDeposit)));
+  // 6. Clinic Address Formatting
+  const locationAddress = location?.address
+    ? [
+        location.address.addressLine1,
+        location.address.locality,
+        location.address.postalCode,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : location?.name || "Clinic Location";
 
   return (
     <main className="min-h-screen bg-[#141210] text-[#F5F2EB] px-4 py-12 sm:py-20">
@@ -129,14 +148,14 @@ export default async function BookingSuccessPage({
           <div className="flex items-center justify-between border-b border-[#38332E] pb-4">
             <div>
               <span className="text-xs uppercase tracking-widest text-[#B8AEA4] font-semibold block">
-                Booking Reference
+                Square Booking ID
               </span>
               <span className="text-xs font-mono text-[#DFC095] mt-0.5 block">
                 {uid}
               </span>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-[#2A2622] text-[#DFC095] border border-[#3D3833] font-medium">
-              Verified
+              {booking.status || "ACCEPTED"}
             </span>
           </div>
 
@@ -149,8 +168,7 @@ export default async function BookingSuccessPage({
                   {formattedDate}
                 </p>
                 <p className="text-xs text-[#DFC095] font-medium mt-0.5">
-                  {formattedTime} (
-                  {booking.duration || booking.lengthInMinutes || 60} mins)
+                  {formattedTime} ({durationMinutes} mins)
                 </p>
               </div>
             </div>
@@ -160,57 +178,30 @@ export default async function BookingSuccessPage({
               <div>
                 <p className="text-xs text-[#B8AEA4]">Clinic Location</p>
                 <p className="text-sm font-semibold text-white mt-0.5 line-clamp-2">
-                  {booking.location || "Clinic Location"}
+                  {locationAddress}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Only show procedures & financial breakdown if authorized */}
+          {/* Procedure Notes & Privacy Gating */}
           {isAuthorizedBooker ? (
-            <>
-              <div className="space-y-3">
-                <h3 className="text-xs uppercase tracking-wider text-[#B8AEA4] font-semibold">
-                  Procedures Booked
-                </h3>
-                <div className="divide-y divide-[#38332E] bg-[#24211E] border border-[#38332E] rounded-2xl px-4">
-                  {treatmentLines.length > 0 ? (
-                    treatmentLines.map((line, idx) => (
-                      <div
-                        key={idx}
-                        className="py-3.5 text-sm font-medium text-white"
-                      >
-                        {line}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-4 text-sm text-[#B8AEA4]">
-                      Clinical Consultation Session
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-3">
+              <h3 className="text-xs uppercase tracking-wider text-[#B8AEA4] font-semibold">
+                Clinical Notes
+              </h3>
+              <div className="bg-[#24211E] border border-[#38332E] rounded-2xl p-4 text-xs text-[#B8AEA4]">
+                {booking.customerNote ? (
+                  <p>{booking.customerNote}</p>
+                ) : (
+                  <p className="italic">No special medical notes provided.</p>
+                )}
               </div>
-
-              <div className="bg-[#24211E] border border-[#38332E] rounded-2xl p-4 space-y-2.5 text-sm">
-                <div className="flex justify-between text-[#B8AEA4]">
-                  <span>Total Procedure Value</span>
-                  <span>£{totalPrice}</span>
-                </div>
-                <div className="flex justify-between text-[#DFC095] font-medium">
-                  <span>Deposit Recorded</span>
-                  <span>£{totalDeposit}</span>
-                </div>
-                <div className="border-t border-[#38332E] pt-2.5 flex justify-between font-bold text-white text-base">
-                  <span>Balance Due at Clinic</span>
-                  <span>£{balanceDue}</span>
-                </div>
-              </div>
-            </>
+            </div>
           ) : (
             <div className="bg-[#24211E] border border-[#38332E] rounded-2xl p-4 text-center text-xs text-[#B8AEA4]">
-              Itemized procedure details and pricing are hidden for patient
-              privacy. Please check your confirmation email for full
-              consultation records.
+              Itemized procedure details are hidden for patient privacy. Please
+              check your confirmation email for full clinical records.
             </div>
           )}
         </div>
@@ -224,7 +215,7 @@ export default async function BookingSuccessPage({
             </p>
             <p className="leading-relaxed">
               Please avoid blood-thinning agents, alcohol, and active skincare
-              ingredients 24-48 hours before your session.
+              ingredients (retinoids, AHA/BHA) 24-48 hours before your session.
             </p>
           </div>
         </div>

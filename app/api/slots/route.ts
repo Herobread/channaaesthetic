@@ -1,44 +1,71 @@
 import { NextResponse } from "next/server";
-import { CAL_ALLOWED_DURATIONS, CAL_MIN_DURATION } from "../constants";
+import { SquareClient, SquareEnvironment } from "square";
 
-// app/api/slots/route.ts
+const square = new SquareClient({
+  token: process.env.SQUARE_ACCESS_TOKEN,
+  environment:
+    process.env.SQUARE_ENVIRONMENT?.toLowerCase() === "production"
+      ? SquareEnvironment.Production
+      : SquareEnvironment.Sandbox,
+});
 
-function snapToCalDuration(rawMinutes?: number): number {
-  if (!rawMinutes || rawMinutes <= 0) return CAL_MIN_DURATION;
-  const matched = CAL_ALLOWED_DURATIONS.find((d) => d >= rawMinutes);
-  return matched || 180;
-}
+export async function POST(request: Request) {
+  try {
+    const { locationId, serviceVariationIds, startAt, endAt } =
+      await request.json();
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const eventTypeId = searchParams.get("eventTypeId");
-  const start = searchParams.get("start");
-  const end = searchParams.get("end");
-  const timeZone = searchParams.get("timeZone") || "Europe/London";
-  const rawDuration = Number(searchParams.get("duration"));
+    if (!locationId || !serviceVariationIds || !serviceVariationIds.length) {
+      return NextResponse.json(
+        { error: "locationId and serviceVariationIds are required" },
+        { status: 400 },
+      );
+    }
 
-  if (!eventTypeId || !start || !end) {
-    return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
+    // Default range: next 10 days if not provided
+    const start = startAt || new Date().toISOString();
+    const end =
+      endAt || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Map each item variation into an appointment segment
+    const appointmentSegments = serviceVariationIds.map(
+      (variationId: string) => ({
+        serviceVariationId: variationId,
+        serviceVariationVersion: BigInt(1), // Square will auto-resolve if null or default
+      }),
+    );
+
+    // Query Square's native Bookings engine
+    const response = await square.bookings.searchAvailability({
+      query: {
+        filter: {
+          startAtRange: {
+            startAt: start,
+            endAt: end,
+          },
+          locationId,
+          segmentFilters: [
+            {
+              serviceVariationId: serviceVariationIds[0],
+            },
+          ],
+        },
+      },
+    });
+
+    const availabilities = (response as any).availabilities || [];
+
+    // Format into flat start times
+    const slots = availabilities.map((avail: any) => ({
+      start: avail.startAt,
+      teamMemberId: avail.appointmentSegments?.[0]?.teamMemberId,
+    }));
+
+    return NextResponse.json({ slots });
+  } catch (err: any) {
+    console.error("Square availability error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to search availability" },
+      { status: 500 },
+    );
   }
-
-  // Snap before requesting slots from Cal.com
-  const duration = snapToCalDuration(rawDuration);
-
-  const url = new URL("https://api.cal.com/v2/slots");
-  url.searchParams.set("eventTypeId", eventTypeId);
-  url.searchParams.set("start", start);
-  url.searchParams.set("end", end);
-  url.searchParams.set("timeZone", timeZone);
-  url.searchParams.set("duration", duration.toString());
-
-  const res = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${process.env.CAL_API_KEY}`,
-      "cal-api-version": "2024-09-04",
-    },
-    cache: "no-store",
-  });
-
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
 }

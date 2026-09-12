@@ -1,4 +1,3 @@
-// components/BookingBar.tsx
 "use client";
 
 import { useCart } from "@/hooks/useCart";
@@ -7,9 +6,9 @@ import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import {
   AlertCircle,
   ArrowRight,
+  CheckCircle2,
   ChevronUp,
   Clock,
-  CreditCard,
   Loader2,
   X,
 } from "lucide-react";
@@ -43,13 +42,10 @@ export default function BookingBar() {
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const {
     selectedSlot,
-    eventTypeId,
-    duration,
-    locationAddress,
     customerDetails,
+    setCustomerDetails,
     isSubmitting,
     setIsSubmitting,
-    resetFlow,
   } = useBookingFlowStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -62,11 +58,6 @@ export default function BookingBar() {
 
   const isOverLimit = totalMinutes > maxMinutes;
   const hasPickedSlot = Boolean(selectedSlot);
-  const hasFilledDetails = Boolean(
-    customerDetails.name?.trim() &&
-    customerDetails.email?.trim() &&
-    customerDetails.phone?.trim(),
-  );
 
   useEffect(() => {
     if (totalQuantity > 0) {
@@ -83,7 +74,7 @@ export default function BookingBar() {
 
   const handleAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isOverLimit) return;
+    if (isOverLimit || isSubmitting) return;
 
     if (isStep1Treatments) {
       router.push("/book/datetime");
@@ -97,33 +88,94 @@ export default function BookingBar() {
     }
 
     if (isStep3Details) {
+      // Direct DOM fallback to catch browser autofill without React keystrokes
+      const nameInput =
+        document.querySelector<HTMLInputElement>(
+          'input[name="fullName"], input[name="name"], input[placeholder*="Doe"]',
+        )?.value ||
+        customerDetails.name ||
+        "";
+      const emailInput =
+        document.querySelector<HTMLInputElement>(
+          'input[name="email"], input[type="email"]',
+        )?.value ||
+        customerDetails.email ||
+        "";
+      const phoneInput =
+        document.querySelector<HTMLInputElement>(
+          'input[name="phone"], input[type="tel"]',
+        )?.value ||
+        customerDetails.phone ||
+        "";
+      const notesInput =
+        document.querySelector<HTMLTextAreaElement>("textarea")?.value ||
+        customerDetails.notes ||
+        "";
+
+      if (!nameInput.trim()) {
+        alert("Please enter your full name.");
+        return;
+      }
+      if (!emailInput.trim() || !emailInput.includes("@")) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+      if (!phoneInput.trim()) {
+        alert("Please enter your phone number.");
+        return;
+      }
+
+      // Extract variation ID from the current cart
+      const variationId =
+        cart[0]?.treatment?.variationId || cart[0]?.treatment?.id;
+
+      if (!selectedLocationId || !variationId || !selectedSlot) {
+        alert(
+          "Missing booking details. Please return to step 1 and re-select.",
+        );
+        return;
+      }
+
       setIsSubmitting(true);
 
+      // Sync state back to store
+      setCustomerDetails({
+        name: nameInput.trim(),
+        email: emailInput.trim(),
+        phone: phoneInput.trim(),
+        notes: notesInput.trim(),
+      });
+
       try {
-        const response = await fetch("/api/checkout", {
+        const response = await fetch("/api/bookings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            totalDeposit,
-            totalPrice,
-            selectedSlot,
-            eventTypeId,
-            locationAddress,
-            customerDetails,
-            cart,
+            locationId: selectedLocationId,
+            startAt: selectedSlot,
+            serviceVariationId: variationId,
+            customer: {
+              name: nameInput.trim(),
+              email: emailInput.trim(),
+              phone: phoneInput.trim(),
+            },
+            notes: notesInput.trim() || undefined,
           }),
         });
 
-        const { url, error } = await response.json();
-        if (error || !url) throw new Error(error || "Payment failed to start.");
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to commit booking.");
+
+        const bookingId = data.booking?.id || data.booking?.uid;
+        if (!bookingId) throw new Error("No booking ID returned from server.");
 
         if (typeof clearCart === "function") clearCart();
-        if (typeof resetFlow === "function") resetFlow();
 
-        window.location.href = url; // Sends client to Stripe
+        // Hard navigation breaks out of layout and prevents the page guard from kicking you to /datetime
+        window.location.assign(`/success/${bookingId}`);
       } catch (err: any) {
-        alert(err.message || "Failed to proceed to payment.");
-      } finally {
+        alert(err.message || "Failed to finalize booking.");
         setIsSubmitting(false);
       }
     }
@@ -131,10 +183,9 @@ export default function BookingBar() {
 
   if (!shouldRender) return null;
 
+  // Never lock the button on Step 3—let the user click so validation triggers
   const isButtonDisabled =
-    isOverLimit ||
-    (isStep2DateTime && !hasPickedSlot) ||
-    (isStep3Details && (!hasFilledDetails || !eventTypeId || isSubmitting));
+    isOverLimit || (isStep2DateTime && !hasPickedSlot) || isSubmitting;
 
   return (
     <div
@@ -184,43 +235,46 @@ export default function BookingBar() {
 
               {/* Treatment list */}
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
-                {cart.map(({ treatment, quantity }) => (
-                  <div
-                    key={treatment.id}
-                    className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
-                  >
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="text-sm font-medium text-[#F5F2EB] leading-snug wrap-break-word">
-                        {quantity > 1 ? `${quantity}x ` : ""}
-                        {treatment.title}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
-                        <span className="text-[#DFC095] font-semibold">
-                          {treatment.price}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1.5 font-normal">
-                          <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
-                          {treatment.time ||
-                            `${treatment.durationMinutes || 30} mins`}
-                        </span>
+                {cart.map(({ treatment, quantity }) => {
+                  const targetId = treatment.variationId || treatment.id;
+                  return (
+                    <div
+                      key={targetId}
+                      className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
+                    >
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <p className="text-sm font-medium text-[#F5F2EB] leading-snug break-words">
+                          {quantity > 1 ? `${quantity}x ` : ""}
+                          {treatment.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
+                          <span className="text-[#DFC095] font-semibold">
+                            {treatment.price}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1.5 font-normal">
+                            <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
+                            {treatment.time ||
+                              `${treatment.durationMinutes || 30} mins`}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {isStep1Treatments && (
-                      <button
-                        type="button"
-                        tabIndex={isExpanded ? 0 : -1}
-                        onClick={() => handleDecrement(treatment.id)}
-                        aria-label={`Remove ${treatment.title}`}
-                        className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5 text-[#A8A096]" />
-                        <span>Remove</span>
-                      </button>
-                    )}
-                  </div>
-                ))}
+                      {isStep1Treatments && (
+                        <button
+                          type="button"
+                          tabIndex={isExpanded ? 0 : -1}
+                          onClick={() => handleDecrement(targetId)}
+                          aria-label={`Remove ${treatment.title}`}
+                          className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5 text-[#A8A096]" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -300,7 +354,7 @@ export default function BookingBar() {
                 <span>Securing Slot...</span>
               </div>
 
-              {/* State: Step 3 (Payment / Finalize) */}
+              {/* State: Step 3 Final Submission */}
               <div
                 className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
                   !isSubmitting && isStep3Details
@@ -308,12 +362,8 @@ export default function BookingBar() {
                     : "opacity-0 scale-90 translate-y-2 pointer-events-none"
                 }`}
               >
-                <CreditCard className="w-4 h-4 text-[#F5F2EB]" />
-                <span>
-                  {totalDeposit > 0
-                    ? `Pay £${totalDeposit} Deposit`
-                    : "Pay & Confirm"}
-                </span>
+                <CheckCircle2 className="w-4 h-4 text-white" />
+                <span>Confirm Booking</span>
               </div>
 
               {/* State: Steps 1 & 2 */}

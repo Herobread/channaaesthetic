@@ -17,6 +17,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
+    "form-data": "^4.0.6",
     "lucide-react": "^1.38.0",
     "next": "16.3.3",
     "next-sanity": "^13.3.4",
@@ -24,6 +25,7 @@
     "react-dom": "19.2.8",
     "sanity": "^6.12.0",
     "shadcn": "^4.19.1",
+    "square": "^45.1.0",
     "stripe": "^22.6.1",
     "styled-components": "^6.5.3",
     "tailwind-merge": "^3.6.0",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/form-data": "^2.5.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

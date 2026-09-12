@@ -1,17 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: [
-    "next-sanity",
-    "sanity",
-    "@sanity/sdk-react",
-    "@sanity/workbench",
-  ],
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cdn.sanity.io",
+        hostname: "items-images-production.s3.us-west-2.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.us-west-2.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.squarecdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.squareup.com",
       },
     ],
   },
