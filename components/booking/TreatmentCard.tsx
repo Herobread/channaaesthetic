@@ -28,6 +28,8 @@ export default function TreatmentCard({
     }
   };
 
+  const formattedPrice = treatment.price === 0 ? "Free" : `£${treatment.price}`;
+
   return (
     <div
       className={`group relative bg-white rounded-2xl overflow-hidden border flex flex-col justify-between transition-all duration-300 ${
@@ -94,7 +96,7 @@ export default function TreatmentCard({
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-base text-[#1A1A1A]">
-              {treatment.price}
+              {formattedPrice}
             </span>
             <span className="text-xs text-[#8C827A]">•</span>
             <span className="flex items-center gap-1 text-xs text-[#8C827A]">
@@ -102,9 +104,9 @@ export default function TreatmentCard({
             </span>
           </div>
 
-          {treatment.deposit && treatment.priceNum > 0 && (
+          {treatment.deposit > 0 && treatment.price > 0 && (
             <span className="text-[11px] text-[#8C827A] font-light truncate">
-              {treatment.deposit} deposit to reserve
+              £{treatment.deposit} deposit to reserve
             </span>
           )}
         </div>

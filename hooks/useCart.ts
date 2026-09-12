@@ -24,12 +24,17 @@ export const useCartStore = create<CartStore>()(
       handleIncrement: (treatment) => {
         set((state) => {
           const existing = state.cart.find(
-            (i) => i.treatment.id === treatment.id,
+            (i) =>
+              i.treatment.id === treatment.id ||
+              (treatment.variationId &&
+                i.treatment.variationId === treatment.variationId),
           );
 
           const nextCart = existing
             ? state.cart.map((i) =>
-                i.treatment.id === treatment.id
+                i.treatment.id === treatment.id ||
+                (treatment.variationId &&
+                  i.treatment.variationId === treatment.variationId)
                   ? { ...i, quantity: i.quantity + 1 }
                   : i,
               )
@@ -42,11 +47,13 @@ export const useCartStore = create<CartStore>()(
       handleDecrement: (treatmentId) => {
         set((state) => ({
           cart: state.cart
-            .map((i) =>
-              i.treatment.id === treatmentId
-                ? { ...i, quantity: i.quantity - 1 }
-                : i,
-            )
+            .map((i) => {
+              const isMatch =
+                i.treatment.id === treatmentId ||
+                i.treatment.variationId === treatmentId;
+
+              return isMatch ? { ...i, quantity: i.quantity - 1 } : i;
+            })
             .filter((i) => i.quantity > 0),
         }));
       },
@@ -66,24 +73,20 @@ export function useCart() {
   );
 
   const totalPrice = store.cart.reduce(
-    (acc, curr) => acc + (curr.treatment.priceNum || 0) * curr.quantity,
+    (acc, curr) => acc + (Number(curr.treatment.price) || 0) * curr.quantity,
     0,
   );
 
   const totalMinutes = store.cart.reduce(
-    (acc, curr) => acc + (curr.treatment.durationMinutes || 30) * curr.quantity,
+    (acc, curr) =>
+      acc + (Number(curr.treatment.durationMinutes) || 30) * curr.quantity,
     0,
   );
 
-  const totalDeposit = store.cart.reduce((acc, curr) => {
-    const depositRaw = curr.treatment.deposit;
-    const depVal =
-      typeof depositRaw === "number"
-        ? depositRaw
-        : parseFloat(String(depositRaw || "").replace(/[^0-9.]/g, "")) || 0;
-
-    return acc + depVal * curr.quantity;
-  }, 0);
+  const totalDeposit = store.cart.reduce(
+    (acc, curr) => acc + (Number(curr.treatment.deposit) || 0) * curr.quantity,
+    0,
+  );
 
   return {
     cart: store.cart,

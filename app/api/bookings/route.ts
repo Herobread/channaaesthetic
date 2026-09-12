@@ -23,11 +23,19 @@ function sanitizePhoneNumber(phone?: string): string | undefined {
   }
   return cleaned || undefined;
 }
+// Inside app/api/bookings/route.ts
 
 export async function POST(request: Request) {
   try {
-    const { locationId, startAt, serviceVariationId, customer, notes } =
-      await request.json();
+    const {
+      locationId,
+      startAt,
+      serviceVariationId,
+      customer,
+      notes,
+      sourceId, // Card token from Square Web Payments SDK
+      depositAmount, // Numeric deposit amount in GBP (e.g., 30)
+    } = await request.json();
 
     if (!locationId || !startAt || !serviceVariationId || !customer?.email) {
       return NextResponse.json(
@@ -39,18 +47,11 @@ export async function POST(request: Request) {
     const emailClean = customer.email.trim().toLowerCase();
     const phoneClean = sanitizePhoneNumber(customer.phone);
 
-    // 1. Find existing customer or create a new one
+    // 1. Find or create the customer in Square
     let customerId: string;
     const searchRes = await square.customers.search({
-      query: {
-        filter: {
-          emailAddress: {
-            exact: emailClean,
-          },
-        },
-      },
+      query: { filter: { emailAddress: { exact: emailClean } } },
     });
-
     const existing = (searchRes as any).customers?.[0];
 
     if (existing) {
@@ -58,7 +59,6 @@ export async function POST(request: Request) {
     } else {
       const [givenName, ...rest] = (customer.name || "Guest").trim().split(" ");
       const familyName = rest.join(" ") || "";
-
       const created = await square.customers.create({
         idempotencyKey: crypto.randomUUID(),
         givenName,
@@ -67,20 +67,38 @@ export async function POST(request: Request) {
         phoneNumber: phoneClean,
         note: notes?.trim() || undefined,
       });
-
       customerId = (created as any).customer.id;
     }
 
-    // 2. Retrieve service variation details to read version & assigned staff
-    let variationObj: any = null;
+    // 2. Process non-refundable deposit payment if requested
+    let paymentId: string | null = null;
+    if (depositAmount && depositAmount > 0 && sourceId) {
+      const amountInPence = BigInt(Math.round(depositAmount * 100));
 
+      const paymentRes = await square.payments.create({
+        sourceId,
+        idempotencyKey: crypto.randomUUID(),
+        amountMoney: {
+          amount: amountInPence,
+          currency: "GBP",
+        },
+        customerId,
+        locationId,
+        referenceId: `DEP-${Date.now()}`,
+        note: `Non-refundable booking deposit for ${customer.name || "Client"}`,
+      });
+
+      paymentId = (paymentRes as any).payment?.id;
+    }
+
+    // 3. Retrieve service variation details & team member
+    let variationObj: any = null;
     try {
       const singleRes = await square.catalog.object.get({
         objectId: serviceVariationId,
       });
       variationObj = (singleRes as any).object;
     } catch {
-      // Fallback if object.get is unavailable
       const batchRes = await (square.catalog as any).batchGet?.({
         objectIds: [serviceVariationId],
       });
@@ -90,20 +108,12 @@ export async function POST(request: Request) {
     const variationVersion = variationObj?.version
       ? BigInt(variationObj.version)
       : BigInt(1);
-
-    // 3. Extract assigned staff member from variation or active team members
     let teamMemberId = variationObj?.itemVariationData?.teamMemberIds?.[0];
 
     if (!teamMemberId) {
       const teamRes = await square.teamMembers.search({
-        query: {
-          filter: {
-            status: "ACTIVE",
-            locationIds: [locationId],
-          },
-        },
+        query: { filter: { status: "ACTIVE", locationIds: [locationId] } },
       });
-
       teamMemberId = (teamRes as any).teamMembers?.[0]?.id;
     }
 
@@ -114,14 +124,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Create the booking in Square Appointments
+    // 4. Create appointment with payment record logged in customer notes
+    const bookingNote = [
+      notes?.trim(),
+      paymentId
+        ? `Non-refundable deposit paid: £${depositAmount} (Payment ID: ${paymentId})`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
     const bookingRes = await square.bookings.create({
       idempotencyKey: crypto.randomUUID(),
       booking: {
         locationId,
         customerId,
         startAt,
-        customerNote: notes?.trim() || undefined,
+        customerNote: bookingNote || undefined,
         appointmentSegments: [
           {
             serviceVariationId,
@@ -134,14 +153,12 @@ export async function POST(request: Request) {
 
     const booking = (bookingRes as any).booking;
 
-    // Convert BigInts before JSON serialization
     const serializedBooking = JSON.parse(
       JSON.stringify(booking, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
 
-    // 5. Build response & set authentication cookie for the /success/[uid] page
     const response = NextResponse.json({
       success: true,
       booking: serializedBooking,
@@ -152,20 +169,17 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 60 * 60 * 24,
     });
 
     return response;
   } catch (err: any) {
-    console.error("Square Booking Error:", err);
-
-    // Parse Square structured error details if available
-    const squareMessage =
+    console.error("Square Booking/Payment Error:", err);
+    const msg =
       err?.errors?.[0]?.detail ||
       err?.body?.errors?.[0]?.detail ||
       err?.message ||
-      "Failed to finalize booking";
-
-    return NextResponse.json({ error: squareMessage }, { status: 500 });
+      "Failed to process deposit and booking";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

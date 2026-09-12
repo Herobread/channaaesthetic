@@ -3,7 +3,6 @@
 import { useClinicLocations } from "@/api/useClinicLocations";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
-import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import {
   AlertCircle,
@@ -11,27 +10,36 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
+  CreditCard as CreditCardIcon,
   Loader2,
   MapPin,
   Phone,
+  ShieldCheck,
   User,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+declare global {
+  interface Window {
+    Square?: any;
+  }
+}
+
 export default function PatientDetailsPage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const cardInstanceRef = useRef<any>(null);
 
   const { cart, totalMinutes, totalPrice, totalDeposit, clearCart } = useCart();
-  const selectedLocationId = useAppStore((state) => state.selectedLocationId);
-  const { locations } = useClinicLocations();
+  const { locations, selectedLocationId } = useClinicLocations();
   const { selectedSlot, customerDetails, setCustomerDetails } =
     useBookingFlowStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCardReady, setIsCardReady] = useState(false);
 
   const activeLocation = useMemo(() => {
     return (
@@ -39,21 +47,116 @@ export default function PatientDetailsPage() {
     );
   }, [locations, selectedLocationId]);
 
-  // Guard: Return to slot picker if no slot is stored
+  const activeLocationId = activeLocation?.id;
+  const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID;
+
+  // Guard: Return to slot picker if no slot is selected
   useEffect(() => {
     if (!selectedSlot) {
       router.replace("/book/datetime");
     }
   }, [selectedSlot, router]);
 
+  // Load Square Payments Script and Mount Card safely
+  useEffect(() => {
+    if (totalDeposit <= 0 || !activeLocationId || !squareAppId) return;
+
+    let isMounted = true;
+
+    async function loadSquare() {
+      try {
+        // 1. Ensure the CDN script is on the page
+        if (!window.Square) {
+          let script = document.getElementById(
+            "square-cdn-script",
+          ) as HTMLScriptElement;
+
+          if (!script) {
+            script = document.createElement("script");
+            script.id = "square-cdn-script";
+            script.src = squareAppId.startsWith("sandbox-")
+              ? "https://sandbox.web.squarecdn.com/v1/square.js"
+              : "https://web.squarecdn.com/v1/square.js";
+            script.async = true;
+            document.head.appendChild(script);
+          }
+
+          // Polling to avoid race condition during React DEV Strict Mode mount
+          let attempts = 0;
+          while (!window.Square && attempts < 50) {
+            await new Promise((r) => setTimeout(r, 100));
+            attempts++;
+          }
+        }
+
+        if (!window.Square) {
+          throw new Error(
+            "Square payment library timed out. Check network or ad-blockers.",
+          );
+        }
+
+        if (!isMounted) return;
+
+        // 2. Clean previous instance before creating a new one
+        if (cardInstanceRef.current) {
+          try {
+            await cardInstanceRef.current.destroy();
+          } catch (_) {}
+          cardInstanceRef.current = null;
+        }
+
+        // 3. Initialize Payments & Card
+        const payments = window.Square.payments(squareAppId, activeLocationId);
+        const card = await payments.card({
+          style: {
+            input: {
+              color: "#1A1A1A",
+              fontSize: "14px",
+            },
+            "input::placeholder": {
+              color: "#8C827A",
+            },
+          },
+        });
+
+        // 4. Attach to mount element
+        const mountNode = document.getElementById("square-card-mount");
+        if (mountNode && isMounted) {
+          await card.attach("#square-card-mount");
+          cardInstanceRef.current = card;
+          setIsCardReady(true);
+          setErrorMessage(null);
+        }
+      } catch (err: any) {
+        console.error("Square initialization failure:", err);
+        if (isMounted) {
+          setErrorMessage(err.message || "Could not load payment card input.");
+        }
+      }
+    }
+
+    loadSquare();
+
+    return () => {
+      isMounted = false;
+      if (cardInstanceRef.current) {
+        try {
+          cardInstanceRef.current.destroy();
+        } catch (_) {}
+        cardInstanceRef.current = null;
+      }
+      setIsCardReady(false);
+    };
+  }, [totalDeposit, activeLocationId, squareAppId]);
+
   if (!selectedSlot) return null;
   const slotDate = new Date(selectedSlot);
 
   const handleBookingSubmission = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (isSubmitting) return;
     setErrorMessage(null);
 
-    // 1. Read directly from the DOM / FormData (100% immune to React autofill lag)
     const form = formRef.current;
     if (!form) return;
 
@@ -63,7 +166,6 @@ export default function PatientDetailsPage() {
     const phone = String(formData.get("phone") || "").trim();
     const notes = String(formData.get("notes") || "").trim();
 
-    // 2. Validate fields with immediate visual feedback
     if (!fullName) {
       setErrorMessage("Please enter your full name.");
       form.querySelector<HTMLInputElement>('input[name="fullName"]')?.focus();
@@ -80,23 +182,42 @@ export default function PatientDetailsPage() {
       return;
     }
 
-    // 3. Extract Square serviceVariationId (prefer variationId over parent id)
     const targetService = cart[0]?.treatment;
     const variationId = targetService?.variationId || targetService?.id;
-    const locationId = activeLocation?.id;
 
-    if (!variationId) {
-      setErrorMessage("No treatment selected. Please return to the menu.");
-      return;
-    }
-    if (!locationId) {
-      setErrorMessage("No clinic location active. Please reselect a location.");
+    if (!variationId || !activeLocationId) {
+      setErrorMessage("Missing procedure or location details.");
       return;
     }
 
     setIsSubmitting(true);
 
-    // Sync back to Zustand store for history/receipts
+    // Tokenize payment card if deposit is required
+    let sourceId: string | undefined = undefined;
+    if (totalDeposit > 0) {
+      if (!cardInstanceRef.current) {
+        setErrorMessage("Payment form is not ready. Please refresh.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        const tokenResult = await cardInstanceRef.current.tokenize();
+        if (tokenResult.status !== "OK") {
+          const detail =
+            tokenResult.errors?.[0]?.message || "Invalid card details.";
+          setErrorMessage(detail);
+          setIsSubmitting(false);
+          return;
+        }
+        sourceId = tokenResult.token;
+      } catch (err: any) {
+        setErrorMessage(err.message || "Card verification failed.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     setCustomerDetails({
       name: fullName,
       email,
@@ -104,34 +225,31 @@ export default function PatientDetailsPage() {
       notes,
     });
 
-    const payload = {
-      locationId,
-      startAt: selectedSlot,
-      serviceVariationId: variationId,
-      customer: {
-        name: fullName,
-        email,
-        phone,
-      },
-      notes: notes || undefined,
-    };
-
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          locationId: activeLocationId,
+          startAt: selectedSlot,
+          serviceVariationId: variationId,
+          depositAmount: totalDeposit,
+          sourceId,
+          customer: { name: fullName, email, phone },
+          notes: notes || undefined,
+        }),
       });
 
       const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to commit booking in Square");
-      }
+      if (!res.ok) throw new Error(json.error || "Failed to finalize booking.");
+
+      const bookingId = json.booking?.id || json.booking?.uid;
+      if (!bookingId) throw new Error("No reference returned from Square.");
 
       if (typeof clearCart === "function") clearCart();
-      router.push(`/book/confirmation?bookingId=${json.booking?.id || ""}`);
+      window.location.assign(`/success/${bookingId}`);
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to confirm booking.");
+      setErrorMessage(err.message || "Failed to finalize booking.");
       setIsSubmitting(false);
     }
   };
@@ -191,13 +309,12 @@ export default function PatientDetailsPage() {
         </div>
 
         {errorMessage && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+          <div className="flex items-center gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* Contact Input Form - Uncontrolled inputs to capture autofill instantly */}
         <form
           ref={formRef}
           onSubmit={handleBookingSubmission}
@@ -271,10 +388,50 @@ export default function PatientDetailsPage() {
               </div>
             </div>
           </div>
+
+          {/* Secure Deposit Card Section */}
+          {totalDeposit > 0 && (
+            <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between pb-2 border-b border-[#F4EFEA]">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
+                  <CreditCardIcon className="w-3.5 h-3.5 text-[#B8925D]" />
+                  <span>Required Booking Deposit</span>
+                </div>
+                <span className="text-xs font-bold text-[#B8925D] bg-[#B8925D]/10 px-2 py-0.5 rounded-md">
+                  £{totalDeposit} to hold slot
+                </span>
+              </div>
+
+              <p className="text-[11px] text-[#8C827A] leading-relaxed">
+                A non-refundable deposit of £{totalDeposit} is collected now to
+                reserve this slot. The remainder (£
+                {Math.max(0, totalPrice - totalDeposit)}) is paid at the clinic.
+              </p>
+
+              {/* Native container where Square mounts its single-card iframe */}
+              <div className="pt-1 relative">
+                {!isCardReady && !errorMessage && (
+                  <div className="h-20 flex items-center justify-center text-xs text-[#8C827A] gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#B8925D]" />
+                    <span>Connecting to Square payment terminal...</span>
+                  </div>
+                )}
+                <div
+                  id="square-card-mount"
+                  className={isCardReady ? "min-h-[90px]" : "hidden"}
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 text-[10px] text-[#8C827A] pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#B8925D]" />
+                <span>Encrypted 256-bit Square payment processing</span>
+              </div>
+            </div>
+          )}
         </form>
       </main>
 
-      {/* Floating Bottom Bar (ALWAYS ACTIVE AND NEVER BLOCKED) */}
+      {/* Floating Action Bar */}
       <div className="fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50">
         <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl p-4 sm:p-5 flex items-center justify-between gap-4">
           <div className="flex flex-col min-w-0">
@@ -283,8 +440,8 @@ export default function PatientDetailsPage() {
                 £{totalPrice}
               </span>
               {totalDeposit > 0 && (
-                <span className="text-xs text-[#B8AEA4]">
-                  (£{totalDeposit} dep)
+                <span className="text-xs text-[#DFC095]">
+                  (£{totalDeposit} deposit due)
                 </span>
               )}
             </div>
@@ -301,19 +458,23 @@ export default function PatientDetailsPage() {
 
           <button
             type="button"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (totalDeposit > 0 && !isCardReady)}
             onClick={() => handleBookingSubmission()}
             className="h-11 px-6 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 bg-[#B8925D] hover:bg-[#A8824C] active:scale-95 text-white cursor-pointer transition-all shadow-md disabled:opacity-50 shrink-0"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Securing...</span>
+                <span>Processing...</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4 text-white" />
-                <span>Confirm Booking</span>
+                <span>
+                  {totalDeposit > 0
+                    ? `Pay £${totalDeposit} Deposit`
+                    : "Confirm Booking"}
+                </span>
               </>
             )}
           </button>
