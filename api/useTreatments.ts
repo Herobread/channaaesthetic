@@ -12,14 +12,17 @@ export interface ClinicLocation {
 
 export interface MappedTreatment {
   id: string;
+  variationId?: string; // Square catalog service variation ID
   category: string;
   title: string;
   desc: string;
   time: string;
   durationMinutes: number;
-  price: string;
-  priceNum: number;
-  deposit?: string;
+  price: number; // Raw numeric GBP (e.g., 100)
+  priceNum?: number;
+  deposit?: number; // Raw numeric GBP (e.g., 25 or 0)
+  depositNum?: number;
+  depositInPence?: number; // Integer for Square Payments API (e.g., 2500)
   imageUrl?: string;
   locationIds: string[];
   locations: ClinicLocation[];
@@ -44,7 +47,27 @@ export async function fetchTreatmentsPage({
     throw new Error("Failed to fetch treatments from Square");
   }
 
-  return res.json();
+  const data = await res.json();
+
+  // Normalize price and deposit numeric aliases so consumers don't break
+  const items: MappedTreatment[] = (data.items || []).map((item: any) => {
+    const rawPrice = Number(item.price) || 0;
+    const rawDeposit = Number(item.deposit) || 0;
+
+    return {
+      ...item,
+      price: rawPrice,
+      priceNum: rawPrice,
+      deposit: rawDeposit,
+      depositNum: rawDeposit,
+      depositInPence: Math.round(rawDeposit * 100),
+    };
+  });
+
+  return {
+    ...data,
+    items,
+  };
 }
 
 export const treatmentsInfiniteQueryOptions = () =>
@@ -59,7 +82,10 @@ export const treatmentsInfiniteQueryOptions = () =>
 
 export function useInfiniteTreatments() {
   const query = useInfiniteQuery(treatmentsInfiniteQueryOptions());
-  const treatments = query.data?.pages.flatMap((page) => page.items) || [];
+  const treatments = useMemo(
+    () => query.data?.pages.flatMap((page) => page.items) || [],
+    [query.data],
+  );
 
   return {
     ...query,
@@ -72,7 +98,7 @@ export function useLocations() {
 
   const locations = useMemo(() => {
     return treatments.reduce<ClinicLocation[]>((acc, treatment) => {
-      treatment.locations.forEach((loc) => {
+      (treatment.locations || []).forEach((loc) => {
         if (loc.id && !acc.some((existing) => existing.id === loc.id)) {
           acc.push(loc);
         }

@@ -60,7 +60,11 @@ export const useCartStore = create<CartStore>()(
 
       clearCart: () => set({ cart: [] }),
     }),
-    { name: "clinic-cart" },
+    {
+      name: "clinic-cart",
+      version: 2, // Bumps version so old carts lacking the new deposit attribute are wiped
+      migrate: () => ({ cart: [] }),
+    },
   ),
 );
 
@@ -68,23 +72,28 @@ export function useCart() {
   const store = useCartStore();
 
   const totalQuantity = store.cart.reduce(
-    (acc, curr) => acc + curr.quantity,
+    (acc, curr) => acc + (Number(curr.quantity) || 1),
     0,
   );
 
   const totalPrice = store.cart.reduce(
-    (acc, curr) => acc + (Number(curr.treatment.price) || 0) * curr.quantity,
+    (acc, curr) =>
+      acc + (Number(curr.treatment?.price) || 0) * (Number(curr.quantity) || 1),
     0,
   );
 
   const totalMinutes = store.cart.reduce(
     (acc, curr) =>
-      acc + (Number(curr.treatment.durationMinutes) || 30) * curr.quantity,
+      acc +
+      (Number(curr.treatment?.durationMinutes) || 30) *
+        (Number(curr.quantity) || 1),
     0,
   );
 
   const totalDeposit = store.cart.reduce(
-    (acc, curr) => acc + (Number(curr.treatment.deposit) || 0) * curr.quantity,
+    (acc, curr) =>
+      acc +
+      (Number(curr.treatment?.deposit) || 0) * (Number(curr.quantity) || 1),
     0,
   );
 

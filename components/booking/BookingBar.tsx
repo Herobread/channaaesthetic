@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronUp,
   Clock,
+  CreditCard,
   Loader2,
   X,
 } from "lucide-react";
@@ -33,17 +34,28 @@ export default function BookingBar() {
     totalQuantity,
     totalPrice,
     totalMinutes,
-    totalDeposit,
+    totalDeposit: hookDeposit,
     handleDecrement,
     clearCart,
     maxMinutes = 180,
   } = useCart();
+
+  // Defensive fallback: compute deposit directly from cart items if hook value is missing or 0
+  const computedDeposit = cart.reduce((sum, item) => {
+    const itemDeposit = Number(item.treatment?.deposit) || 0;
+    const qty = Number(item.quantity) || 1;
+    return sum + itemDeposit * qty;
+  }, 0);
+
+  const totalDeposit =
+    Number(hookDeposit) > 0 ? Number(hookDeposit) : computedDeposit;
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const {
     selectedSlot,
     customerDetails,
     setCustomerDetails,
+    isDetailsValid,
     isSubmitting,
     setIsSubmitting,
   } = useBookingFlowStore();
@@ -52,13 +64,21 @@ export default function BookingBar() {
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Match root treatments page, /book, or localized route
+  // Flow step detection
   const isStep1Treatments = pathname === "/" || pathname === "/book";
   const isStep2DateTime = pathname.includes("/datetime");
   const isStep3Details = pathname.includes("/details");
+  const isStep4Payment = pathname.includes("/pay-deposit");
 
   const isOverLimit = totalMinutes > maxMinutes;
   const hasPickedSlot = Boolean(selectedSlot);
+
+  // Disable button if limit exceeded, slot not picked in step 2, form invalid in step 3, or submitting
+  const isButtonDisabled =
+    isOverLimit ||
+    (isStep2DateTime && !hasPickedSlot) ||
+    (isStep3Details && !isDetailsValid) ||
+    isSubmitting;
 
   useEffect(() => {
     if (totalQuantity > 0) {
@@ -75,7 +95,7 @@ export default function BookingBar() {
 
   const handleAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isOverLimit || isSubmitting) return;
+    if (isButtonDisabled) return;
 
     if (isStep1Treatments) {
       router.push("/book/datetime");
@@ -89,10 +109,10 @@ export default function BookingBar() {
     }
 
     if (isStep3Details) {
-      // Direct DOM fallback to catch browser autofill without React keystrokes
+      // Sync latest inputs from DOM
       const nameInput =
         document.querySelector<HTMLInputElement>(
-          'input[name="fullName"], input[name="name"], input[placeholder*="Doe"]',
+          'input[name="fullName"], input[name="name"]',
         )?.value ||
         customerDetails.name ||
         "";
@@ -113,19 +133,20 @@ export default function BookingBar() {
         customerDetails.notes ||
         "";
 
-      if (!nameInput.trim()) {
-        alert("Please enter your full name.");
-        return;
-      }
-      if (!emailInput.trim() || !emailInput.includes("@")) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-      if (!phoneInput.trim()) {
-        alert("Please enter your phone number.");
+      setCustomerDetails({
+        name: nameInput.trim(),
+        email: emailInput.trim(),
+        phone: phoneInput.trim(),
+        notes: notesInput.trim(),
+      });
+
+      // If deposit is required, navigate to dedicated payment page
+      if (totalDeposit > 0) {
+        router.push("/book/pay-deposit");
         return;
       }
 
+      // If zero deposit, proceed directly with final appointment creation
       const variationId =
         cart[0]?.treatment?.variationId || cart[0]?.treatment?.id;
 
@@ -138,13 +159,6 @@ export default function BookingBar() {
 
       setIsSubmitting(true);
 
-      setCustomerDetails({
-        name: nameInput.trim(),
-        email: emailInput.trim(),
-        phone: phoneInput.trim(),
-        notes: notesInput.trim(),
-      });
-
       try {
         const response = await fetch("/api/bookings", {
           method: "POST",
@@ -153,7 +167,7 @@ export default function BookingBar() {
             locationId: selectedLocationId,
             startAt: selectedSlot,
             serviceVariationId: variationId,
-            depositAmount: totalDeposit,
+            depositAmount: 0,
             customer: {
               name: nameInput.trim(),
               email: emailInput.trim(),
@@ -164,26 +178,34 @@ export default function BookingBar() {
         });
 
         const data = await response.json();
-        if (!response.ok)
+        if (!response.ok) {
           throw new Error(data.error || "Failed to commit booking.");
+        }
 
         const bookingId = data.booking?.id || data.booking?.uid;
         if (!bookingId) throw new Error("No booking ID returned from server.");
 
         if (typeof clearCart === "function") clearCart();
-
         window.location.assign(`/success/${bookingId}`);
       } catch (err: any) {
         alert(err.message || "Failed to finalize booking.");
         setIsSubmitting(false);
       }
     }
+
+    if (isStep4Payment) {
+      // Handled by the payment form inside /book/pay-deposit
+      const paymentForm = document.getElementById(
+        "deposit-payment-form",
+      ) as HTMLFormElement;
+      if (paymentForm) {
+        paymentForm.requestSubmit();
+      }
+    }
   };
 
-  if (!shouldRender) return null;
-
-  const isButtonDisabled =
-    isOverLimit || (isStep2DateTime && !hasPickedSlot) || isSubmitting;
+  // Do not render floating bar on the dedicated payment page if preferred, or keep it visible
+  if (!shouldRender || isStep4Payment) return null;
 
   return (
     <div
@@ -233,46 +255,58 @@ export default function BookingBar() {
 
               {/* Treatment list */}
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
-                {cart.map(({ treatment, quantity }) => (
-                  <div
-                    key={treatment.id}
-                    className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
-                  >
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="text-sm font-medium text-[#F5F2EB] leading-snug break-words">
-                        {quantity > 1 ? `${quantity}x ` : ""}
-                        {treatment.title}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
-                        <span className="text-[#DFC095] font-semibold">
-                          £{treatment.price}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1.5 font-normal">
-                          <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
-                          {treatment.time ||
-                            `${treatment.durationMinutes || 30} mins`}
-                        </span>
-                      </div>
-                    </div>
+                {cart.map(({ treatment, quantity }) => {
+                  const itemDeposit = Number(treatment.deposit) || 0;
 
-                    {isStep1Treatments && (
-                      <button
-                        type="button"
-                        tabIndex={isExpanded ? 0 : -1}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDecrement(treatment.id);
-                        }}
-                        aria-label={`Remove ${treatment.title}`}
-                        className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5 text-[#A8A096]" />
-                        <span>Remove</span>
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={treatment.id}
+                      className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
+                    >
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <p className="text-sm font-medium text-[#F5F2EB] leading-snug break-words">
+                          {quantity > 1 ? `${quantity}x ` : ""}
+                          {treatment.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
+                          <span className="text-[#DFC095] font-semibold">
+                            £{treatment.price}
+                          </span>
+                          {itemDeposit > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-[#DFC095]">
+                                £{itemDeposit * quantity} deposit
+                              </span>
+                            </>
+                          )}
+                          <span>•</span>
+                          <span className="flex items-center gap-1.5 font-normal">
+                            <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
+                            {treatment.time ||
+                              `${treatment.durationMinutes || 30} mins`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {isStep1Treatments && (
+                        <button
+                          type="button"
+                          tabIndex={isExpanded ? 0 : -1}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDecrement(treatment.id);
+                          }}
+                          aria-label={`Remove ${treatment.title}`}
+                          className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5 text-[#A8A096]" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -352,7 +386,7 @@ export default function BookingBar() {
                 <span>Securing Slot...</span>
               </div>
 
-              {/* State: Step 3 Final Submission */}
+              {/* State: Step 3 Final Submission / Continue */}
               <div
                 className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
                   !isSubmitting && isStep3Details
@@ -360,8 +394,18 @@ export default function BookingBar() {
                     : "opacity-0 scale-90 translate-y-2 pointer-events-none"
                 }`}
               >
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                <span>Confirm Booking</span>
+                {totalDeposit > 0 ? (
+                  <>
+                    <CreditCard className="w-4 h-4 text-white" />
+                    <span>Continue</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-white" />
+                    <span>Confirm Booking</span>
+                  </>
+                )}
               </div>
 
               {/* State: Steps 1 & 2 */}

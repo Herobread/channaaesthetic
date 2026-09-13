@@ -92,14 +92,36 @@ export async function GET(request: Request) {
           ? Number(variationData.priceMoney.amount) / 100
           : 0;
 
-        // Parse deposit tag from description (e.g. "[Deposit: £25]" or "[Deposit: 25]")
+        // Read deposit from Custom Attribute (handles both camelCase and snake_case SDK representations)
+        const customAttrs =
+          item.customAttributeValues || item.custom_attribute_values || {};
+        const depositAttr =
+          customAttrs.deposit_amount ||
+          Object.values(customAttrs).find(
+            (attr: any) => attr.key === "deposit_amount",
+          );
+
+        const rawAttrVal =
+          depositAttr?.numberValue ?? depositAttr?.number_value;
+
+        // Fallback: Check description regex if attribute isn't set
         const rawDescription = itemData.description || "";
         const depositMatch = rawDescription.match(
           /\[Deposit:\s*£?([0-9.]+)\]/i,
         );
-        const deposit = depositMatch ? parseFloat(depositMatch[1]) : 0;
 
-        // Strip the tag so users see clean description text
+        let deposit = 0;
+        if (
+          rawAttrVal !== undefined &&
+          rawAttrVal !== null &&
+          rawAttrVal !== ""
+        ) {
+          deposit = parseFloat(String(rawAttrVal)) || 0;
+        } else if (depositMatch) {
+          deposit = parseFloat(depositMatch[1]) || 0;
+        }
+
+        // Clean out any remnants of the tag from description if still present
         const cleanDesc = rawDescription
           .replace(/\[Deposit:\s*£?[0-9.]+\]/gi, "")
           .trim();

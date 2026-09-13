@@ -23,6 +23,9 @@ interface BookingFlowState {
   customerDetails: CustomerDetails;
   setCustomerDetails: (details: Partial<CustomerDetails>) => void;
 
+  isDetailsValid: boolean;
+  setIsDetailsValid: (valid: boolean) => void;
+
   isSubmitting: boolean;
   setIsSubmitting: (loading: boolean) => void;
 
@@ -55,6 +58,9 @@ export const useBookingFlowStore = create<BookingFlowState>((set) => ({
       customerDetails: { ...state.customerDetails, ...details },
     })),
 
+  isDetailsValid: false,
+  setIsDetailsValid: (valid) => set({ isDetailsValid: valid }),
+
   isSubmitting: false,
   setIsSubmitting: (loading) => set({ isSubmitting: loading }),
 
@@ -65,6 +71,7 @@ export const useBookingFlowStore = create<BookingFlowState>((set) => ({
       duration: 30,
       locationAddress: null,
       customerDetails: initialDetails,
+      isDetailsValid: false,
       isSubmitting: false,
     }),
 }));

@@ -1,26 +1,17 @@
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
-import CheckoutBar from "@/components/booking/CheckoutBar";
 import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
 import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import { AlertCircle, ArrowLeft, Clock, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export default function DateTimePickerPage() {
-  const router = useRouter();
-  const {
-    cart,
-    totalPrice,
-    totalMinutes,
-    totalQuantity,
-    totalDeposit,
-    removeFromCart,
-  } = useCart();
+  const { cart, totalPrice, totalMinutes, totalQuantity, totalDeposit } =
+    useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const { locations, isLoading: locationsLoading } = useClinicLocations();
@@ -268,20 +259,6 @@ export default function DateTimePickerPage() {
           </div>
         )}
       </main>
-
-      {/* Floating CheckoutBar Controller */}
-      <CheckoutBar
-        cart={cart}
-        totalQuantity={totalQuantity}
-        totalPrice={totalPrice}
-        totalMinutes={totalMinutes}
-        totalDeposit={totalDeposit}
-        selectedSlot={selectedSlot}
-        ctaText={selectedSlot ? "Enter Details" : "Select a Time"}
-        isDisabled={!selectedSlot}
-        onDecrement={(id) => removeFromCart(id)}
-        onAction={() => router.push("/book/details")}
-      />
     </div>
   );
 }
