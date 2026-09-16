@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-surface-canvas text-text-primary font-sans antialiased selection:bg-accent/20 selection:text-accent">
       {/* 1. Header Navigation */}
-      <Navbar />
+      <Navbar theme="light" overlay className="absolute top-0 left-0" />
 
       {/* 2. Atmospheric Hero Section */}
       <section className="relative text-text-inverted pt-24 pb-48 px-6 text-center overflow-hidden">

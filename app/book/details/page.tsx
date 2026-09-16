@@ -1,27 +1,34 @@
 "use client";
 
-import { useClinicLocations } from "@/api/useClinicLocations";
-import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
-import { useCart } from "@/hooks/useCart";
+import BackLink from "@/components/ui/BackLink";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
-import {
-  AlertCircle,
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  MapPin,
-  Phone,
-  User,
-} from "lucide-react";
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const patientSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters."),
+  email: z
+    .string()
+    .trim()
+    .email("Please check your email address format (e.g. jane@example.com)."),
+  phone: z
+    .string()
+    .trim()
+    .refine(
+      (val) => val.replace(/[^0-9+]/g, "").length >= 8,
+      "Please provide a valid phone number.",
+    ),
+  notes: z.string().optional(),
+});
+
+type PatientFormValues = z.infer<typeof patientSchema>;
 
 export default function PatientDetailsPage() {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
 
-  const { totalMinutes } = useCart();
-  const { locations, selectedLocationId } = useClinicLocations();
   const {
     selectedSlot,
     customerDetails,
@@ -29,34 +36,41 @@ export default function PatientDetailsPage() {
     setIsDetailsValid,
   } = useBookingFlowStore();
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {
+    register,
+    watch,
+    formState: { errors, isValid, touchedFields },
+  } = useForm<PatientFormValues>({
+    resolver: zodResolver(patientSchema),
+    mode: "onTouched",
+    defaultValues: {
+      name: customerDetails?.name || "",
+      email: customerDetails?.email || "",
+      phone: customerDetails?.phone || "",
+      notes: customerDetails?.notes || "",
+    },
+  });
 
-  // Controlled input states initialized from store
-  const [name, setName] = useState(customerDetails?.name || "");
-  const [email, setEmail] = useState(customerDetails?.email || "");
-  const [phone, setPhone] = useState(customerDetails?.phone || "");
-  const [notes, setNotes] = useState(customerDetails?.notes || "");
-
-  const activeLocation = useMemo(() => {
-    return (
-      locations.find((loc) => loc.id === selectedLocationId) || locations[0]
-    );
-  }, [locations, selectedLocationId]);
-
-  // Real-time validation check
-  const isNameValid = name.trim().length >= 2;
-  const isEmailValid = email.includes("@") && email.includes(".");
-  const isPhoneValid = phone.replace(/[^0-9+]/g, "").length >= 9;
-
-  const isFormValid = isNameValid && isEmailValid && isPhoneValid;
-
-  // Sync validation status with the store for BookingBar
+  // Keep bottom BookingBar enabled/disabled state synced
   useEffect(() => {
-    setIsDetailsValid(isFormValid);
+    setIsDetailsValid(isValid);
     return () => setIsDetailsValid(false);
-  }, [isFormValid, setIsDetailsValid]);
+  }, [isValid, setIsDetailsValid]);
 
-  // Guard: Return to slot picker if no slot is selected
+  // Sync details silently to Zustand
+  useEffect(() => {
+    const subscription = watch((value) => {
+      setCustomerDetails({
+        name: value.name ?? "",
+        email: value.email ?? "",
+        phone: value.phone ?? "",
+        notes: value.notes ?? "",
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, setCustomerDetails]);
+
   useEffect(() => {
     if (!selectedSlot) {
       router.replace("/book/datetime");
@@ -64,186 +78,102 @@ export default function PatientDetailsPage() {
   }, [selectedSlot, router]);
 
   if (!selectedSlot) return null;
-  const slotDate = new Date(selectedSlot);
-
-  const handleDetailsSubmission = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setErrorMessage(null);
-
-    if (!isNameValid) {
-      setErrorMessage("Please enter your full name.");
-      return;
-    }
-    if (!isEmailValid) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
-    if (!isPhoneValid) {
-      setErrorMessage("Please enter your contact phone number.");
-      return;
-    }
-
-    setCustomerDetails({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      notes: notes.trim(),
-    });
-  };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <NavBarLogoOnly theme="dark" />
+    <>
+      <BackLink href={"/book/datetime"}>Back to time selection</BackLink>
 
-      <main className="max-w-xl mx-auto px-4 pt-20 pb-44 space-y-5">
-        <Link
-          href="/book/datetime"
-          className="inline-flex items-center text-xs text-[#8C827A] gap-1 hover:text-black transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Time Selection
-        </Link>
+      <header className="mt-4 mb-8 lg:mb-10">
+        <h1 className="font-serif text-headline font-normal text-text-primary tracking-tight">
+          Patient details
+        </h1>
+        {/* <p className="text-caption font-sans text-text-muted mt-1.5">
+          Please enter your contact details to secure your consultation and
+          procedure.
+        </p> */}
+      </header>
 
-        {/* Selected Slot Summary Card */}
-        <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
-              <CalendarIcon className="w-3.5 h-3.5 text-[#B8925D]" />
-              <span>
-                {slotDate.toLocaleDateString("en-GB", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                })}{" "}
-                at{" "}
-                {slotDate.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-            <p className="text-[11px] text-[#8C827A] flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-[#B8925D]" />
-              {activeLocation?.name || "Clinic"} • {totalMinutes}m appointment
+      <form id="booking-form" className="space-y-6">
+        <div>
+          <label className="block text-caption font-sans font-medium text-text-primary mb-2">
+            Full name *
+          </label>
+          <input
+            type="text"
+            autoComplete="name"
+            placeholder="Jane Doe"
+            {...register("name")}
+            className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+              touchedFields.name && errors.name
+                ? "border-accent"
+                : "border-border-subtle"
+            }`}
+          />
+          {touchedFields.name && errors.name && (
+            <p className="text-xs text-accent mt-1.5 font-sans">
+              {errors.name.message}
             </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+          <div>
+            <label className="block text-caption font-sans font-medium text-text-primary mb-2">
+              Email address *
+            </label>
+            <input
+              type="email"
+              autoComplete="email"
+              placeholder="jane@example.com"
+              {...register("email")}
+              className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+                touchedFields.email && errors.email
+                  ? "border-accent"
+                  : "border-border-subtle"
+              }`}
+            />
+            {touchedFields.email && errors.email && (
+              <p className="text-xs text-accent mt-1.5 font-sans">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
-          <Link
-            href="/book/datetime"
-            className="text-xs text-[#B8925D] hover:underline font-medium shrink-0"
-          >
-            Change
-          </Link>
+          <div>
+            <label className="block text-caption font-sans font-medium text-text-primary mb-2">
+              Mobile phone *
+            </label>
+            <input
+              type="tel"
+              autoComplete="tel"
+              placeholder="+44 7123 456789"
+              {...register("phone")}
+              className={`w-full text-caption font-sans px-4 py-3.5 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+                touchedFields.phone && errors.phone
+                  ? "border-accent"
+                  : "border-border-subtle"
+              }`}
+            />
+            {touchedFields.phone && errors.phone && (
+              <p className="text-xs text-accent mt-1.5 font-sans">
+                {errors.phone.message}
+              </p>
+            )}
+          </div>
         </div>
 
         <div>
-          <h1 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">
-            Patient Contact Details
-          </h1>
-          <p className="text-xs text-[#8C827A] mt-1">
-            We require your details to secure the booking and prepare clinical
-            notes.
-          </p>
+          <label className="block text-caption font-sans font-medium text-text-primary mb-2">
+            Medical notes or considerations (optional)
+          </label>
+          <textarea
+            rows={4}
+            placeholder="Any previous treatments, allergies, or questions for the practitioner..."
+            {...register("notes")}
+            className="w-full text-caption font-sans p-4 rounded-control border border-border-subtle bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors resize-none"
+          />
         </div>
-
-        {errorMessage && (
-          <div className="flex items-center gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        <form
-          id="booking-form"
-          ref={formRef}
-          onSubmit={handleDetailsSubmission}
-          className="space-y-4"
-        >
-          <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-sm">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A] pb-1 border-b border-[#F4EFEA]">
-              <User className="w-3.5 h-3.5 text-[#B8925D]" />
-              <span>Personal Information</span>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-medium text-[#666666] mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setCustomerDetails({ name: e.target.value });
-                  }}
-                  placeholder="Jane Doe"
-                  className="w-full text-xs p-3 rounded-xl border border-[#EBE5DF] bg-[#FAFAF8] focus:bg-white focus:outline-none focus:border-[#B8925D] transition-colors"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-[#666666] mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setCustomerDetails({ email: e.target.value });
-                    }}
-                    placeholder="jane@example.com"
-                    className="w-full text-xs p-3 rounded-xl border border-[#EBE5DF] bg-[#FAFAF8] focus:bg-white focus:outline-none focus:border-[#B8925D] transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-[#666666] mb-1">
-                    Mobile Phone *
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-[#8C827A] absolute left-3 top-3.5" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      autoComplete="tel"
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value);
-                        setCustomerDetails({ phone: e.target.value });
-                      }}
-                      placeholder="+44 7123 456789"
-                      className="w-full text-xs pl-8 p-3 rounded-xl border border-[#EBE5DF] bg-[#FAFAF8] focus:bg-white focus:outline-none focus:border-[#B8925D] transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-medium text-[#666666] mb-1">
-                  Medical Notes / Considerations (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  name="notes"
-                  value={notes}
-                  onChange={(e) => {
-                    setNotes(e.target.value);
-                    setCustomerDetails({ notes: e.target.value });
-                  }}
-                  placeholder="Any previous treatments, allergies, or questions for the practitioner..."
-                  className="w-full text-xs p-3 rounded-xl border border-[#EBE5DF] bg-[#FAFAF8] focus:bg-white focus:outline-none focus:border-[#B8925D] transition-colors resize-none"
-                />
-              </div>
-            </div>
-          </div>
-        </form>
-      </main>
-    </div>
+      </form>
+    </>
   );
 }

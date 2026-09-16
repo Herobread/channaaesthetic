@@ -2,12 +2,11 @@
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
-import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
+import BackLink from "@/components/ui/BackLink";
 import { useCart } from "@/hooks/useCart";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import {
   AlertCircle,
-  ArrowLeft,
   Calendar as CalendarIcon,
   Clock,
   CreditCard,
@@ -15,7 +14,6 @@ import {
   Lock,
   ShieldCheck,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -45,17 +43,6 @@ export default function PayDepositPage() {
 
   const activeLocationId = activeLocation?.id;
   const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID;
-
-  // Guard: Send user back if steps are skipped or no deposit is needed
-  useEffect(() => {
-    if (!selectedSlot) {
-      router.replace("/book/datetime");
-    } else if (!customerDetails?.email || !customerDetails?.name) {
-      router.replace("/book/details");
-    } else if (totalDeposit <= 0) {
-      router.replace("/book/details");
-    }
-  }, [selectedSlot, customerDetails, totalDeposit, router]);
 
   // Load Square Web Payments SDK & Mount Card Form
   useEffect(() => {
@@ -224,149 +211,147 @@ export default function PayDepositPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <NavBarLogoOnly theme="dark" />
+    <div className="w-full space-y-6">
+      <BackLink href="/book/details">Back to Edit Contact Details</BackLink>
 
-      <main className="max-w-xl mx-auto px-4 pt-20 pb-28 space-y-6">
-        <Link
-          href="/book/details"
-          className="inline-flex items-center text-xs text-[#8C827A] gap-1.5 hover:text-black transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Edit Contact Details
-        </Link>
+      <header className="space-y-1.5">
+        <h1 className="font-serif text-headline font-normal text-text-primary tracking-tight">
+          Secure Your Booking
+        </h1>
+        <p className="text-caption font-sans text-text-muted">
+          A non-refundable deposit is required to reserve your slot. The
+          remaining balance will be settled at the clinic.
+        </p>
+      </header>
 
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
-            Secure Your Booking
-          </h1>
-          <p className="text-xs text-[#8C827A] mt-1.5">
-            A non-refundable deposit of £{totalDeposit} is required to reserve
-            your slot. The remaining balance will be settled at the clinic.
-          </p>
+      {errorMessage && (
+        <div className="flex items-center gap-2.5 p-4 bg-surface-elevated border border-accent/20 rounded-control text-caption font-sans text-accent shadow-subtle">
+          <AlertCircle className="w-4 h-4 shrink-0 text-accent" />
+          <span>{errorMessage}</span>
         </div>
+      )}
 
-        {errorMessage && (
-          <div className="flex items-center gap-2 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Appointment & Breakdown Summary */}
-        <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
-          <div className="flex items-start justify-between gap-4 pb-3.5 border-b border-[#F4EFEA]">
-            <div>
-              <p className="text-sm font-semibold text-[#1A1A1A]">
-                {cart[0]?.treatment?.title || "Clinical Treatment"}
-              </p>
-              <div className="flex items-center gap-2 mt-1 text-xs text-[#8C827A]">
-                <span className="flex items-center gap-1">
-                  <CalendarIcon className="w-3.5 h-3.5 text-[#B8925D]" />
-                  {slotDate.toLocaleDateString("en-GB", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                  })}{" "}
-                  at{" "}
-                  {slotDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-[#B8925D]" />
-                  {totalMinutes} mins
-                </span>
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-[#1A1A1A]">
-              £{totalPrice} Total
-            </span>
-          </div>
-
-          <div className="text-xs space-y-2 text-[#666666]">
-            <div className="flex justify-between">
-              <span>Patient</span>
-              <span className="font-medium text-[#1A1A1A]">
-                {customerDetails.name}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Location</span>
-              <span className="font-medium text-[#1A1A1A]">
-                {activeLocation?.name}
-              </span>
-            </div>
-            <div className="flex justify-between pt-2 border-t border-[#F4EFEA] text-[#1A1A1A] font-semibold text-sm">
-              <span>Deposit Due Now</span>
-              <span className="text-[#B8925D]">£{totalDeposit}.00</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Square Payment Form */}
-        <form onSubmit={handlePaymentSubmit} className="space-y-4">
-          <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F4EFEA]">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
-                <CreditCard className="w-3.5 h-3.5 text-[#B8925D]" />
-                <span>Card Details</span>
-              </div>
-              <span className="flex items-center gap-1 text-[10px] text-[#8C827A]">
-                <Lock className="w-3 h-3 text-[#B8925D]" /> End-to-End Encrypted
-              </span>
-            </div>
-
-            {/* Container where Square Web Payments SDK attaches */}
-            <div className="relative min-h-[96px]">
-              {isSdkLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#FAFAF8] rounded-xl border border-[#EBE5DF] text-xs text-[#8C827A] gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#B8925D]" />
-                  <span>Loading secure payment gateway...</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+        {/* Payment Form (Left column on desktop, order-2 on mobile) */}
+        <div className="lg:col-span-7 order-2 lg:order-1">
+          <form onSubmit={handlePaymentSubmit} className="space-y-5">
+            <div className="bg-surface-elevated border border-border-subtle rounded-control p-5 sm:p-6 shadow-subtle space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+                <div className="flex items-center gap-2 text-caption font-sans font-medium text-text-primary">
+                  <CreditCard className="w-4 h-4 text-accent" />
+                  <span>Card Details</span>
                 </div>
-              )}
-              <div
-                id="square-card-container"
-                className={`p-3 border border-[#EBE5DF] rounded-xl bg-[#FAFAF8] transition-opacity duration-200 ${
-                  isSdkLoading ? "opacity-0" : "opacity-100"
-                }`}
-              />
+                <span className="inline-flex items-center gap-1.5 text-xs text-text-muted font-sans">
+                  <Lock className="w-3.5 h-3.5 text-accent" /> End-to-End
+                  Encrypted
+                </span>
+              </div>
+
+              {/* Square Web Payments SDK Mount Container */}
+              <div className="relative min-h-[96px]">
+                {isSdkLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-surface-canvas rounded-control border border-border-subtle text-caption font-sans text-text-muted gap-2 z-10">
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                    <span>Loading secure payment gateway...</span>
+                  </div>
+                )}
+                <div
+                  id="square-card-container"
+                  className={`p-3.5 border border-border-subtle rounded-control bg-surface-canvas transition-opacity duration-200 ${
+                    isSdkLoading ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+              </div>
+
+              <div className="flex items-start gap-2 pt-1 text-xs text-text-muted font-sans">
+                <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <span>
+                  Processed securely by Square Payments. Your card is charged
+                  instantly for the deposit only.
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1 text-[11px] text-[#8C827A]">
-              <ShieldCheck className="w-4 h-4 text-[#B8925D] shrink-0" />
-              <span>
-                Processed securely by Square Payments. Your card is charged
-                instantly.
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSdkLoading || isSubmitting}
+              className={`w-full h-12 rounded-control text-caption font-sans font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-200 focus-ring-accent ${
+                isSdkLoading || isSubmitting
+                  ? "bg-surface-elevated text-text-muted border border-border-subtle cursor-not-allowed"
+                  : "bg-accent hover:bg-accent/90 active:scale-[0.99] text-text-inverted cursor-pointer shadow-accent-glow"
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Authorizing £{totalDeposit} Deposit...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Pay £{totalDeposit} Deposit & Confirm</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Booking Summary Card (Right column on desktop, order-1 on mobile) */}
+        <aside className="lg:col-span-5 order-1 lg:order-2 lg:sticky lg:top-6">
+          <div className="bg-surface-elevated border border-border-subtle rounded-control p-5 sm:p-6 shadow-subtle space-y-4">
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-border-subtle">
+              <div>
+                <p className="text-body font-sans font-medium text-text-primary">
+                  {cart[0]?.treatment?.title || "Clinical Treatment"}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-1.5 text-caption font-sans text-text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarIcon className="w-3.5 h-3.5 text-accent" />
+                    {slotDate.toLocaleDateString("en-GB", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    })}{" "}
+                    at{" "}
+                    {slotDate.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-accent" />
+                    {totalMinutes} mins
+                  </span>
+                </div>
+              </div>
+              <span className="text-caption font-sans font-medium text-text-primary whitespace-nowrap">
+                £{totalPrice} Total
               </span>
             </div>
-          </div>
 
-          {/* Pay Button */}
-          <button
-            type="submit"
-            disabled={isSdkLoading || isSubmitting}
-            className={`w-full h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 transition-all duration-200 shadow-md ${
-              isSdkLoading || isSubmitting
-                ? "bg-[#D1C9BF] text-[#8C827A] cursor-not-allowed shadow-none"
-                : "bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.99] text-white cursor-pointer"
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Authorizing £{totalDeposit} Deposit...</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-4 h-4" />
-                <span>Pay £{totalDeposit} Deposit & Confirm</span>
-              </>
-            )}
-          </button>
-        </form>
-      </main>
+            <div className="space-y-2.5 text-caption font-sans text-text-muted">
+              <div className="flex justify-between">
+                <span>Patient</span>
+                <span className="font-medium text-text-primary">
+                  {customerDetails.name}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Location</span>
+                <span className="font-medium text-text-primary">
+                  {activeLocation?.name}
+                </span>
+              </div>
+              <div className="flex justify-between pt-3 border-t border-border-subtle text-text-primary font-medium text-body">
+                <span>Deposit Due Now</span>
+                <span className="text-accent">£{totalDeposit}.00</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

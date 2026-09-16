@@ -1,17 +1,15 @@
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
-import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
+import BackLink from "@/components/ui/BackLink";
 import { useCart } from "@/hooks/useCart";
 import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
-import { AlertCircle, ArrowLeft, Clock, Loader2, MapPin } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, Calendar, Clock, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export default function DateTimePickerPage() {
-  const { cart, totalPrice, totalMinutes, totalQuantity, totalDeposit } =
-    useCart();
+  const { cart, totalMinutes } = useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const { locations, isLoading: locationsLoading } = useClinicLocations();
@@ -65,7 +63,7 @@ export default function DateTimePickerPage() {
         if (!res.ok) throw new Error(json.error || "Failed to load slots");
 
         const rawSlots = json.slots || [];
-        const formatted = rawSlots.map((slot: any) => ({
+        const formatted = rawSlots.map((slot: { start: string }) => ({
           start: slot.start,
           formatted: new Date(slot.start).toLocaleTimeString([], {
             hour: "2-digit",
@@ -74,8 +72,10 @@ export default function DateTimePickerPage() {
         }));
 
         setSlots(formatted);
-      } catch (err: any) {
-        setSlotError(err.message || "Failed to fetch availability");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch availability";
+        setSlotError(message);
         setSlots([]);
       } finally {
         setLoadingSlots(false);
@@ -125,79 +125,58 @@ export default function DateTimePickerPage() {
     }
   }, [groupedDays, selectedDayKey]);
 
-  const currentDaySlots = useMemo(() => {
-    if (!selectedDayKey) return [];
-    return groupedDays.find((g) => g.dayKey === selectedDayKey)?.slots || [];
+  const activeDay = useMemo(() => {
+    return groupedDays.find((g) => g.dayKey === selectedDayKey) || null;
   }, [groupedDays, selectedDayKey]);
 
+  const currentDaySlots = useMemo(() => {
+    return activeDay?.slots || [];
+  }, [activeDay]);
+
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <NavBarLogoOnly theme="dark" />
+    <>
+      <BackLink href={"/book"}>Back to treatments</BackLink>
 
-      <main className="max-w-xl mx-auto px-4 pt-20 pb-40 space-y-5">
-        <Link
-          href="/book"
-          className="inline-flex items-center text-xs text-[#8C827A] gap-1 hover:text-black transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Treatments
-        </Link>
+      <header className="mt-4 mb-8 lg:mb-10">
+        <h1 className="font-serif text-headline font-normal text-text-primary tracking-tight">
+          Select date &amp; time
+        </h1>
+        <p className="text-caption font-sans text-text-muted mt-1.5">
+          Choose an available slot for your consultation &amp; procedure.
+        </p>
+      </header>
 
-        {/* Clinic Summary Bar */}
-        <div className="bg-white border border-[#EBE5DF] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A] truncate">
-              <MapPin className="w-3.5 h-3.5 text-[#B8925D] shrink-0" />
-              <span className="truncate">
-                {activeLocation?.name || "Clinic"}
+      {slotError && (
+        <div className="flex items-center gap-2.5 p-4 mb-6 bg-surface-elevated border border-red-200 rounded-card text-caption font-sans text-red-800 shadow-subtle">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+          <span>{slotError}</span>
+        </div>
+      )}
+
+      {loadingSlots || locationsLoading ? (
+        <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-3 rounded-card border border-border-subtle bg-surface-elevated shadow-subtle">
+          <Loader2 className="w-5 h-5 animate-spin text-accent" />
+          <span className="text-caption font-sans">Finding open times...</span>
+        </div>
+      ) : groupedDays.length === 0 ? (
+        <div className="py-20 text-center rounded-card border border-border-subtle bg-surface-elevated p-8 text-caption font-sans text-text-muted shadow-subtle">
+          No openings found in the next 10 days.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* Date Selection Column */}
+          <section className="lg:col-span-5 space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <span className="inline-flex items-center gap-2 text-caption font-sans font-medium text-text-primary">
+                <Calendar className="w-4 h-4 text-accent" /> Select date
+              </span>
+              <span className="text-caption font-sans text-text-muted hidden lg:inline">
+                {groupedDays.length} dates available
               </span>
             </div>
-            <p className="text-[11px] text-[#8C827A] flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#B8925D]" />
-              {totalMinutes}m appointment window
-            </p>
-          </div>
 
-          <div className="text-right shrink-0">
-            <span className="text-xs font-bold text-[#1A1A1A]">
-              £{totalPrice}
-            </span>
-            {totalDeposit > 0 && (
-              <p className="text-[10px] text-[#B8925D] font-medium">
-                (£{totalDeposit} deposit)
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <h1 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">
-            Select Date &amp; Time
-          </h1>
-          <p className="text-xs text-[#8C827A] mt-1">
-            Choose an available slot for your consultation &amp; procedure.
-          </p>
-        </div>
-
-        {slotError && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{slotError}</span>
-          </div>
-        )}
-
-        {loadingSlots || locationsLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center text-[#8C827A] gap-2.5 bg-white rounded-2xl border border-[#EBE5DF]">
-            <Loader2 className="w-5 h-5 animate-spin text-[#B8925D]" />
-            <span className="text-xs">Finding open times in Square...</span>
-          </div>
-        ) : groupedDays.length === 0 ? (
-          <div className="py-14 text-center bg-white rounded-2xl border border-[#EBE5DF] p-6 text-xs text-[#8C827A]">
-            No openings found in the next 10 days.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Day Selector */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+            {/* Mobile: Horizontal scroll | Desktop: Clean vertical sequence */}
+            <div className="flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0">
               {groupedDays.map((day) => {
                 const isSelected = selectedDayKey === day.dayKey;
                 return (
@@ -208,57 +187,93 @@ export default function DateTimePickerPage() {
                       setSelectedDayKey(day.dayKey);
                       setSelectedSlot(null);
                     }}
-                    className={`shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                    className={`shrink-0 flex items-center transition-all cursor-pointer focus-ring text-left w-18 py-3 flex-col justify-center rounded-control lg:w-full lg:flex-row lg:justify-between lg:px-4 lg:py-3.5 ${
                       isSelected
-                        ? "bg-[#1A1A1A] text-white border-[#1A1A1A]"
-                        : "bg-white border-[#EBE5DF] text-[#1A1A1A] hover:border-[#1A1A1A]"
+                        ? "bg-surface-dark text-text-inverted border border-surface-dark shadow-subtle"
+                        : "bg-surface-elevated border border-border-subtle text-text-primary hover:border-border-focus"
                     }`}
                   >
+                    {/* Mobile layout */}
                     <span
-                      className={`text-[10px] uppercase font-medium ${
-                        isSelected ? "text-neutral-400" : "text-[#8C827A]"
+                      className={`lg:hidden text-caption font-sans ${
+                        isSelected ? "text-text-inverted/90" : "text-text-muted"
                       }`}
                     >
                       {day.weekday}
                     </span>
-                    <span className="text-base font-semibold my-0.5">
+                    <span className="lg:hidden text-body font-sans font-medium my-0.5">
                       {day.dayNum}
                     </span>
                     <span
-                      className={`text-[9px] uppercase font-medium ${
-                        isSelected ? "text-[#B8925D]" : "text-[#8C827A]"
+                      className={`lg:hidden text-caption font-sans font-medium ${
+                        isSelected ? "text-accent-champagne" : "text-text-muted"
                       }`}
                     >
                       {day.month}
                     </span>
+
+                    {/* Desktop layout row */}
+                    <div className="hidden lg:flex items-baseline gap-2.5">
+                      <span className="text-body font-sans font-medium">
+                        {day.weekday}, {day.dayNum} {day.month}
+                      </span>
+                    </div>
+                    <span
+                      className={`hidden lg:inline text-caption font-sans ${
+                        isSelected
+                          ? "text-accent-champagne font-medium"
+                          : "text-text-muted"
+                      }`}
+                    >
+                      {day.slots.length} slots
+                    </span>
                   </button>
                 );
               })}
+            </div>
+          </section>
+
+          {/* Time Slot Column */}
+          <section className="lg:col-span-7 space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <span className="inline-flex items-center gap-2 text-caption font-sans font-medium text-text-primary">
+                <Clock className="w-4 h-4 text-accent" /> Available times
+              </span>
+              {activeDay && (
+                <span className="text-caption font-sans text-text-muted">
+                  {activeDay.weekday}, {activeDay.dayNum} {activeDay.month}
+                </span>
+              )}
             </div>
 
-            {/* Time Slot Grid */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
-              {currentDaySlots.map(({ start, formatted }) => {
-                const isSelected = selectedSlot === start;
-                return (
-                  <button
-                    key={start}
-                    type="button"
-                    onClick={() => setSelectedSlot(start)}
-                    className={`py-3 px-2 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-[#B8925D] text-white border-[#B8925D] shadow-sm"
-                        : "bg-white border-[#EBE5DF] text-[#1A1A1A] hover:border-black"
-                    }`}
-                  >
-                    {formatted}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+            {currentDaySlots.length === 0 ? (
+              <div className="py-14 text-center border border-border-subtle rounded-control bg-surface-canvas p-6 text-caption font-sans text-text-muted">
+                No slots available for this date.
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+                {currentDaySlots.map(({ start, formatted }) => {
+                  const isSelected = selectedSlot === start;
+                  return (
+                    <button
+                      key={start}
+                      type="button"
+                      onClick={() => setSelectedSlot(start)}
+                      className={`py-3 px-3 rounded-control text-caption font-sans font-medium border transition-all cursor-pointer text-center ${
+                        isSelected
+                          ? "bg-accent text-text-inverted border-accent shadow-accent-glow focus-ring-accent"
+                          : "bg-surface-elevated border-border-subtle text-text-primary hover:border-border-focus focus-ring"
+                      }`}
+                    >
+                      {formatted}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </>
   );
 }

@@ -3,7 +3,6 @@
 import { useInfiniteTreatments, useLocations } from "@/api/useTreatments";
 import SearchCategoryDock from "@/components/booking/SearchCategoryDock";
 import TreatmentCard from "@/components/booking/TreatmentCard";
-import NavBarLogoOnly from "@/components/ui/NavBarLogoOnly";
 import { useCart } from "@/hooks/useCart";
 import { useAppStore } from "@/store/useAppStore";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -41,14 +40,12 @@ export default function BookingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // FIX: Guard against unnecessary updates
+  // Guard against unnecessary updates
   useEffect(() => {
     if (locations.length === 0) return;
 
     const isValid = locations.some((loc) => loc.id === selectedLocationId);
 
-    // Only update if current ID is null or genuinely invalid,
-    // AND make sure we don't re-set to the exact same value
     if (
       !isValid &&
       locations[0]?.id &&
@@ -104,23 +101,21 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] font-sans antialiased selection:bg-[#B8925D]/20 selection:text-[#B8925D]">
-      <NavBarLogoOnly theme="dark" />
-
-      <header className="pt-24 max-w-5xl mx-auto px-4 sm:px-6">
+      <header className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
-              Select Your Treatments
+              Treatment Selection
             </h1>
             <p className="text-xs sm:text-sm text-[#666666] font-light">
-              Doctor-led clinical appointments • Add multiple procedures as
-              needed
+              Private medical aesthetic consultations &amp; advanced clinical
+              procedures
             </p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-36 space-y-4">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4">
         <SearchCategoryDock
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -133,7 +128,7 @@ export default function BookingPage() {
           <div className="py-24 flex flex-col items-center justify-center text-[#8C827A] gap-2.5">
             <Loader2 className="w-6 h-6 animate-spin text-[#B8925D]" />
             <span className="text-xs font-medium tracking-wide">
-              Loading live treatment menu...
+              Accessing clinic schedule and menu...
             </span>
           </div>
         )}
@@ -144,26 +139,27 @@ export default function BookingPage() {
               <AlertCircle className="w-5 h-5" />
             </div>
             <p className="text-sm font-medium text-[#1A1A1A]">
-              Failed to load treatments
+              Unable to Load Treatment Menu
             </p>
             <p className="text-xs text-[#666666] max-w-sm mx-auto">
-              {(error as Error)?.message || "An unexpected error occurred."}
+              {(error as Error)?.message ||
+                "We could not retrieve current clinic availability. Please refresh or speak directly with our reception team."}
             </p>
             <button
               onClick={() => refetch()}
               className="mt-2 text-xs font-medium text-[#B8925D] hover:underline cursor-pointer"
             >
-              Try again
+              Retry Connection
             </button>
           </div>
         )}
 
         {!isLoading && !isError && filteredTreatments.length === 0 && (
           <div className="py-16 text-center text-sm text-[#8C827A] bg-white rounded-2xl border border-[#EBE5DF] p-8 space-y-2">
-            <p className="font-medium text-[#1A1A1A]">No treatments found</p>
+            <p className="font-medium text-[#1A1A1A]">No Matching Procedures</p>
             <p className="text-xs">
-              Try adjusting your search query, selecting another category, or
-              switching locations.
+              No clinical treatments match your criteria. Adjust your search or
+              contact our team directly for bespoke requests.
             </p>
           </div>
         )}
@@ -194,7 +190,7 @@ export default function BookingPage() {
               {isFetchingNextPage && (
                 <div className="flex items-center gap-2 text-xs text-[#8C827A]">
                   <Loader2 className="w-4 h-4 animate-spin text-[#B8925D]" />
-                  <span>Loading more treatments...</span>
+                  <span>Retrieving additional procedures...</span>
                 </div>
               )}
             </div>
