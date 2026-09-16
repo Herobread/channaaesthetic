@@ -7,10 +7,12 @@ import Shimmer from "../ui/Shimmer";
 
 interface LocationPickerProps {
   className?: string;
+  disabled?: boolean;
 }
 
 export default function LocationPicker({
   className = "",
+  disabled = false,
 }: LocationPickerProps) {
   const {
     locations = [],
@@ -36,14 +38,26 @@ export default function LocationPicker({
   const activeLocation =
     locations.find((l) => l.id === selectedLocationId) || locations[0];
 
+  // Disable if explicitly requested or if there's only one location
+  const isPickerDisabled = disabled || locations.length <= 1;
+
   return (
     <Menu.Root>
       <Menu.Trigger
+        disabled={isPickerDisabled}
         aria-label="Select clinic location"
-        className={`group w-full h-full min-h-[44px] inline-flex items-center justify-between gap-2.5 px-3.5 bg-surface-elevated hover:bg-surface-subtle/50 border border-border-subtle hover:border-border-focus rounded-control shadow-subtle cursor-pointer focus-ring text-body transition-colors ${className}`.trim()}
+        className={`group w-full h-full min-h-[44px] inline-flex items-center justify-between gap-2.5 px-3.5 bg-surface-elevated border border-border-subtle rounded-control shadow-subtle text-body transition-colors focus-ring ${
+          isPickerDisabled
+            ? "cursor-not-allowed opacity-60 pointer-events-none"
+            : "hover:bg-surface-subtle/50 hover:border-border-focus cursor-pointer"
+        } ${className}`.trim()}
       >
         <span className="flex items-center gap-2.5 min-w-0 pointer-events-none">
-          <MapPin className="w-4 h-4 text-accent shrink-0" />
+          <MapPin
+            className={`w-4 h-4 shrink-0 ${
+              isPickerDisabled ? "text-text-muted" : "text-accent"
+            }`}
+          />
           <span className="text-caption font-medium text-text-primary truncate">
             {activeLocation?.name || "Select location"}
             {activeLocation?.city && (
@@ -54,7 +68,9 @@ export default function LocationPicker({
           </span>
         </span>
 
-        <ChevronDown className="w-4 h-4 text-text-muted group-hover:text-text-primary transition-transform duration-150 group-data-[popup-open]:rotate-180 shrink-0 pointer-events-none" />
+        {!isPickerDisabled && (
+          <ChevronDown className="w-4 h-4 text-text-muted group-hover:text-text-primary transition-transform duration-150 group-data-[popup-open]:rotate-180 shrink-0 pointer-events-none" />
+        )}
       </Menu.Trigger>
 
       <Menu.Portal>
@@ -71,11 +87,16 @@ export default function LocationPicker({
             >
               {locations.map((loc) => {
                 const isSelected = loc.id === (activeLocation?.id || "");
+                const isLocDisabled =
+                  (loc as any).isClosed || (loc as any).disabled;
+
                 return (
                   <Menu.RadioItem
                     key={loc.id}
                     value={loc.id}
-                    className="group flex w-full select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-left cursor-pointer outline-none transition-colors data-[highlighted]:bg-surface-subtle"
+                    closeOnClick
+                    disabled={isLocDisabled}
+                    className="group flex w-full select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-left cursor-pointer outline-none transition-colors data-[highlighted]:bg-surface-subtle data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none"
                   >
                     <div className="flex flex-col min-w-0">
                       <span
@@ -92,9 +113,11 @@ export default function LocationPicker({
                       )}
                     </div>
 
-                    <Menu.RadioItemIndicator className="shrink-0 text-accent">
-                      <Check className="w-4 h-4" />
-                    </Menu.RadioItemIndicator>
+                    {isSelected && (
+                      <Menu.RadioItemIndicator className="shrink-0 text-accent">
+                        <Check className="w-4 h-4" />
+                      </Menu.RadioItemIndicator>
+                    )}
                   </Menu.RadioItem>
                 );
               })}

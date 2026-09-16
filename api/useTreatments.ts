@@ -20,7 +20,7 @@ export interface MappedTreatment {
   durationMinutes: number;
   price: number; // Raw numeric GBP (e.g., 100)
   priceNum?: number;
-  deposit?: number; // Raw numeric GBP (e.g., 25 or 0)
+  deposit: number; // Raw numeric GBP (e.g., 25 or 0)
   depositNum?: number;
   depositInPence?: number; // Integer for Square Payments API (e.g., 2500)
   imageUrl?: string;
