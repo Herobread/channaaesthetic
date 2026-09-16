@@ -23,6 +23,49 @@ declare global {
   }
 }
 
+const SQUARE_ERROR_MAP: Record<string, string> = {
+  INVALID_EXPIRATION: "Your card expiration date is invalid or in the past.",
+  INVALID_EXPIRATION_DATE:
+    "Your card expiration date is invalid or in the past.",
+  INVALID_CARD_DATA:
+    "The card information entered is invalid. Please re-check the number.",
+  INVALID_CARD: "The card number is invalid.",
+  UNSUPPORTED_CARD_BRAND:
+    "This card type is not accepted. Please try a different card.",
+  INVALID_CVV: "The security code (CVV) is incorrect.",
+  INVALID_POSTAL_CODE:
+    "The postal code does not match the billing address for this card.",
+  CARD_DECLINED:
+    "Your card was declined by the bank. Please try another payment method.",
+  CARD_DECLINED_CALL_ISSUER:
+    "Your card was declined. Please contact your bank or use another card.",
+  INSUFFICIENT_FUNDS: "The transaction was declined due to insufficient funds.",
+  CARD_EXPIRED: "This card has expired. Please use a valid card.",
+  CARD_TOKEN_EXPIRED:
+    "The payment session timed out. Please re-enter your card details.",
+  CVV_FAILURE: "The security code (CVV) failed verification.",
+  ADDRESS_VERIFICATION_FAILURE:
+    "Billing address verification failed. Please check your registered postcode.",
+  VERIFY_CVV_FAILURE: "Could not verify your card security code.",
+  TRANSACTION_LIMIT: "This transaction exceeds your card's spending limit.",
+  GENERIC_DECLINE:
+    "Your card was declined. Please check with your bank or try another card.",
+};
+
+function formatSquareError(raw: string | undefined | null): string {
+  if (!raw) {
+    return "An error occurred while confirming your booking. Please try again.";
+  }
+
+  for (const [code, friendlyMessage] of Object.entries(SQUARE_ERROR_MAP)) {
+    if (raw.includes(code)) {
+      return friendlyMessage;
+    }
+  }
+
+  return raw;
+}
+
 export default function PayDepositPage() {
   const router = useRouter();
   const cardInstanceRef = useRef<any>(null);
@@ -44,7 +87,6 @@ export default function PayDepositPage() {
   const activeLocationId = activeLocation?.id;
   const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID;
 
-  // Load Square Web Payments SDK & Mount Card Form
   useEffect(() => {
     if (!activeLocationId || !squareAppId || totalDeposit <= 0) return;
 
@@ -83,7 +125,6 @@ export default function PayDepositPage() {
 
         if (!isMounted) return;
 
-        // Cleanup prior instance if hot reloaded
         if (cardInstanceRef.current) {
           try {
             await cardInstanceRef.current.destroy();
@@ -95,8 +136,9 @@ export default function PayDepositPage() {
         const card = await payments.card({
           style: {
             input: {
-              color: "#1C1A18",
+              color: "#1A1A1A",
               fontSize: "14px",
+              fontFamily: "inherit",
             },
             "input::placeholder": {
               color: "#8C827A",
@@ -161,17 +203,17 @@ export default function PayDepositPage() {
     setIsSubmitting(true);
 
     try {
-      // 1. Tokenize card details via Square SDK
       const tokenResult = await cardInstanceRef.current.tokenize();
       if (tokenResult.status !== "OK") {
-        const detail =
-          tokenResult.errors?.[0]?.message || "Invalid card details.";
-        setErrorMessage(detail);
+        const rawCode =
+          tokenResult.errors?.[0]?.code ||
+          tokenResult.errors?.[0]?.detail ||
+          tokenResult.errors?.[0]?.message;
+        setErrorMessage(formatSquareError(rawCode));
         setIsSubmitting(false);
         return;
       }
 
-      // 2. Submit payment token and create booking
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,7 +234,9 @@ export default function PayDepositPage() {
 
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.error || "Deposit authorization failed.");
+        throw new Error(
+          formatSquareError(json.error || json.detail || json.message),
+        );
       }
 
       const bookingId = json.booking?.id || json.booking?.uid;
@@ -203,20 +247,18 @@ export default function PayDepositPage() {
       if (typeof clearCart === "function") clearCart();
       window.location.assign(`/success/${bookingId}`);
     } catch (err: any) {
-      setErrorMessage(
-        err.message || "An error occurred while confirming your booking.",
-      );
+      setErrorMessage(formatSquareError(err.message));
       setIsSubmitting(false);
     }
   };
 
   return (
     <div className="w-full space-y-6">
-      <BackLink href="/book/details">Back to Edit Contact Details</BackLink>
+      <BackLink href="/book/details">Back to contact details</BackLink>
 
       <header className="space-y-1.5">
         <h1 className="font-serif text-headline font-normal text-text-primary tracking-tight">
-          Secure Your Booking
+          Secure your booking
         </h1>
         <p className="text-caption font-sans text-text-muted">
           A non-refundable deposit is required to reserve your slot. The
@@ -225,45 +267,45 @@ export default function PayDepositPage() {
       </header>
 
       {errorMessage && (
-        <div className="flex items-center gap-2.5 p-4 bg-surface-elevated border border-accent/20 rounded-control text-caption font-sans text-accent shadow-subtle">
-          <AlertCircle className="w-4 h-4 shrink-0 text-accent" />
+        <div className="flex items-center gap-2.5 p-4 bg-surface-error border border-border-error rounded-control text-caption font-sans text-text-error shadow-subtle">
+          <AlertCircle className="w-4 h-4 shrink-0 text-text-error" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-        {/* Payment Form (Left column on desktop, order-2 on mobile) */}
+        {/* Payment Form: Single Clean Card */}
         <div className="lg:col-span-7 order-2 lg:order-1">
-          <form onSubmit={handlePaymentSubmit} className="space-y-5">
-            <div className="bg-surface-elevated border border-border-subtle rounded-control p-5 sm:p-6 shadow-subtle space-y-5">
+          <form onSubmit={handlePaymentSubmit} className="space-y-5" noValidate>
+            <div className="bg-surface-elevated border border-border-subtle rounded-card p-5 sm:p-6 shadow-subtle space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
                 <div className="flex items-center gap-2 text-caption font-sans font-medium text-text-primary">
                   <CreditCard className="w-4 h-4 text-accent" />
-                  <span>Card Details</span>
+                  <span>Card details</span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs text-text-muted font-sans">
-                  <Lock className="w-3.5 h-3.5 text-accent" /> End-to-End
-                  Encrypted
+                <span className="inline-flex items-center gap-1.5 text-caption text-text-muted font-sans">
+                  <Lock className="w-3.5 h-3.5 text-accent" /> End-to-end
+                  encrypted
                 </span>
               </div>
 
-              {/* Square Web Payments SDK Mount Container */}
+              {/* Square Mount Container: No extra border, no nested card */}
               <div className="relative min-h-[96px]">
                 {isSdkLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-surface-canvas rounded-control border border-border-subtle text-caption font-sans text-text-muted gap-2 z-10">
+                  <div className="absolute inset-0 flex items-center justify-center text-caption font-sans text-text-muted gap-2 z-10">
                     <Loader2 className="w-4 h-4 animate-spin text-accent" />
                     <span>Loading secure payment gateway...</span>
                   </div>
                 )}
                 <div
                   id="square-card-container"
-                  className={`p-3.5 border border-border-subtle rounded-control bg-surface-canvas transition-opacity duration-200 ${
+                  className={`w-full transition-opacity duration-200 ${
                     isSdkLoading ? "opacity-0" : "opacity-100"
                   }`}
                 />
               </div>
 
-              <div className="flex items-start gap-2 pt-1 text-xs text-text-muted font-sans">
+              <div className="flex items-start gap-2 pt-1 text-caption text-text-muted font-sans border-t border-border-subtle">
                 <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                 <span>
                   Processed securely by Square Payments. Your card is charged
@@ -272,37 +314,36 @@ export default function PayDepositPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSdkLoading || isSubmitting}
               className={`w-full h-12 rounded-control text-caption font-sans font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-200 focus-ring-accent ${
                 isSdkLoading || isSubmitting
                   ? "bg-surface-elevated text-text-muted border border-border-subtle cursor-not-allowed"
-                  : "bg-accent hover:bg-accent/90 active:scale-[0.99] text-text-inverted cursor-pointer shadow-accent-glow"
+                  : "bg-accent hover:bg-accent-hover active:scale-[0.99] text-text-inverted cursor-pointer shadow-accent-glow"
               }`}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Authorizing £{totalDeposit} Deposit...</span>
+                  <span>Authorizing £{totalDeposit} deposit...</span>
                 </>
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  <span>Pay £{totalDeposit} Deposit & Confirm</span>
+                  <span>Pay £{totalDeposit} deposit & confirm</span>
                 </>
               )}
             </button>
           </form>
         </div>
 
-        {/* Booking Summary Card (Right column on desktop, order-1 on mobile) */}
+        {/* Booking Summary Card */}
         <aside className="lg:col-span-5 order-1 lg:order-2 lg:sticky lg:top-6">
-          <div className="bg-surface-elevated border border-border-subtle rounded-control p-5 sm:p-6 shadow-subtle space-y-4">
+          <div className="bg-surface-elevated border border-border-subtle rounded-card p-5 sm:p-6 shadow-subtle space-y-4">
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-border-subtle">
               <div>
-                <p className="text-body font-sans font-medium text-text-primary">
+                <p className="font-serif text-title font-medium text-text-primary">
                   {cart[0]?.treatment?.title || "Clinical Treatment"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5 text-caption font-sans text-text-muted">
@@ -327,7 +368,7 @@ export default function PayDepositPage() {
                 </div>
               </div>
               <span className="text-caption font-sans font-medium text-text-primary whitespace-nowrap">
-                £{totalPrice} Total
+                £{totalPrice} total
               </span>
             </div>
 
@@ -345,7 +386,7 @@ export default function PayDepositPage() {
                 </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-border-subtle text-text-primary font-medium text-body">
-                <span>Deposit Due Now</span>
+                <span>Deposit due now</span>
                 <span className="text-accent">£{totalDeposit}.00</span>
               </div>
             </div>

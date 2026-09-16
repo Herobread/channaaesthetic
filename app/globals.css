@@ -133,6 +133,12 @@ RULES FOR AI CODE GENERATION:
   --radius-card: 1rem;
   --radius-panel: 1.5rem;
 
+  /* --- Feedback & Error (Warm Mineral Terracotta) --- */
+  --color-text-error: #9e382b;
+  --color-border-error: #e5b3ab;
+  --color-surface-error: #fbf3f1;
+  --color-focus-ring-error: #9e382b;
+
   /* --- Luxury Warm Ambient Shadows --- */
   --shadow-subtle:
     0 1px 2px 0 rgba(28, 25, 23, 0.03), 0 4px 12px 0 rgba(28, 25, 23, 0.02);
@@ -173,5 +179,16 @@ RULES FOR AI CODE GENERATION:
       0 0 0 2px var(--color-surface-elevated),
       0 0 0 calc(2px + 2.5px) var(--color-focus-ring-accent),
       var(--shadow-accent-glow);
+  }
+}
+
+@utility focus-ring-error {
+  outline: none;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-surface-elevated),
+      0 0 0 calc(2px + 2px) var(--color-focus-ring-error);
   }
 }
