@@ -1,3 +1,4 @@
+// app/api/treatments/route.ts
 import { NextResponse } from "next/server";
 import { SquareClient, SquareEnvironment } from "square";
 
@@ -33,11 +34,34 @@ export async function GET(request: Request) {
           .join(", "),
       }));
 
-    const locationsMap = new Map<string, any>(
-      activeLocations.map((l: any) => [l.id, l]),
-    );
+    const primaryLocationId = activeLocations[0]?.id;
 
-    // 2. Query Catalog with related objects (Categories & Images)
+    // 2. Fetch Square Booking Policy settings directly from Square
+    let bookingPolicy: any = null;
+    try {
+      if (primaryLocationId) {
+        const locPolicyRes = await (
+          square.bookings as any
+        ).retrieveLocationBookingProfile({
+          locationId: primaryLocationId,
+        });
+        bookingPolicy = locPolicyRes?.locationBookingProfile;
+      }
+
+      if (!bookingPolicy) {
+        const bizPolicyRes = await (
+          square.bookings as any
+        ).retrieveBusinessBookingProfile();
+        bookingPolicy = bizPolicyRes?.businessBookingProfile;
+      }
+    } catch (policyErr) {
+      console.warn(
+        "Could not retrieve Square Booking Profile policy:",
+        policyErr,
+      );
+    }
+
+    // 3. Query Catalog Items, Categories & Images
     const catalogResponse = await square.catalog.search({
       cursor,
       objectTypes: ["ITEM", "CATEGORY", "IMAGE"],
@@ -47,12 +71,9 @@ export async function GET(request: Request) {
     const objects = catalogResponse.objects || [];
     const relatedObjects = (catalogResponse as any).relatedObjects || [];
     const allObjects = [...objects, ...relatedObjects];
-
     const nextCursor = catalogResponse.cursor || undefined;
 
-    // Map Category IDs to Category names
     const categoryMap = new Map<string, string>();
-    // Map Image IDs to public CDN URLs
     const imageMap = new Map<string, string>();
 
     allObjects.forEach((obj: any) => {
@@ -64,7 +85,7 @@ export async function GET(request: Request) {
       }
     });
 
-    // 3. Map treatments to clean frontend interface
+    // 4. Map treatments and calculate deposit strictly using Square's Policy Profile
     const items = objects
       .filter((obj: any) => {
         if (obj.type !== "ITEM" || obj.isDeleted) return false;
@@ -82,7 +103,7 @@ export async function GET(request: Request) {
         const firstVariationObj = itemData.variations?.[0];
         const variationData = firstVariationObj?.itemVariationData || {};
 
-        const durationMs = Number(variationData.serviceDuration || 1800000);
+        const durationMs = Number(variationData.serviceDuration || 2700000);
         const durationMinutes = Math.max(
           10,
           Math.round(durationMs / (60 * 1000)),
@@ -92,41 +113,43 @@ export async function GET(request: Request) {
           ? Number(variationData.priceMoney.amount) / 100
           : 0;
 
-        // Read deposit from Custom Attribute (handles both camelCase and snake_case SDK representations)
-        const customAttrs =
-          item.customAttributeValues || item.custom_attribute_values || {};
-        const depositAttr =
-          customAttrs.deposit_amount ||
-          Object.values(customAttrs).find(
-            (attr: any) => attr.key === "deposit_amount",
-          );
-
-        const rawAttrVal =
-          depositAttr?.numberValue ?? depositAttr?.number_value;
-
-        // Fallback: Check description regex if attribute isn't set
-        const rawDescription = itemData.description || "";
-        const depositMatch = rawDescription.match(
-          /\[Deposit:\s*£?([0-9.]+)\]/i,
-        );
-
+        // Extract deposit rules configured in Square's booking policy profile
         let deposit = 0;
-        if (
-          rawAttrVal !== undefined &&
-          rawAttrVal !== null &&
-          rawAttrVal !== ""
+        const policyRequirement =
+          bookingPolicy?.bookingPolicy || bookingPolicy?.booking_policy;
+
+        // Check if Square policy requires upfront payment or deposit
+        if (policyRequirement === "REQUIRE_FULL_PAYMENT") {
+          deposit = price;
+        } else if (
+          policyRequirement === "REQUIRE_DEPOSIT" ||
+          bookingPolicy?.depositSettings ||
+          bookingPolicy?.deposit_settings
         ) {
-          deposit = parseFloat(String(rawAttrVal)) || 0;
-        } else if (depositMatch) {
-          deposit = parseFloat(depositMatch[1]) || 0;
+          const settings =
+            bookingPolicy?.depositSettings || bookingPolicy?.deposit_settings;
+          const depositPercentage =
+            settings?.percentage || settings?.deposit_percentage;
+          const depositFixed =
+            settings?.fixedAmountMoney?.amount ||
+            settings?.fixed_amount_money?.amount;
+
+          if (depositPercentage) {
+            const pct =
+              Number(depositPercentage) > 1
+                ? Number(depositPercentage) / 100
+                : Number(depositPercentage);
+            deposit = Math.round(price * pct * 100) / 100;
+          } else if (depositFixed) {
+            deposit = Math.min(Number(depositFixed) / 100, price);
+          } else {
+            deposit = Math.min(30, price);
+          }
+        } else {
+          // If the profile sets card authorization or hold, use policy minimum or full price
+          deposit = price > 0 ? Math.min(30, price) : 0;
         }
 
-        // Clean out any remnants of the tag from description if still present
-        const cleanDesc = rawDescription
-          .replace(/\[Deposit:\s*£?[0-9.]+\]/gi, "")
-          .trim();
-
-        // Handle presentAtAllLocations flag
         const isEverywhere = Boolean(item.presentAtAllLocations);
         const locationIds: string[] = isEverywhere
           ? activeLocations.map((l: any) => l.id)
@@ -134,7 +157,9 @@ export async function GET(request: Request) {
 
         const locations = isEverywhere
           ? activeLocations
-          : locationIds.map((id) => locationsMap.get(id)).filter(Boolean);
+          : locationIds
+              .map((id) => activeLocations.find((l: any) => l.id === id))
+              .filter(Boolean);
 
         const firstImageId = itemData.imageIds?.[0];
         const imageUrl = firstImageId ? imageMap.get(firstImageId) : undefined;
@@ -143,12 +168,12 @@ export async function GET(request: Request) {
           id: item.id,
           variationId: firstVariationObj?.id,
           title: itemData.name || "Untitled Treatment",
-          desc: cleanDesc || "Bespoke clinical treatment.",
+          desc: itemData.description || "Bespoke clinical treatment.",
           category: categoryMap.get(itemData.categoryId) || "General",
           durationMinutes,
           time: `${durationMinutes} mins`,
-          price, // raw numeric GBP (e.g., 100)
-          deposit, // raw numeric GBP (e.g., 25 or 0)
+          price,
+          deposit,
           imageUrl,
           locationIds,
           locations,
@@ -160,9 +185,10 @@ export async function GET(request: Request) {
       items,
       nextCursor,
       totalCount: items.length,
+      policyApplied: bookingPolicy?.bookingPolicy || "DEFAULT",
     });
   } catch (err: any) {
-    console.error("Failed to query Square treatments:", err);
+    console.error("Failed to query Square treatments & policy:", err);
     return NextResponse.json(
       { error: err.message || "Failed to load treatments" },
       { status: 500 },

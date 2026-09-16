@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { SquareClient, SquareEnvironment } from "square";
 
+export const dynamic = "force-dynamic";
+
 const square = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
   environment:
@@ -21,20 +23,57 @@ export async function POST(request: Request) {
       );
     }
 
-    // Default range: next 10 days if not provided
+    const variationId = serviceVariationIds[0];
+
+    // 1. Fetch the variation to see if a team member is assigned
+    let variationObj: any = null;
+    try {
+      const singleRes = await square.catalog.object.get({
+        objectId: variationId,
+      });
+      variationObj = (singleRes as any).object;
+    } catch {
+      const batchRes = await (square.catalog as any).batchGet?.({
+        objectIds: [variationId],
+      });
+      variationObj = batchRes?.objects?.[0];
+    }
+
+    const assignedStaff: string[] =
+      variationObj?.itemVariationData?.teamMemberIds || [];
+
+    // 2. Fallback to active location team members if variation lacks assigned staff
+    let bookableTeamMemberIds = assignedStaff;
+    if (bookableTeamMemberIds.length === 0) {
+      const teamRes = await square.teamMembers.search({
+        query: {
+          filter: {
+            status: "ACTIVE",
+            locationIds: [locationId],
+          },
+        },
+      });
+      const teamMembers = (teamRes as any).teamMembers || [];
+      bookableTeamMemberIds = teamMembers.map((m: any) => m.id).filter(Boolean);
+    }
+
+    // Default range: next 10 days
     const start = startAt || new Date().toISOString();
     const end =
       endAt || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Map each item variation into an appointment segment
-    const appointmentSegments = serviceVariationIds.map(
-      (variationId: string) => ({
-        serviceVariationId: variationId,
-        serviceVariationVersion: BigInt(1), // Square will auto-resolve if null or default
-      }),
-    );
+    // 3. Build segment filter safely
+    const segmentFilter: any = {
+      serviceVariationId: variationId,
+    };
 
-    // Query Square's native Bookings engine
+    if (bookableTeamMemberIds.length > 0) {
+      segmentFilter.teamMemberIdFilter = {
+        any: bookableTeamMemberIds,
+      };
+    }
+
+    // 4. Query Square native availability
     const response = await square.bookings.searchAvailability({
       query: {
         filter: {
@@ -43,18 +82,13 @@ export async function POST(request: Request) {
             endAt: end,
           },
           locationId,
-          segmentFilters: [
-            {
-              serviceVariationId: serviceVariationIds[0],
-            },
-          ],
+          segmentFilters: [segmentFilter],
         },
       },
     });
 
     const availabilities = (response as any).availabilities || [];
 
-    // Format into flat start times
     const slots = availabilities.map((avail: any) => ({
       start: avail.startAt,
       teamMemberId: avail.appointmentSegments?.[0]?.teamMemberId,
@@ -62,10 +96,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ slots });
   } catch (err: any) {
-    console.error("Square availability error:", err);
-    return NextResponse.json(
-      { error: err.message || "Failed to search availability" },
-      { status: 500 },
-    );
+    console.error("Square /api/slots error:", err);
+    const detail =
+      err?.errors?.[0]?.detail ||
+      err?.body?.errors?.[0]?.detail ||
+      err?.message ||
+      "Failed to search availability";
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

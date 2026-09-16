@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { SquareClient, SquareEnvironment } from "square";
 
+export const dynamic = "force-dynamic";
+
 const square = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
   environment:
@@ -9,9 +11,6 @@ const square = new SquareClient({
       : SquareEnvironment.Sandbox,
 });
 
-/**
- * Formats incoming UK/international phone strings to E.164 standard required by Square.
- */
 function sanitizePhoneNumber(phone?: string): string | undefined {
   if (!phone) return undefined;
   const cleaned = phone.replace(/[^0-9+]/g, "");
@@ -35,8 +34,8 @@ export async function POST(request: Request) {
       serviceVariationId,
       customer,
       notes,
-      sourceId, // Card token from Square Web Payments SDK
-      depositAmount, // Numeric deposit amount in GBP (e.g., 25)
+      sourceId,
+      depositAmount,
     } = await request.json();
 
     if (!locationId || !startAt || !serviceVariationId || !customer?.email) {
@@ -80,26 +79,7 @@ export async function POST(request: Request) {
       customerId = (created as any).customer.id;
     }
 
-    // 2. Charge non-refundable deposit if required
-    if (numericDeposit > 0 && sourceId) {
-      depositPence = BigInt(Math.round(numericDeposit * 100));
-
-      const paymentRes = await square.payments.create({
-        sourceId,
-        idempotencyKey: crypto.randomUUID(),
-        amountMoney: {
-          amount: depositPence,
-          currency: "GBP",
-        },
-        customerId,
-        locationId,
-        note: `Deposit: ${customer.name || "Client"} - Non-refundable`,
-      });
-
-      capturedPaymentId = (paymentRes as any).payment?.id;
-    }
-
-    // 3. Resolve service variation & team member
+    // 2. Resolve variation details & team member
     let variationObj: any = null;
     try {
       const singleRes = await square.catalog.object.get({
@@ -131,13 +111,60 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Create Booking
-    const bookingNote = [
-      notes?.trim(),
-      capturedPaymentId
-        ? `Non-refundable deposit paid: £${numericDeposit} (Payment ID: ${capturedPaymentId})`
-        : null,
-    ]
+    // 3. Create an Order explicitly for the Non-Refundable Deposit
+    let createdOrderId: string | undefined = undefined;
+
+    if (numericDeposit > 0 && sourceId) {
+      depositPence = BigInt(Math.round(numericDeposit * 100));
+
+      const serviceTitle = variationObj?.itemVariationData?.name
+        ? `${variationObj.itemVariationData.name} - Booking Deposit`
+        : "Treatment Booking Deposit";
+
+      const orderRes = await square.orders.create({
+        idempotencyKey: crypto.randomUUID(),
+        order: {
+          locationId,
+          customerId,
+          lineItems: [
+            {
+              name: serviceTitle,
+              quantity: "1",
+              basePriceMoney: {
+                amount: depositPence,
+                currency: "GBP",
+              },
+            },
+          ],
+        },
+      });
+
+      createdOrderId = (orderRes as any).order?.id;
+
+      // 4. Charge the exact deposit against the deposit order (Amounts match 1:1)
+      const paymentRes = await square.payments.create({
+        sourceId,
+        idempotencyKey: crypto.randomUUID(),
+        amountMoney: {
+          amount: depositPence,
+          currency: "GBP",
+        },
+        orderId: createdOrderId, // Matches order total exactly -> No error
+        customerId,
+        locationId,
+        note: `Deposit for booking: ${customer.name || "Client"}`,
+        autocomplete: true,
+      });
+
+      capturedPaymentId = (paymentRes as any).payment?.id;
+    }
+
+    // 5. Create Booking
+    const confirmationNote = capturedPaymentId
+      ? `NON-REFUNDABLE DEPOSIT PAID: £${numericDeposit} (Square Payment ID: ${capturedPaymentId})`
+      : "";
+
+    const combinedCustomerNote = [notes?.trim(), confirmationNote]
       .filter(Boolean)
       .join(" | ");
 
@@ -147,7 +174,8 @@ export async function POST(request: Request) {
         locationId,
         customerId,
         startAt,
-        customerNote: bookingNote || undefined,
+        customerNote: combinedCustomerNote,
+        sellerNote: confirmationNote || undefined,
         appointmentSegments: [
           {
             serviceVariationId,
@@ -183,13 +211,15 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error("Square Booking/Payment Error:", err);
 
-    // Rollback: Void/refund payment if booking creation failed after charge
+    // Rollback: Refund deposit if booking creation failed after charge
     if (capturedPaymentId && depositPence > BigInt(0)) {
       try {
         console.warn(
           `Attempting automatic refund for failed booking on payment ${capturedPaymentId}`,
         );
-        await square.refunds.createPaymentRefund({
+
+        // Use square.refunds.refundPayment (or square.refunds.create)
+        await (square.refunds as any).refundPayment({
           idempotencyKey: crypto.randomUUID(),
           paymentId: capturedPaymentId,
           amountMoney: {
@@ -200,10 +230,7 @@ export async function POST(request: Request) {
             "System refund: Appointment creation failed after deposit capture.",
         });
       } catch (refundErr) {
-        console.error(
-          "Critical: Automatic refund failed. Check Square Dashboard:",
-          refundErr,
-        );
+        console.error("Critical: Automatic refund failed:", refundErr);
       }
     }
 

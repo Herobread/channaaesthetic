@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "bun --env-file=.env.development.local next dev",
+    "dev:prod": "bun --env-file=.env.production.local next dev",
+    "build": "bun --env-file=.env.production.local next build",
     "start": "next start",
     "clone-prod": "bun scripts/clone-prod-to-sandbox.ts"
   },
