@@ -80,42 +80,40 @@ export default function PatientDetailsPage() {
   if (!selectedSlot) return null;
 
   return (
-    <>
-      <BackLink href={"/book/datetime"}>Back to time selection</BackLink>
+    <div className="w-full">
+      <BackLink href="/book/datetime">Back to time selection</BackLink>
 
       <header className="mt-4 mb-8 lg:mb-10">
         <h1 className="font-serif text-headline font-normal text-text-primary tracking-tight">
           Patient details
         </h1>
-        {/* <p className="text-caption font-sans text-text-muted mt-1.5">
-          Please enter your contact details to secure your consultation and
-          procedure.
-        </p> */}
       </header>
 
-      <form id="booking-form" className="space-y-6">
+      <form id="patient-details-form" className="space-y-6" noValidate>
+        {/* Full Name */}
         <div>
           <label className="block text-caption font-sans font-medium text-text-primary mb-2">
             Full name *
           </label>
           <input
             type="text"
-            autoComplete="name"
+            autoComplete="shipping name"
             placeholder="Jane Doe"
             {...register("name")}
-            className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+            className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 transition-colors ${
               touchedFields.name && errors.name
-                ? "border-accent"
-                : "border-border-subtle"
+                ? "border-border-error focus-ring-error"
+                : "border-border-subtle focus-ring-accent"
             }`}
           />
           {touchedFields.name && errors.name && (
-            <p className="text-xs text-accent mt-1.5 font-sans">
+            <p className="text-caption font-sans text-text-error mt-1.5">
               {errors.name.message}
             </p>
           )}
         </div>
 
+        {/* Email & Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           <div>
             <label className="block text-caption font-sans font-medium text-text-primary mb-2">
@@ -123,17 +121,17 @@ export default function PatientDetailsPage() {
             </label>
             <input
               type="email"
-              autoComplete="email"
+              autoComplete="shipping email"
               placeholder="jane@example.com"
               {...register("email")}
-              className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+              className={`w-full text-caption font-sans py-3.5 px-4 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 transition-colors ${
                 touchedFields.email && errors.email
-                  ? "border-accent"
-                  : "border-border-subtle"
+                  ? "border-border-error focus-ring-error"
+                  : "border-border-subtle focus-ring-accent"
               }`}
             />
             {touchedFields.email && errors.email && (
-              <p className="text-xs text-accent mt-1.5 font-sans">
+              <p className="text-caption font-sans text-text-error mt-1.5">
                 {errors.email.message}
               </p>
             )}
@@ -145,23 +143,24 @@ export default function PatientDetailsPage() {
             </label>
             <input
               type="tel"
-              autoComplete="tel"
+              autoComplete="shipping tel"
               placeholder="+44 7123 456789"
               {...register("phone")}
-              className={`w-full text-caption font-sans px-4 py-3.5 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors ${
+              className={`w-full text-caption font-sans px-4 py-3.5 rounded-control border bg-surface-elevated text-text-primary placeholder:text-text-muted/60 transition-colors ${
                 touchedFields.phone && errors.phone
-                  ? "border-accent"
-                  : "border-border-subtle"
+                  ? "border-border-error focus-ring-error"
+                  : "border-border-subtle focus-ring-accent"
               }`}
             />
             {touchedFields.phone && errors.phone && (
-              <p className="text-xs text-accent mt-1.5 font-sans">
+              <p className="text-caption font-sans text-text-error mt-1.5">
                 {errors.phone.message}
               </p>
             )}
           </div>
         </div>
 
+        {/* Notes */}
         <div>
           <label className="block text-caption font-sans font-medium text-text-primary mb-2">
             Medical notes or considerations (optional)
@@ -174,6 +173,6 @@ export default function PatientDetailsPage() {
           />
         </div>
       </form>
-    </>
+    </div>
   );
 }
