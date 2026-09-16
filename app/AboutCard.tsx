@@ -94,9 +94,6 @@ export default function AboutCard({
 
         {/* Overlay Details */}
         <div className="absolute bottom-6 inset-x-6 sm:inset-x-8 text-white space-y-1 z-20 pointer-events-none">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] uppercase tracking-widest text-[#DFC095] font-medium border border-white/10 mb-1">
-            Lead Clinician
-          </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-tight">
             Dr. Channa
           </h2>

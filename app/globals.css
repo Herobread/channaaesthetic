@@ -11,9 +11,11 @@ platform. The visual tone must feel like an editorial clinic portfolio: warm,
 restrained, sterile yet indulgent.
 
 RULES FOR AI CODE GENERATION:
-1. STRICTLY NO ARBITRARY HEX CODES:
-   - NEVER use `bg-[#...]`, `text-[#...]`, or `border-[#...]`.
+1. STRICTLY NO ARBITRARY VALUES:
+   - NEVER use raw hex values: `bg-[#...]`, `text-[#...]`, `border-[#...]`.
    - Never introduce pure cold grays (e.g., slate, zinc, gray-500, #666666).
+   - NEVER use arbitrary drop shadows (`shadow-[...]` or generic cold `shadow-lg`).
+
 2. USE SEMANTIC UTILITIES FIRST:
    - Backdrops: Use `bg-surface-canvas`.
    - Cards/Flyouts: Use `bg-surface-elevated` with `border border-border-subtle`.
@@ -22,9 +24,54 @@ RULES FOR AI CODE GENERATION:
    - CTAs, Active States & Gold Icons: Use `bg-accent` / `text-accent`.
    - Dark Sections/Hero Overlays: Use `bg-surface-dark` or `text-text-inverted`.
    - Champagne Highlights (on dark surfaces): Use `text-accent-champagne`.
-3. TWO-TIER TOKEN CONTRACT:
-   - Primitives: Concrete scales (--sand-*, --charcoal-*, --bronze-*).
-   - Semantics: Mapped to UI roles (--surface-*, --text-*, --border-*, --accent-*).
+
+3. STRICT PROHIBITION OF UPPERCASE / ALL-CAPS:
+   - NEVER use the `uppercase` class.
+   - NEVER type UI strings in ALL CAPS (no "SELECT DATE", "MON", "AVAILABLE", "DETAILS").
+   - Use natural sentence case ("Select date & time", "Available", "Mon") or title case for headers.
+   - Micro badges, category pills, and section markers MUST be sentence case.
+
+4. TYPOGRAPHY DISCIPLINE & ABSOLUTE MINIMUM SCALE:
+   - NEVER use raw text size utilities like `text-xs`, `text-sm`, `text-4xl`, or `text-6xl`.
+   - ABSOLUTE MINIMUM IS 14PX:
+     * Never render 12px / 0.75rem text anywhere in the interface.
+     * The lowest tier is `--text-caption` (14px). Use it for metadata, weekdays, and tags.
+   - CORMORANT GARAMOND OPTICAL COMPENSATION:
+     * Cormorant has a delicate x-height. Treatment card headers MUST use `text-title font-medium` 
+       (500) rather than `font-normal` so they hold visual weight against 16px Inter sans copy.
+   - ALWAYS pair sizes with their intended semantic font family:
+     * Display (`text-display font-serif`): Hero headers & primary editorial statements.
+     * Headline (`text-headline font-serif`): Section headers & page titles.
+     * Title (`text-title font-serif font-medium`): Card headers & treatment names.
+     * Body (`text-body font-sans`): Default paragraph copy, form inputs, primary actions.
+     * Caption (`text-caption font-sans`): Absolute baseline (14px). Secondary copy, helper text, time slots, weekdays, tags.
+
+5. DARK SURFACE CONTRAST & OPTICAL WEIGHT COMPENSATION:
+   - NEVER pair `font-light` with opacity modifiers below `/85` on dark surfaces.
+   - Body/caption copy inside `bg-surface-dark` MUST use `font-normal` (400) or `font-medium` (500), 
+     with at least `text-text-inverted/90` or pure `text-text-inverted` to prevent text thinning.
+   - Code tags or accents inside dark surfaces MUST carry `font-medium` or `font-semibold`.
+
+6. CONCENTRIC RADII & ELEVATION DISCIPLINE:
+   - Outer Cards: `rounded-card` with `shadow-subtle`.
+   - Inner Controls / Slots / Pills / Inputs: `rounded-control`.
+   - Full-width Hero Panels / Modal Sheets: `rounded-panel`.
+   - Hover / Floating Dropdowns: `shadow-elevated`.
+
+7. FOCUS RINGS & INPUT BOUNDARIES:
+   - Form inputs inside elevated cards MUST use `bg-surface-elevated` with `border border-border-subtle`
+     so they never look flat, sunken, or disabled.
+   - NEVER use raw `focus:outline-*` or default blue rings.
+   - ALWAYS use `focus-visible:` (keyboard navigation only), never raw `focus:`.
+   - Apply `.focus-ring` to interactive buttons, cards, and date pills.
+   - Apply `.focus-ring-accent` to input fields and primary booking confirmations.
+
+8. PROHIBITION OF UNREQUESTED DECORATIVE CHIPS, EYEBROWS & BADGES:
+   - NEVER invent decorative pill badges, SaaS-style eyebrows, or "chip" labels 
+     (e.g., `<Sparkles /> AI Audit`, "• Step 1 of 3", "Featured", "Overview") above headings.
+   - Do NOT add decorative icons (sparkles, stars, lightning bolts) to headers unless 
+     explicitly requested in the design spec.
+   - Keep layout entrances purely editorial: jump straight to the heading and description.
 ================================================================================
 */
 
@@ -48,4 +95,82 @@ RULES FOR AI CODE GENERATION:
   --color-accent: #b8925d;
   --color-accent-hover: #9e7b4c;
   --color-accent-champagne: #dfc095;
+
+  /* --- Focus Rings --- */
+  --color-focus-ring: #1a1a1a;
+  --color-focus-ring-accent: #b8925d;
+
+  /* --- Font Families --- */
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-serif), "Cormorant Garamond", Georgia, serif;
+
+  /* --- Editorial Typography Scale (Absolute Floor: 14px) --- */
+  /* Caption: 14px (Secondary copy, time slot values, metadata, tags, weekdays) */
+  --text-caption: 0.875rem;
+  --text-caption--line-height: 1.35rem;
+
+  /* Body: 16px (Paragraphs, inputs, standard button text) */
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+
+  /* Title: 24px (Bumped for Cormorant Garamond x-height balance) */
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.85rem;
+  --text-title--letter-spacing: -0.015em;
+
+  /* Headline: 28px (Section titles like 'Select date & time') */
+  --text-headline: 1.75rem;
+  --text-headline--line-height: 2.125rem;
+  --text-headline--letter-spacing: -0.02em;
+
+  /* Display: 36px (Editorial hero statements) */
+  --text-display: 2.25rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--letter-spacing: -0.025em;
+
+  /* --- Concentric Radii Scale --- */
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  /* --- Luxury Warm Ambient Shadows --- */
+  --shadow-subtle:
+    0 1px 2px 0 rgba(28, 25, 23, 0.03), 0 4px 12px 0 rgba(28, 25, 23, 0.02);
+  --shadow-elevated:
+    0 4px 6px -1px rgba(28, 25, 23, 0.04),
+    0 12px 24px -4px rgba(28, 25, 23, 0.06);
+  --shadow-accent-glow: 0 4px 14px 0 rgba(184, 146, 93, 0.25);
+}
+
+@media (min-width: 640px) {
+  @theme {
+    /* Responsive Display: 42px on tablet & desktop */
+    --text-display: 2.625rem;
+    --text-display--line-height: 2.875rem;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   REUSABLE EDITORIAL FOCUS UTILITIES
+   ----------------------------------------------------------------------------- */
+@utility focus-ring {
+  outline: none;
+  transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-surface-canvas),
+      0 0 0 calc(2px + 1.5px) var(--color-focus-ring);
+  }
+}
+
+@utility focus-ring-accent {
+  outline: none;
+  transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-surface-elevated),
+      0 0 0 calc(2px + 1.5px) var(--color-focus-ring-accent);
+  }
 }
