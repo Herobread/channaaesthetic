@@ -85,7 +85,7 @@ export default function PayDepositPage() {
   }, [locations, selectedLocationId]);
 
   const activeLocationId = activeLocation?.id;
-  const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID;
+  const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID || "";
 
   useEffect(() => {
     if (!activeLocationId || !squareAppId || totalDeposit <= 0) return;

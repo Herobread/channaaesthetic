@@ -44,7 +44,7 @@ export default function BookingBottomBar({
           <div className="overflow-hidden bg-[#24211E] border-b border-[#38332E]">
             <div className="p-4 sm:p-5 max-h-[50vh] overflow-y-auto space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-wider font-semibold text-[#DFC095]">
+                <span className="text-xs uppercase tracking-wider font-semibold text-accent-champagne">
                   Procedure Breakdown
                 </span>
                 <button
@@ -66,10 +66,10 @@ export default function BookingBottomBar({
                       <p className="font-medium text-[#F5F2EB]">
                         {quantity}x {treatment.title}
                       </p>
-                      <p className="text-[#8C827A]">{treatment.time}</p>
+                      <p className="text-text-muted">{treatment.time}</p>
                     </div>
-                    <span className="text-[#DFC095] font-semibold">
-                      £{treatment.priceNum * quantity}
+                    <span className="text-accent-champagne font-semibold">
+                      £{(treatment.priceNum ?? 0) * quantity}
                     </span>
                   </div>
                 ))}
@@ -82,9 +82,9 @@ export default function BookingBottomBar({
                 </div>
                 <div className="flex justify-between text-white font-semibold">
                   <span>Deposit Due Now</span>
-                  <span className="text-[#DFC095]">£{totalDeposit}</span>
+                  <span className="text-accent-champagne">£{totalDeposit}</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-[#8C827A]">
+                <div className="flex justify-between text-[11px] text-text-muted">
                   <span>Balance Due at Appointment</span>
                   <span>£{Math.max(0, totalPrice - totalDeposit)}</span>
                 </div>
@@ -106,7 +106,7 @@ export default function BookingBottomBar({
               <span className="text-[11px] text-[#B8AEA4]">deposit</span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-[#DFC095] font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-accent-champagne font-medium">
               <span>
                 {totalQuantity}{" "}
                 {totalQuantity === 1 ? "treatment" : "treatments"}
