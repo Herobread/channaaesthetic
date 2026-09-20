@@ -6,11 +6,10 @@ import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import {
   AlertCircle,
   ArrowRight,
-  CheckCircle2,
   ChevronUp,
   Clock,
-  CreditCard,
   Loader2,
+  Trash2,
   X,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,11 +35,9 @@ export default function BookingBar() {
     totalMinutes,
     totalDeposit: hookDeposit,
     handleDecrement,
-    clearCart,
     maxMinutes = 180,
   } = useCart();
 
-  // Defensive fallback: compute deposit directly from cart items if hook value is missing or 0
   const computedDeposit = cart.reduce((sum, item) => {
     const itemDeposit = Number(item.treatment?.deposit) || 0;
     const qty = Number(item.quantity) || 1;
@@ -50,21 +47,12 @@ export default function BookingBar() {
   const totalDeposit =
     Number(hookDeposit) > 0 ? Number(hookDeposit) : computedDeposit;
 
-  const selectedLocationId = useAppStore((state) => state.selectedLocationId);
-  const {
-    selectedSlot,
-    customerDetails,
-    setCustomerDetails,
-    isDetailsValid,
-    isSubmitting,
-    setIsSubmitting,
-  } = useBookingFlowStore();
+  const { selectedSlot, isSubmitting } = useBookingFlowStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [shouldRender, setShouldRender] = useState(totalQuantity > 0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Flow step detection
   const isStep1Treatments = pathname === "/" || pathname === "/book";
   const isStep2DateTime = pathname.includes("/datetime");
   const isStep3Details = pathname.includes("/details");
@@ -73,12 +61,8 @@ export default function BookingBar() {
   const isOverLimit = totalMinutes > maxMinutes;
   const hasPickedSlot = Boolean(selectedSlot);
 
-  // Disable button if limit exceeded, slot not picked in step 2, form invalid in step 3, or submitting
   const isButtonDisabled =
-    isOverLimit ||
-    (isStep2DateTime && !hasPickedSlot) ||
-    (isStep3Details && !isDetailsValid) ||
-    isSubmitting;
+    isOverLimit || (isStep2DateTime && !hasPickedSlot) || isSubmitting;
 
   useEffect(() => {
     if (totalQuantity > 0) {
@@ -107,115 +91,20 @@ export default function BookingBar() {
       router.push("/book/details");
       return;
     }
-
-    if (isStep3Details) {
-      // Sync latest inputs from DOM
-      const nameInput =
-        document.querySelector<HTMLInputElement>(
-          'input[name="fullName"], input[name="name"]',
-        )?.value ||
-        customerDetails.name ||
-        "";
-      const emailInput =
-        document.querySelector<HTMLInputElement>(
-          'input[name="email"], input[type="email"]',
-        )?.value ||
-        customerDetails.email ||
-        "";
-      const phoneInput =
-        document.querySelector<HTMLInputElement>(
-          'input[name="phone"], input[type="tel"]',
-        )?.value ||
-        customerDetails.phone ||
-        "";
-      const notesInput =
-        document.querySelector<HTMLTextAreaElement>("textarea")?.value ||
-        customerDetails.notes ||
-        "";
-
-      setCustomerDetails({
-        name: nameInput.trim(),
-        email: emailInput.trim(),
-        phone: phoneInput.trim(),
-        notes: notesInput.trim(),
-      });
-
-      // If deposit is required, navigate to dedicated payment page
-      if (totalDeposit > 0) {
-        router.push("/book/pay-deposit");
-        return;
-      }
-
-      // If zero deposit, proceed directly with final appointment creation
-      const variationId =
-        cart[0]?.treatment?.variationId || cart[0]?.treatment?.id;
-
-      if (!selectedLocationId || !variationId || !selectedSlot) {
-        alert(
-          "Missing booking details. Please return to step 1 and re-select.",
-        );
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      try {
-        const response = await fetch("/api/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            locationId: selectedLocationId,
-            startAt: selectedSlot,
-            serviceVariationId: variationId,
-            depositAmount: 0,
-            customer: {
-              name: nameInput.trim(),
-              email: emailInput.trim(),
-              phone: phoneInput.trim(),
-            },
-            notes: notesInput.trim() || undefined,
-          }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to commit booking.");
-        }
-
-        const bookingId = data.booking?.id || data.booking?.uid;
-        if (!bookingId) throw new Error("No booking ID returned from server.");
-
-        if (typeof clearCart === "function") clearCart();
-        window.location.assign(`/success/${bookingId}`);
-      } catch (err: any) {
-        alert(err.message || "Failed to finalize booking.");
-        setIsSubmitting(false);
-      }
-    }
-
-    if (isStep4Payment) {
-      // Handled by the payment form inside /book/pay-deposit
-      const paymentForm = document.getElementById(
-        "deposit-payment-form",
-      ) as HTMLFormElement;
-      if (paymentForm) {
-        paymentForm.requestSubmit();
-      }
-    }
   };
 
-  // Do not render floating bar on the dedicated payment page if preferred, or keep it visible
-  if (!shouldRender || isStep4Payment) return null;
+  // Hide floating bar on Details and Payment steps so forms have standard on-screen buttons
+  if (!shouldRender || isStep3Details || isStep4Payment) return null;
 
   return (
     <div
-      className={`fixed bottom-6 inset-x-3 sm:inset-x-4 max-w-xl mx-auto z-50 origin-bottom transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed bottom-3 inset-x-2 sm:bottom-6 sm:inset-x-4 max-w-xl mx-auto z-50 origin-bottom transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isVisible
           ? "opacity-100 scale-100 translate-y-0"
           : "opacity-0 scale-[0.88] translate-y-8 pointer-events-none"
       }`}
     >
-      <div className="bg-[#1C1A18] text-white rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
+      <div className="bg-[#1C1A18] text-white rounded-2xl sm:rounded-3xl border border-[#38332E] shadow-2xl overflow-hidden">
         {/* Animated Review Sheet */}
         <div
           id="review-sheet"
@@ -229,46 +118,39 @@ export default function BookingBar() {
           }`}
         >
           <div className="overflow-hidden bg-[#24211E] border-b border-[#38332E]">
-            <div className="p-5 sm:p-6 max-h-[60vh] overflow-y-auto space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h4 className="font-sans font-bold text-2xl text-[#F5F2EB] leading-tight">
-                    Selected Procedures
-                  </h4>
-                  <p className="text-sm text-[#B8AEA4] font-light mt-1">
-                    {totalQuantity}{" "}
-                    {totalQuantity === 1 ? "treatment" : "treatments"} •{" "}
-                    {formatMinutes(totalMinutes)}
-                  </p>
-                </div>
+            <div className="p-3.5 sm:p-5 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="font-sans font-bold text-lg sm:text-xl text-[#F5F2EB] leading-none">
+                  Selected Procedures
+                </h4>
 
                 <button
                   type="button"
                   tabIndex={isExpanded ? 0 : -1}
                   onClick={() => setIsExpanded(false)}
                   aria-label="Close overview"
-                  className="w-10 h-10 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0 cursor-pointer"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#332E29] hover:bg-[#423C36] active:scale-95 text-[#E6E0D8] flex items-center justify-center transition shrink-0 cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Treatment list */}
-              <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-2xl border border-[#38332E] px-4 sm:px-5">
+              <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-xl border border-[#38332E] px-3 sm:px-4">
                 {cart.map(({ treatment, quantity }) => {
                   const itemDeposit = Number(treatment.deposit) || 0;
 
                   return (
                     <div
                       key={treatment.id}
-                      className="py-4 sm:py-5 flex items-start justify-between gap-4 first:pt-4 last:pb-4"
+                      className="py-2.5 sm:py-3.5 flex items-center justify-between gap-3 first:pt-3 last:pb-3"
                     >
-                      <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="min-w-0 flex-1 space-y-0.5">
                         <p className="text-sm font-medium text-[#F5F2EB] leading-snug break-words">
                           {quantity > 1 ? `${quantity}x ` : ""}
                           {treatment.title}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#B8AEA4]">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#B8AEA4]">
                           <span className="text-[#DFC095] font-semibold">
                             £{treatment.price}
                           </span>
@@ -281,8 +163,8 @@ export default function BookingBar() {
                             </>
                           )}
                           <span>•</span>
-                          <span className="flex items-center gap-1.5 font-normal">
-                            <Clock className="w-3.5 h-3.5 text-[#DFC095] shrink-0" />{" "}
+                          <span className="flex items-center gap-1 font-normal">
+                            <Clock className="w-3 h-3 text-[#DFC095] shrink-0" />{" "}
                             {treatment.time ||
                               `${treatment.durationMinutes || 30} mins`}
                           </span>
@@ -298,10 +180,9 @@ export default function BookingBar() {
                             handleDecrement(treatment.id);
                           }}
                           aria-label={`Remove ${treatment.title}`}
-                          className="h-9 px-3 rounded-xl bg-[#2A2622] hover:bg-red-950/40 hover:text-red-300 text-[#E6E0D8] border border-[#3D3833] flex items-center gap-1.5 text-xs font-normal transition active:scale-95 shrink-0 cursor-pointer"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#2A2622] hover:bg-red-950/40 text-[#A8A096] hover:text-red-300 border border-[#3D3833] flex items-center justify-center transition active:scale-95 shrink-0 cursor-pointer"
                         >
-                          <X className="w-3.5 h-3.5 text-[#A8A096]" />
-                          <span>Remove</span>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -314,9 +195,9 @@ export default function BookingBar() {
 
         {/* Clinical limit warning */}
         {isOverLimit && (
-          <div className="bg-[#2B1414] border-b border-red-900/60 px-5 py-3 flex items-start gap-2.5 text-xs text-red-200">
+          <div className="bg-[#2B1414] border-b border-red-900/60 px-3.5 py-2 sm:px-5 sm:py-3 flex items-start gap-2 sm:gap-2.5 text-xs text-red-200">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">
+            <span className="leading-tight sm:leading-relaxed">
               Maximum single-session limit is {formatMinutes(maxMinutes)} for
               clinical safety. Please remove a procedure to continue.
             </span>
@@ -326,28 +207,28 @@ export default function BookingBar() {
         {/* Action bar section */}
         <div
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between gap-4 cursor-pointer select-none"
+          className="px-3.5 py-2.5 sm:px-6 sm:py-4 flex items-center justify-between gap-2.5 sm:gap-4 cursor-pointer select-none"
         >
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-baseline gap-x-2">
+          <div className="flex flex-col min-w-0 justify-center">
+            <div className="flex items-baseline gap-x-1.5 sm:gap-x-2 flex-wrap leading-tight">
               <span className="font-bold text-lg text-white">
                 £{totalPrice}
               </span>
               {totalDeposit > 0 && (
-                <span className="text-xs text-[#DFC095]">
+                <span className="text-xs text-[#DFC095] whitespace-nowrap">
                   (£{totalDeposit} deposit due)
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#DFC095] font-medium mt-0.5">
-              <span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-[#DFC095] font-medium mt-0.5">
+              <span className="truncate">
                 {totalQuantity}{" "}
                 {totalQuantity === 1 ? "treatment" : "treatments"}
               </span>
-              <span className="text-[#59524B]">•</span>
+              <span className="text-[#59524B] shrink-0">•</span>
               <span
-                className={`inline-flex items-center gap-1 ${
+                className={`inline-flex items-center gap-1 shrink-0 ${
                   isOverLimit ? "text-red-400 font-semibold" : "text-[#B8AEA4]"
                 }`}
               >
@@ -356,7 +237,7 @@ export default function BookingBar() {
               </span>
 
               <ChevronUp
-                className={`w-4 h-4 ml-0.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                   isExpanded ? "rotate-180 text-white" : ""
                 }`}
               />
@@ -367,16 +248,15 @@ export default function BookingBar() {
             type="button"
             disabled={isButtonDisabled}
             onClick={handleAction}
-            className={`relative h-11 px-5 sm:px-6 rounded-xl text-sm font-semibold tracking-wide overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-md shrink-0 select-none ${
+            className={`relative h-10 sm:h-11 px-4 sm:px-6 rounded-xl text-sm font-semibold tracking-wide overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-md shrink-0 select-none ${
               isButtonDisabled
                 ? "bg-[#2A2622] text-[#6E665D] border border-[#3D3833] cursor-not-allowed shadow-none"
                 : "bg-[#B8925D] hover:bg-[#A8824C] active:scale-[0.98] text-white cursor-pointer"
             }`}
           >
             <div className="grid grid-cols-1 grid-rows-1 items-center justify-items-center">
-              {/* State: Submitting */}
               <div
-                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 ease-out ${
                   isSubmitting
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-90 -translate-y-2 pointer-events-none"
@@ -386,32 +266,9 @@ export default function BookingBar() {
                 <span>Securing Slot...</span>
               </div>
 
-              {/* State: Step 3 Final Submission / Continue */}
               <div
-                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
-                  !isSubmitting && isStep3Details
-                    ? "opacity-100 scale-100 translate-y-0"
-                    : "opacity-0 scale-90 translate-y-2 pointer-events-none"
-                }`}
-              >
-                {totalDeposit > 0 ? (
-                  <>
-                    <CreditCard className="w-4 h-4 text-white" />
-                    <span>Continue</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-white" />
-                    <span>Confirm Booking</span>
-                  </>
-                )}
-              </div>
-
-              {/* State: Steps 1 & 2 */}
-              <div
-                className={`col-start-1 row-start-1 flex items-center justify-center gap-2 transition-all duration-200 ease-out ${
-                  !isSubmitting && !isStep3Details
+                className={`col-start-1 row-start-1 flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 ease-out ${
+                  !isSubmitting
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-90 -translate-y-2 pointer-events-none"
                 }`}

@@ -1,8 +1,11 @@
 "use client";
 
 import BackLink from "@/components/ui/BackLink";
+import { useCart } from "@/hooks/useCart";
+import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowRight, CheckCircle2, CreditCard, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -29,15 +32,29 @@ type PatientFormValues = z.infer<typeof patientSchema>;
 export default function PatientDetailsPage() {
   const router = useRouter();
 
+  const { cart, totalDeposit: hookDeposit, clearCart } = useCart();
+  const selectedLocationId = useAppStore((state) => state.selectedLocationId);
+
+  const computedDeposit = cart.reduce((sum, item) => {
+    const itemDeposit = Number(item.treatment?.deposit) || 0;
+    const qty = Number(item.quantity) || 1;
+    return sum + itemDeposit * qty;
+  }, 0);
+
+  const totalDeposit =
+    Number(hookDeposit) > 0 ? Number(hookDeposit) : computedDeposit;
+
   const {
     selectedSlot,
     customerDetails,
     setCustomerDetails,
-    setIsDetailsValid,
+    isSubmitting,
+    setIsSubmitting,
   } = useBookingFlowStore();
 
   const {
     register,
+    handleSubmit,
     watch,
     formState: { errors, isValid, touchedFields },
   } = useForm<PatientFormValues>({
@@ -51,13 +68,7 @@ export default function PatientDetailsPage() {
     },
   });
 
-  // Keep bottom BookingBar enabled/disabled state synced
-  useEffect(() => {
-    setIsDetailsValid(isValid);
-    return () => setIsDetailsValid(false);
-  }, [isValid, setIsDetailsValid]);
-
-  // Sync details silently to Zustand
+  // Keep Zustand state synced as user types
   useEffect(() => {
     const subscription = watch((value) => {
       setCustomerDetails({
@@ -77,6 +88,67 @@ export default function PatientDetailsPage() {
     }
   }, [selectedSlot, router]);
 
+  const onSubmit = async (values: PatientFormValues) => {
+    if (isSubmitting) return;
+
+    setCustomerDetails({
+      name: values.name.trim(),
+      email: values.email.trim(),
+      phone: values.phone.trim(),
+      notes: values.notes?.trim() || "",
+    });
+
+    // If a deposit is due, push to the Square payment page
+    if (totalDeposit > 0) {
+      router.push("/book/pay-deposit");
+      return;
+    }
+
+    // Zero-deposit booking: create appointment directly
+    const variationId =
+      cart[0]?.treatment?.variationId || cart[0]?.treatment?.id;
+
+    if (!selectedLocationId || !variationId || !selectedSlot) {
+      alert("Missing booking details. Please return to step 1 and re-select.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locationId: selectedLocationId,
+          startAt: selectedSlot,
+          serviceVariationId: variationId,
+          depositAmount: 0,
+          customer: {
+            name: values.name.trim(),
+            email: values.email.trim(),
+            phone: values.phone.trim(),
+          },
+          notes: values.notes?.trim() || undefined,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to commit booking.");
+      }
+
+      const bookingId = data.booking?.id || data.booking?.uid;
+      if (!bookingId) throw new Error("No booking ID returned from server.");
+
+      if (typeof clearCart === "function") clearCart();
+      window.location.assign(`/success/${bookingId}`);
+    } catch (err: any) {
+      alert(err.message || "Failed to finalize booking.");
+      setIsSubmitting(false);
+    }
+  };
+
   if (!selectedSlot) return null;
 
   return (
@@ -89,7 +161,12 @@ export default function PatientDetailsPage() {
         </h1>
       </header>
 
-      <form id="patient-details-form" className="space-y-6" noValidate>
+      <form
+        id="patient-details-form"
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
+        noValidate
+      >
         {/* Full Name */}
         <div>
           <label className="block text-caption font-sans font-medium text-text-primary mb-2">
@@ -171,6 +248,37 @@ export default function PatientDetailsPage() {
             {...register("notes")}
             className="w-full text-caption font-sans p-4 rounded-control border border-border-subtle bg-surface-elevated text-text-primary placeholder:text-text-muted/60 focus-ring-accent transition-colors resize-none"
           />
+        </div>
+
+        {/* On-screen submit button */}
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className={`w-full h-12 rounded-control text-body font-sans font-medium flex items-center justify-center gap-2 transition-all shadow-subtle focus-ring ${
+              !isValid || isSubmitting
+                ? "bg-surface-subtle text-text-muted cursor-not-allowed border border-border-subtle shadow-none"
+                : "bg-accent hover:bg-accent-hover active:scale-[0.99] text-text-inverted cursor-pointer shadow-accent-glow"
+            }`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Securing appointment...</span>
+              </>
+            ) : totalDeposit > 0 ? (
+              <>
+                <CreditCard className="w-5 h-5" />
+                <span>Continue to deposit (£{totalDeposit})</span>
+                <ArrowRight className="w-5 h-5" />
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Confirm appointment</span>
+              </>
+            )}
+          </button>
         </div>
       </form>
     </div>

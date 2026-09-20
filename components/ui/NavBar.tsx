@@ -27,7 +27,7 @@ export default function Navbar({
     <header
       className={`z-20 w-full transition-colors ${positionClasses} ${className}`.trim()}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-4">
+      <div className="max-w-5xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-4 flex items-center justify-between gap-3">
         <Link
           href="/"
           className="shrink-0 focus-ring rounded-control inline-flex items-center"
@@ -35,19 +35,19 @@ export default function Navbar({
           <Logo theme={theme} />
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {action === "book" && (
             <Link
               href="/book"
-              className={`h-10 px-5 rounded-control font-sans text-caption font-medium flex items-center justify-center transition focus-ring ${
+              className={`h-9 sm:h-10 px-3.5 sm:px-5 rounded-control font-sans text-caption font-medium flex items-center justify-center transition focus-ring active:scale-[0.98] ${
                 overlay
                   ? "bg-white/10 hover:bg-white/20 text-text-inverted backdrop-blur-sm"
                   : isLight
-                    ? "bg-accent hover:bg-accent/90 text-text-inverted shadow-accent-glow"
+                    ? "bg-accent hover:bg-accent-hover text-text-inverted shadow-accent-glow"
                     : "bg-surface-dark hover:bg-accent text-text-inverted"
               }`}
             >
-              Book appointment
+              Book
             </Link>
           )}
 
