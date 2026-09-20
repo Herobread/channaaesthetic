@@ -1,15 +1,7 @@
+import { square } from "@/lib/square";
 import { NextResponse } from "next/server";
-import { SquareClient, SquareEnvironment } from "square";
 
 export const dynamic = "force-dynamic";
-
-const square = new SquareClient({
-  token: process.env.SQUARE_ACCESS_TOKEN,
-  environment:
-    process.env.SQUARE_ENVIRONMENT?.toLowerCase() === "production"
-      ? SquareEnvironment.Production
-      : SquareEnvironment.Sandbox,
-});
 
 function sanitizePhoneNumber(phone?: string): string | undefined {
   if (!phone) return undefined;
@@ -160,13 +152,9 @@ export async function POST(request: Request) {
     }
 
     // 5. Create Booking
-    const confirmationNote = capturedPaymentId
-      ? `NON-REFUNDABLE DEPOSIT PAID: £${numericDeposit} (Square Payment ID: ${capturedPaymentId})`
-      : "";
-
-    const combinedCustomerNote = [notes?.trim(), confirmationNote]
-      .filter(Boolean)
-      .join(" | ");
+    const depositNotice = capturedPaymentId
+      ? `NON-REFUNDABLE DEPOSIT PAID: £${numericDeposit.toFixed(2)} (Payment ID: ${capturedPaymentId})`
+      : undefined;
 
     const bookingRes = await square.bookings.create({
       idempotencyKey: crypto.randomUUID(),
@@ -174,8 +162,8 @@ export async function POST(request: Request) {
         locationId,
         customerId,
         startAt,
-        customerNote: combinedCustomerNote,
-        sellerNote: confirmationNote || undefined,
+        customerNote: notes?.trim() || undefined,
+        sellerNote: depositNotice,
         appointmentSegments: [
           {
             serviceVariationId,

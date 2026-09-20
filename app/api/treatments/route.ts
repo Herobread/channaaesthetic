@@ -1,16 +1,9 @@
 // app/api/treatments/route.ts
+import { square } from "@/lib/square";
 import { NextResponse } from "next/server";
 import { SquareClient, SquareEnvironment } from "square";
 
 export const dynamic = "force-dynamic";
-
-const square = new SquareClient({
-  token: process.env.SQUARE_ACCESS_TOKEN,
-  environment:
-    process.env.SQUARE_ENVIRONMENT?.toLowerCase() === "production"
-      ? SquareEnvironment.Production
-      : SquareEnvironment.Sandbox,
-});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

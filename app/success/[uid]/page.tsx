@@ -1,4 +1,6 @@
 // app/success/[uid]/page.tsx
+import { square } from "@/lib/square";
+
 import HistoryReset from "@/components/shared/HistoryReset";
 import {
   ArrowRight,
@@ -10,19 +12,10 @@ import {
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SquareClient, SquareEnvironment } from "square";
 
 export const metadata = {
   robots: { index: false, follow: false },
 };
-
-const square = new SquareClient({
-  token: process.env.SQUARE_ACCESS_TOKEN,
-  environment:
-    process.env.SQUARE_ENVIRONMENT?.toLowerCase() === "production"
-      ? SquareEnvironment.Production
-      : SquareEnvironment.Sandbox,
-});
 
 function maskEmail(email: string): string {
   if (!email || !email.includes("@")) return email || "your email";
