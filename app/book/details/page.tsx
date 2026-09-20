@@ -52,6 +52,24 @@ export default function PatientDetailsPage() {
     setIsSubmitting,
   } = useBookingFlowStore();
 
+  // Route Guard Checks
+  const hasCart = cart.length > 0;
+  const hasSlot = Boolean(selectedSlot);
+  const isValidSession = hasCart && hasSlot;
+
+  // ROUTE GUARD: Cascade back if cart or time slot are missing
+  useEffect(() => {
+    if (!hasCart) {
+      router.replace("/book");
+      return;
+    }
+
+    if (!hasSlot) {
+      router.replace("/book/datetime");
+      return;
+    }
+  }, [hasCart, hasSlot, router]);
+
   const {
     register,
     handleSubmit,
@@ -81,12 +99,6 @@ export default function PatientDetailsPage() {
 
     return () => subscription.unsubscribe();
   }, [watch, setCustomerDetails]);
-
-  useEffect(() => {
-    if (!selectedSlot) {
-      router.replace("/book/datetime");
-    }
-  }, [selectedSlot, router]);
 
   const onSubmit = async (values: PatientFormValues) => {
     if (isSubmitting) return;
@@ -149,7 +161,17 @@ export default function PatientDetailsPage() {
     }
   };
 
-  if (!selectedSlot) return null;
+  // Prevent flash of form content while redirecting
+  if (!isValidSession) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+        <span className="text-caption font-sans font-medium tracking-wide">
+          Verifying booking details...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

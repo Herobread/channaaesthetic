@@ -8,9 +8,11 @@ export interface SelectedItem {
 }
 
 export const MAX_SESSION_MINUTES = 180;
+const CART_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CartStore {
   cart: SelectedItem[];
+  updatedAt: number;
   handleIncrement: (treatment: MappedTreatment) => void;
   handleDecrement: (targetId: string) => void;
   swapVariation: (oldTargetId: string, newTreatment: MappedTreatment) => void;
@@ -21,6 +23,7 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set) => ({
       cart: [],
+      updatedAt: Date.now(),
 
       handleIncrement: (treatment) => {
         set((state) => {
@@ -37,7 +40,7 @@ export const useCartStore = create<CartStore>()(
               )
             : [...state.cart, { treatment, quantity: 1 }];
 
-          return { cart: nextCart };
+          return { cart: nextCart, updatedAt: Date.now() };
         });
       },
 
@@ -52,6 +55,7 @@ export const useCartStore = create<CartStore>()(
               return isMatch ? { ...i, quantity: i.quantity - 1 } : i;
             })
             .filter((i) => i.quantity > 0),
+          updatedAt: Date.now(),
         }));
       },
 
@@ -64,15 +68,24 @@ export const useCartStore = create<CartStore>()(
 
             return isMatch ? { ...item, treatment: newTreatment } : item;
           }),
+          updatedAt: Date.now(),
         }));
       },
 
-      clearCart: () => set({ cart: [] }),
+      clearCart: () => set({ cart: [], updatedAt: Date.now() }),
     }),
     {
       name: "clinic-cart",
-      version: 4,
-      migrate: () => ({ cart: [] }),
+      version: 5,
+      migrate: () => ({ cart: [], updatedAt: Date.now() }),
+      // Auto-expire cart on page load if older than 24h
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        const now = Date.now();
+        if (state.updatedAt && now - state.updatedAt > CART_TTL_MS) {
+          state.clearCart();
+        }
+      },
     },
   ),
 );

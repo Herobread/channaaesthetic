@@ -78,6 +78,40 @@ export default function PayDepositPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Validate prerequisite data
+  const hasCart = cart.length > 0;
+  const hasSlot = Boolean(selectedSlot);
+  const hasDetails = Boolean(
+    customerDetails?.name && customerDetails?.email && customerDetails?.phone,
+  );
+  const requiresDeposit = totalDeposit > 0;
+
+  const isValidSession = hasCart && hasSlot && hasDetails && requiresDeposit;
+
+  // ROUTE GUARD: Cascade back to the earliest missing step
+  useEffect(() => {
+    if (!hasCart) {
+      router.replace("/book");
+      return;
+    }
+
+    if (!hasSlot) {
+      router.replace("/book/datetime");
+      return;
+    }
+
+    if (!hasDetails) {
+      router.replace("/book/details");
+      return;
+    }
+
+    if (!requiresDeposit) {
+      // Zero-deposit bookings must be confirmed on /book/details directly
+      router.replace("/book/details");
+      return;
+    }
+  }, [hasCart, hasSlot, hasDetails, requiresDeposit, router]);
+
   const activeLocation = useMemo(() => {
     return (
       locations.find((loc) => loc.id === selectedLocationId) || locations[0]
@@ -87,8 +121,9 @@ export default function PayDepositPage() {
   const activeLocationId = activeLocation?.id;
   const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID || "";
 
+  // Initialize Square SDK only if the session is strictly valid
   useEffect(() => {
-    if (!activeLocationId || !squareAppId || totalDeposit <= 0) return;
+    if (!isValidSession || !activeLocationId || !squareAppId) return;
 
     let isMounted = true;
 
@@ -175,10 +210,21 @@ export default function PayDepositPage() {
         cardInstanceRef.current = null;
       }
     };
-  }, [activeLocationId, squareAppId, totalDeposit]);
+  }, [isValidSession, activeLocationId, squareAppId]);
 
-  if (!selectedSlot || !customerDetails?.name) return null;
-  const slotDate = new Date(selectedSlot);
+  // Block rendering until session verification succeeds
+  if (!isValidSession) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+        <span className="text-caption font-sans font-medium tracking-wide">
+          Verifying booking details...
+        </span>
+      </div>
+    );
+  }
+
+  const slotDate = new Date(selectedSlot!);
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,8 +335,8 @@ export default function PayDepositPage() {
                 </span>
               </div>
 
-              {/* Square Mount Container: No extra border, no nested card */}
-              <div className="relative min-h-[96px]">
+              {/* Square Mount Container */}
+              <div className="relative min-h-24">
                 {isSdkLoading && (
                   <div className="absolute inset-0 flex items-center justify-center text-caption font-sans text-text-muted gap-2 z-10">
                     <Loader2 className="w-4 h-4 animate-spin text-accent" />

@@ -6,9 +6,11 @@ import { useCart } from "@/hooks/useCart";
 import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import { AlertCircle, Calendar, Clock, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export default function DateTimePickerPage() {
+  const router = useRouter();
   const { cart, totalMinutes } = useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
@@ -23,6 +25,15 @@ export default function DateTimePickerPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+
+  // Route Guard: Cart must have at least one treatment
+  const hasCart = cart.length > 0;
+
+  useEffect(() => {
+    if (!hasCart) {
+      router.replace("/book");
+    }
+  }, [hasCart, router]);
 
   const activeLocation = useMemo(() => {
     if (!locations || locations.length === 0) return null;
@@ -39,7 +50,7 @@ export default function DateTimePickerPage() {
   // Fetch slots from Square
   useEffect(() => {
     const locId = activeLocation?.id;
-    if (!locId || cart.length === 0) return;
+    if (!locId || !hasCart) return;
 
     async function fetchAvailability() {
       setLoadingSlots(true);
@@ -83,7 +94,7 @@ export default function DateTimePickerPage() {
     }
 
     fetchAvailability();
-  }, [activeLocation?.id, cart]);
+  }, [activeLocation?.id, cart, hasCart]);
 
   // Group slots by date
   const groupedDays = useMemo(() => {
@@ -132,6 +143,17 @@ export default function DateTimePickerPage() {
   const currentDaySlots = useMemo(() => {
     return activeDay?.slots || [];
   }, [activeDay]);
+
+  if (!hasCart) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+        <span className="text-caption font-sans font-medium tracking-wide">
+          Verifying treatment selection...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <>
