@@ -1,7 +1,6 @@
 "use client";
 
 import { useCart } from "@/hooks/useCart";
-import { useAppStore } from "@/store/useAppStore";
 import { useBookingFlowStore } from "@/store/useBookingFlowStore";
 import {
   AlertCircle,
@@ -139,10 +138,11 @@ export default function BookingBar() {
               <div className="divide-y divide-[#38332E] bg-[#1C1A18] rounded-xl border border-[#38332E] px-3 sm:px-4">
                 {cart.map(({ treatment, quantity }) => {
                   const itemDeposit = Number(treatment.deposit) || 0;
+                  const itemKey = treatment.variationId || treatment.id;
 
                   return (
                     <div
-                      key={treatment.id}
+                      key={itemKey}
                       className="py-2.5 sm:py-3.5 flex items-center justify-between gap-3 first:pt-3 last:pb-3"
                     >
                       <div className="min-w-0 flex-1 space-y-0.5">
@@ -177,7 +177,7 @@ export default function BookingBar() {
                           tabIndex={isExpanded ? 0 : -1}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDecrement(treatment.id);
+                            handleDecrement(itemKey);
                           }}
                           aria-label={`Remove ${treatment.title}`}
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#2A2622] hover:bg-red-950/40 text-[#A8A096] hover:text-red-300 border border-[#3D3833] flex items-center justify-center transition active:scale-95 shrink-0 cursor-pointer"

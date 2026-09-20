@@ -1,7 +1,6 @@
 // app/api/treatments/route.ts
 import { square } from "@/lib/square";
 import { NextResponse } from "next/server";
-import { SquareClient, SquareEnvironment } from "square";
 
 export const dynamic = "force-dynamic";
 
@@ -70,11 +69,15 @@ export async function GET(request: Request) {
     const imageMap = new Map<string, string>();
 
     allObjects.forEach((obj: any) => {
-      if (obj.type === "CATEGORY" && obj.categoryData?.name) {
-        categoryMap.set(obj.id, obj.categoryData.name);
+      // Support camelCase and snake_case representations
+      const catName = obj.categoryData?.name || obj.category_data?.name;
+      if (obj.type === "CATEGORY" && catName) {
+        categoryMap.set(obj.id, catName);
       }
-      if (obj.type === "IMAGE" && obj.imageData?.url) {
-        imageMap.set(obj.id, obj.imageData.url);
+
+      const imgUrl = obj.imageData?.url || obj.image_data?.url;
+      if (obj.type === "IMAGE" && imgUrl) {
+        imageMap.set(obj.id, imgUrl);
       }
     });
 
@@ -82,71 +85,98 @@ export async function GET(request: Request) {
     const items = objects
       .filter((obj: any) => {
         if (obj.type !== "ITEM" || obj.isDeleted) return false;
-        const itemData = obj.itemData || {};
-        const firstVariation = itemData.variations?.[0]?.itemVariationData;
+        const itemData = obj.itemData || obj.item_data || {};
+        const variations = itemData.variations || [];
 
         return (
           itemData.productType === "APPOINTMENTS_SERVICE" ||
-          Boolean(firstVariation?.serviceDuration) ||
-          firstVariation?.availableForBooking === true
+          itemData.product_type === "APPOINTMENTS_SERVICE" ||
+          variations.some((v: any) => {
+            const vData = v.itemVariationData || v.item_variation_data;
+            return (
+              Boolean(vData?.serviceDuration || vData?.service_duration) ||
+              vData?.availableForBooking === true ||
+              vData?.available_for_booking === true
+            );
+          })
         );
       })
       .map((item: any) => {
-        const itemData = item.itemData || {};
-        const firstVariationObj = itemData.variations?.[0];
-        const variationData = firstVariationObj?.itemVariationData || {};
+        const itemData = item.itemData || item.item_data || {};
+        const rawVariations = itemData.variations || [];
 
-        const durationMs = Number(variationData.serviceDuration || 2700000);
-        const durationMinutes = Math.max(
-          10,
-          Math.round(durationMs / (60 * 1000)),
-        );
-
-        const price = variationData.priceMoney?.amount
-          ? Number(variationData.priceMoney.amount) / 100
-          : 0;
-
-        // Extract deposit rules configured in Square's booking policy profile
-        let deposit = 0;
         const policyRequirement =
           bookingPolicy?.bookingPolicy || bookingPolicy?.booking_policy;
+        const settings =
+          bookingPolicy?.depositSettings || bookingPolicy?.deposit_settings;
+        const depositPercentage =
+          settings?.percentage || settings?.deposit_percentage;
+        const depositFixed =
+          settings?.fixedAmountMoney?.amount ||
+          settings?.fixed_amount_money?.amount;
 
-        // Check if Square policy requires upfront payment or deposit
-        if (policyRequirement === "REQUIRE_FULL_PAYMENT") {
-          deposit = price;
-        } else if (
-          policyRequirement === "REQUIRE_DEPOSIT" ||
-          bookingPolicy?.depositSettings ||
-          bookingPolicy?.deposit_settings
-        ) {
-          const settings =
-            bookingPolicy?.depositSettings || bookingPolicy?.deposit_settings;
-          const depositPercentage =
-            settings?.percentage || settings?.deposit_percentage;
-          const depositFixed =
-            settings?.fixedAmountMoney?.amount ||
-            settings?.fixed_amount_money?.amount;
-
-          if (depositPercentage) {
-            const pct =
-              Number(depositPercentage) > 1
-                ? Number(depositPercentage) / 100
-                : Number(depositPercentage);
-            deposit = Math.round(price * pct * 100) / 100;
-          } else if (depositFixed) {
-            deposit = Math.min(Number(depositFixed) / 100, price);
-          } else {
-            deposit = Math.min(30, price);
+        const calculateDeposit = (price: number) => {
+          if (policyRequirement === "REQUIRE_FULL_PAYMENT") return price;
+          if (policyRequirement === "REQUIRE_DEPOSIT" || Boolean(settings)) {
+            if (depositPercentage) {
+              const pct =
+                Number(depositPercentage) > 1
+                  ? Number(depositPercentage) / 100
+                  : Number(depositPercentage);
+              return Math.round(price * pct * 100) / 100;
+            }
+            if (depositFixed) {
+              return Math.min(Number(depositFixed) / 100, price);
+            }
+            return Math.min(30, price);
           }
-        } else {
-          // If the profile sets card authorization or hold, use policy minimum or full price
-          deposit = price > 0 ? Math.min(30, price) : 0;
-        }
+          return price > 0 ? Math.min(30, price) : 0;
+        };
 
-        const isEverywhere = Boolean(item.presentAtAllLocations);
+        // Map every variation on this catalog item
+        const variations = rawVariations.map((vObj: any) => {
+          const vData =
+            vObj.itemVariationData || vObj.item_variation_data || {};
+          const durationMs = Number(
+            vData.serviceDuration || vData.service_duration || 2700000,
+          );
+          const durationMinutes = Math.max(
+            10,
+            Math.round(durationMs / (60 * 1000)),
+          );
+
+          const priceMoney = vData.priceMoney || vData.price_money;
+          const price = priceMoney?.amount
+            ? Number(priceMoney.amount) / 100
+            : 0;
+          const deposit = calculateDeposit(price);
+
+          return {
+            id: vObj.id,
+            title: vData.name || itemData.name || "Standard",
+            price,
+            durationMinutes,
+            time: `${durationMinutes} mins`,
+            deposit,
+          };
+        });
+
+        // Fallback default to first variation
+        const defaultVar = variations[0] || {
+          id: item.id,
+          title: "Standard",
+          price: 0,
+          durationMinutes: 30,
+          time: "30 mins",
+          deposit: 0,
+        };
+
+        const isEverywhere = Boolean(
+          item.presentAtAllLocations ?? item.present_at_all_locations,
+        );
         const locationIds: string[] = isEverywhere
           ? activeLocations.map((l: any) => l.id)
-          : item.presentAtLocationIds || [];
+          : item.presentAtLocationIds || item.present_at_location_ids || [];
 
         const locations = isEverywhere
           ? activeLocations
@@ -154,23 +184,35 @@ export async function GET(request: Request) {
               .map((id) => activeLocations.find((l: any) => l.id === id))
               .filter(Boolean);
 
-        const firstImageId = itemData.imageIds?.[0];
+        const imageIds = itemData.imageIds || itemData.image_ids;
+        const firstImageId = imageIds?.[0];
         const imageUrl = firstImageId ? imageMap.get(firstImageId) : undefined;
+
+        // Resolve Category: Check singular categoryId, snake_case, and plural categories array
+        const primaryCatId =
+          itemData.categoryId ||
+          itemData.category_id ||
+          itemData.categories?.[0]?.id;
+
+        const resolvedCategory = primaryCatId
+          ? categoryMap.get(primaryCatId)
+          : null;
 
         return {
           id: item.id,
-          variationId: firstVariationObj?.id,
+          variationId: defaultVar.id,
           title: itemData.name || "Untitled Treatment",
           desc: itemData.description || "Bespoke clinical treatment.",
-          category: categoryMap.get(itemData.categoryId) || "General",
-          durationMinutes,
-          time: `${durationMinutes} mins`,
-          price,
-          deposit,
+          category: resolvedCategory || "General",
+          durationMinutes: defaultVar.durationMinutes,
+          time: defaultVar.time,
+          price: defaultVar.price,
+          deposit: defaultVar.deposit,
           imageUrl,
           locationIds,
           locations,
-          featured: price === 0,
+          featured: defaultVar.price === 0,
+          variations,
         };
       });
 

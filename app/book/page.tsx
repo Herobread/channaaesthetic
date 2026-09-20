@@ -21,7 +21,7 @@ export default function BookingPage() {
   } = useInfiniteTreatments();
 
   const { locations } = useLocations();
-  const { cart, handleIncrement, handleDecrement } = useCart();
+  const { cart, handleIncrement, handleDecrement, swapVariation } = useCart();
 
   const selectedLocationId = useAppStore((state) => state.selectedLocationId);
   const setSelectedLocationId = useAppStore(
@@ -62,12 +62,26 @@ export default function BookingPage() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Strip "General" fallback and avoid redundant tabs if only 1 distinct category exists
   const categories = useMemo(() => {
-    const cats = Array.from(
-      new Set(treatments.map((t) => t.category).filter(Boolean)),
+    const realCategories = Array.from(
+      new Set(
+        treatments
+          .map((t) => t.category)
+          .filter((c): c is string => Boolean(c) && c !== "General"),
+      ),
     );
-    return ["All", ...cats];
+
+    if (realCategories.length <= 1) return [];
+    return ["All", ...realCategories];
   }, [treatments]);
+
+  // Reset activeCategory if it's no longer in the list
+  useEffect(() => {
+    if (categories.length === 0 || !categories.includes(activeCategory)) {
+      setActiveCategory("All");
+    }
+  }, [categories, activeCategory]);
 
   const filteredTreatments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -93,10 +107,10 @@ export default function BookingPage() {
   return (
     <div className="space-y-4">
       <header className="pb-2">
-        <h1 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
+        <h1 className="font-serif text-2xl sm:text-3xl font-medium text-text-primary">
           Treatment Selection
         </h1>
-        <p className="text-xs sm:text-sm text-[#666666] font-light mt-0.5">
+        <p className="text-caption font-sans text-text-muted font-light mt-0.5">
           Private medical aesthetic consultations &amp; advanced clinical
           procedures
         </p>
@@ -111,29 +125,29 @@ export default function BookingPage() {
       />
 
       {isLoading && (
-        <div className="py-24 flex flex-col items-center justify-center text-[#8C827A] gap-2.5">
-          <Loader2 className="w-6 h-6 animate-spin text-[#B8925D]" />
-          <span className="text-xs font-medium tracking-wide">
+        <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
+          <Loader2 className="w-6 h-6 animate-spin text-accent" />
+          <span className="text-caption font-sans font-medium tracking-wide">
             Accessing clinic schedule and menu...
           </span>
         </div>
       )}
 
       {isError && (
-        <div className="py-16 text-center bg-white rounded-2xl border border-red-200 p-8 space-y-3">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-600 mb-1">
+        <div className="py-16 text-center bg-surface-error rounded-card border border-border-error p-8 space-y-3">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-surface-elevated text-text-error mb-1">
             <AlertCircle className="w-5 h-5" />
           </div>
-          <p className="text-sm font-medium text-[#1A1A1A]">
+          <p className="text-body font-sans font-medium text-text-error">
             Unable to Load Treatment Menu
           </p>
-          <p className="text-xs text-[#666666] max-w-sm mx-auto">
+          <p className="text-caption font-sans text-text-muted max-w-sm mx-auto">
             {(error as Error)?.message ||
               "We could not retrieve current clinic availability. Please refresh or speak directly with our reception team."}
           </p>
           <button
             onClick={() => refetch()}
-            className="mt-2 text-xs font-medium text-[#B8925D] hover:underline cursor-pointer"
+            className="mt-2 text-caption font-sans font-medium text-accent hover:underline cursor-pointer focus-ring rounded-control px-2 py-1"
           >
             Retry Connection
           </button>
@@ -141,9 +155,11 @@ export default function BookingPage() {
       )}
 
       {!isLoading && !isError && filteredTreatments.length === 0 && (
-        <div className="py-16 text-center text-sm text-[#8C827A] bg-white rounded-2xl border border-[#EBE5DF] p-8 space-y-2">
-          <p className="font-medium text-[#1A1A1A]">No Matching Procedures</p>
-          <p className="text-xs">
+        <div className="py-16 text-center bg-surface-elevated rounded-card border border-border-subtle p-8 space-y-2">
+          <p className="font-sans font-medium text-body text-text-primary">
+            No Matching Procedures
+          </p>
+          <p className="text-caption font-sans text-text-muted">
             No clinical treatments match your criteria. Adjust your search or
             contact our team directly for bespoke requests.
           </p>
@@ -164,6 +180,7 @@ export default function BookingPage() {
                   quantity={cartItem?.quantity || 0}
                   onIncrement={handleIncrement}
                   onDecrement={handleDecrement}
+                  onSwapVariation={swapVariation}
                 />
               );
             })}
@@ -174,8 +191,8 @@ export default function BookingPage() {
             className="py-6 flex justify-center items-center"
           >
             {isFetchingNextPage && (
-              <div className="flex items-center gap-2 text-xs text-[#8C827A]">
-                <Loader2 className="w-4 h-4 animate-spin text-[#B8925D]" />
+              <div className="flex items-center gap-2 text-caption font-sans text-text-muted">
+                <Loader2 className="w-4 h-4 animate-spin text-accent" />
                 <span>Retrieving additional procedures...</span>
               </div>
             )}

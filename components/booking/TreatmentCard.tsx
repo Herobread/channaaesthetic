@@ -1,15 +1,20 @@
 "use client";
 
-import { MappedTreatment } from "@/api/useTreatments";
+import { MappedTreatment, TreatmentVariation } from "@/api/useTreatments";
 import TreatmentSelectButton from "@/components/booking/TreatmentSelectButton";
 import { Clock } from "lucide-react";
 import Image from "next/image";
+import { useMemo, useState } from "react";
 
 interface TreatmentCardProps {
   treatment: MappedTreatment;
   quantity?: number;
   onIncrement: (treatment: MappedTreatment) => void;
-  onDecrement: (treatmentId: string) => void;
+  onDecrement: (targetId: string) => void;
+  onSwapVariation?: (
+    oldTargetId: string,
+    newTreatment: MappedTreatment,
+  ) => void;
 }
 
 export default function TreatmentCard({
@@ -17,18 +22,77 @@ export default function TreatmentCard({
   quantity = 0,
   onIncrement,
   onDecrement,
+  onSwapVariation,
 }: TreatmentCardProps) {
+  const hasMultipleVariations = Boolean(
+    treatment.variations && treatment.variations.length > 1,
+  );
+
+  const [selectedVarIndex, setSelectedVarIndex] = useState(0);
+
+  const activeVariation: TreatmentVariation = useMemo(() => {
+    if (hasMultipleVariations && treatment.variations[selectedVarIndex]) {
+      return treatment.variations[selectedVarIndex];
+    }
+    return {
+      id: treatment.variationId || treatment.id,
+      title: treatment.title,
+      price: treatment.price,
+      durationMinutes: treatment.durationMinutes,
+      time: treatment.time,
+      deposit: treatment.deposit,
+    };
+  }, [treatment, selectedVarIndex, hasMultipleVariations]);
+
+  const currentTreatmentPayload: MappedTreatment = useMemo(
+    () => ({
+      ...treatment,
+      variationId: activeVariation.id,
+      price: activeVariation.price,
+      durationMinutes: activeVariation.durationMinutes,
+      time: activeVariation.time,
+      deposit: activeVariation.deposit,
+    }),
+    [treatment, activeVariation],
+  );
+
   const isSelected = quantity > 0;
 
   const handleToggle = () => {
     if (isSelected) {
-      onDecrement(treatment.id);
+      onDecrement(activeVariation.id);
     } else {
-      onIncrement(treatment);
+      onIncrement(currentTreatmentPayload);
     }
   };
 
-  const formattedPrice = treatment.price === 0 ? "Free" : `£${treatment.price}`;
+  const handleVariationChange = (index: number) => {
+    if (index === selectedVarIndex) return;
+
+    const newVar = treatment.variations[index];
+    const newPayload: MappedTreatment = {
+      ...treatment,
+      variationId: newVar.id,
+      price: newVar.price,
+      durationMinutes: newVar.durationMinutes,
+      time: newVar.time,
+      deposit: newVar.deposit,
+    };
+
+    if (isSelected) {
+      if (onSwapVariation) {
+        onSwapVariation(activeVariation.id, newPayload);
+      } else {
+        onDecrement(activeVariation.id);
+        onIncrement(newPayload);
+      }
+    }
+
+    setSelectedVarIndex(index);
+  };
+
+  const formattedPrice =
+    activeVariation.price === 0 ? "Free" : `£${activeVariation.price}`;
 
   return (
     <div
@@ -77,14 +141,47 @@ export default function TreatmentCard({
         </div>
       )}
 
-      <div className="p-6 space-y-3 flex-1">
-        <h3 className="font-serif text-title font-medium text-text-primary group-hover:text-accent transition-colors">
-          {treatment.title}
-        </h3>
+      <div className="p-6 space-y-3.5 flex-1">
+        <div className="space-y-1.5">
+          <h3 className="font-serif text-title font-medium text-text-primary group-hover:text-accent transition-colors">
+            {treatment.title}
+          </h3>
 
-        <p className="text-caption font-sans text-text-muted font-normal leading-relaxed">
-          {treatment.desc}
-        </p>
+          <p className="text-caption font-sans text-text-muted font-normal leading-relaxed">
+            {treatment.desc}
+          </p>
+        </div>
+
+        {/* High-conversion minimal tier pills */}
+        {hasMultipleVariations && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {treatment.variations.map((v, idx) => {
+              const isActive = idx === selectedVarIndex;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => handleVariationChange(idx)}
+                  className={`h-8 px-3 rounded-control text-caption font-sans transition-all inline-flex items-center gap-1.5 focus-ring cursor-pointer select-none ${
+                    isActive
+                      ? "bg-surface-canvas text-text-primary font-medium border border-accent shadow-subtle"
+                      : "bg-surface-subtle/60 hover:bg-surface-subtle text-text-muted hover:text-text-primary border border-transparent"
+                  }`}
+                >
+                  <span>{v.title}</span>
+                  <span className="text-text-muted/60 text-[11px]">•</span>
+                  <span
+                    className={
+                      isActive ? "text-accent font-medium" : "text-text-muted"
+                    }
+                  >
+                    £{v.price}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="px-6 pb-6 pt-4 border-t border-border-subtle flex items-center justify-between gap-4">
@@ -96,13 +193,13 @@ export default function TreatmentCard({
             <span className="text-caption text-text-muted">•</span>
             <span className="flex items-center gap-1 text-caption text-text-muted">
               <Clock className="w-4 h-4 text-accent" />
-              {treatment.time}
+              {activeVariation.time}
             </span>
           </div>
 
-          {treatment.deposit > 0 && treatment.price > 0 && (
+          {activeVariation.deposit > 0 && activeVariation.price > 0 && (
             <span className="text-caption font-sans text-text-muted font-normal truncate">
-              £{treatment.deposit} deposit to reserve
+              £{activeVariation.deposit} deposit to reserve
             </span>
           )}
         </div>
@@ -110,7 +207,7 @@ export default function TreatmentCard({
         <TreatmentSelectButton
           isSelected={isSelected}
           onToggle={handleToggle}
-          ariaLabel={treatment.title}
+          ariaLabel={`${treatment.title} - ${activeVariation.title}`}
         />
       </div>
     </div>

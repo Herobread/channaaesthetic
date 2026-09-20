@@ -7,12 +7,13 @@ export interface SelectedItem {
   quantity: number;
 }
 
-export const MAX_SESSION_MINUTES = 180; // 3 hours
+export const MAX_SESSION_MINUTES = 180;
 
 interface CartStore {
   cart: SelectedItem[];
   handleIncrement: (treatment: MappedTreatment) => void;
-  handleDecrement: (treatmentId: string) => void;
+  handleDecrement: (targetId: string) => void;
+  swapVariation: (oldTargetId: string, newTreatment: MappedTreatment) => void;
   clearCart: () => void;
 }
 
@@ -23,18 +24,14 @@ export const useCartStore = create<CartStore>()(
 
       handleIncrement: (treatment) => {
         set((state) => {
+          const targetKey = treatment.variationId || treatment.id;
           const existing = state.cart.find(
-            (i) =>
-              i.treatment.id === treatment.id ||
-              (treatment.variationId &&
-                i.treatment.variationId === treatment.variationId),
+            (i) => (i.treatment.variationId || i.treatment.id) === targetKey,
           );
 
           const nextCart = existing
             ? state.cart.map((i) =>
-                i.treatment.id === treatment.id ||
-                (treatment.variationId &&
-                  i.treatment.variationId === treatment.variationId)
+                (i.treatment.variationId || i.treatment.id) === targetKey
                   ? { ...i, quantity: i.quantity + 1 }
                   : i,
               )
@@ -44,13 +41,13 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      handleDecrement: (treatmentId) => {
+      handleDecrement: (targetId) => {
         set((state) => ({
           cart: state.cart
             .map((i) => {
               const isMatch =
-                i.treatment.id === treatmentId ||
-                i.treatment.variationId === treatmentId;
+                i.treatment.variationId === targetId ||
+                i.treatment.id === targetId;
 
               return isMatch ? { ...i, quantity: i.quantity - 1 } : i;
             })
@@ -58,11 +55,23 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
+      swapVariation: (oldTargetId, newTreatment) => {
+        set((state) => ({
+          cart: state.cart.map((item) => {
+            const isMatch =
+              item.treatment.variationId === oldTargetId ||
+              item.treatment.id === oldTargetId;
+
+            return isMatch ? { ...item, treatment: newTreatment } : item;
+          }),
+        }));
+      },
+
       clearCart: () => set({ cart: [] }),
     }),
     {
       name: "clinic-cart",
-      version: 2, // Bumps version so old carts lacking the new deposit attribute are wiped
+      version: 4,
       migrate: () => ({ cart: [] }),
     },
   ),
@@ -101,6 +110,7 @@ export function useCart() {
     cart: store.cart,
     handleIncrement: store.handleIncrement,
     handleDecrement: store.handleDecrement,
+    swapVariation: store.swapVariation,
     clearCart: store.clearCart,
     totalQuantity,
     totalPrice,

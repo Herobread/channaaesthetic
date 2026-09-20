@@ -10,6 +10,15 @@ export interface ClinicLocation {
   address: string;
 }
 
+export interface TreatmentVariation {
+  id: string;
+  title: string;
+  price: number;
+  durationMinutes: number;
+  time: string;
+  deposit: number;
+}
+
 export interface MappedTreatment {
   id: string;
   variationId?: string; // Square catalog service variation ID
@@ -27,6 +36,7 @@ export interface MappedTreatment {
   locationIds: string[];
   locations: ClinicLocation[];
   featured?: boolean;
+  variations: TreatmentVariation[];
 }
 
 export async function fetchTreatmentsPage({
@@ -54,6 +64,17 @@ export async function fetchTreatmentsPage({
     const rawPrice = Number(item.price) || 0;
     const rawDeposit = Number(item.deposit) || 0;
 
+    const variations: TreatmentVariation[] = (item.variations || []).map(
+      (v: any) => ({
+        id: v.id,
+        title: v.title || "Standard",
+        price: Number(v.price) || 0,
+        durationMinutes: Number(v.durationMinutes) || 30,
+        time: v.time || `${v.durationMinutes || 30} mins`,
+        deposit: Number(v.deposit) || 0,
+      }),
+    );
+
     return {
       ...item,
       price: rawPrice,
@@ -61,6 +82,7 @@ export async function fetchTreatmentsPage({
       deposit: rawDeposit,
       depositNum: rawDeposit,
       depositInPence: Math.round(rawDeposit * 100),
+      variations,
     };
   });
 
