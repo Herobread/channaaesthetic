@@ -106,7 +106,7 @@ async function getAllItems(): Promise<any[]> {
   const items: any[] = [];
 
   do {
-    const res = await fetch(`${BASE_URL}/v2/catalog/search`, {
+    const res: any = await fetch(`${BASE_URL}/v2/catalog/search`, {
       method: "POST",
       headers: HEADERS,
       body: JSON.stringify({
