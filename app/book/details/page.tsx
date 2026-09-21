@@ -50,20 +50,18 @@ export default function PatientDetailsPage() {
     setCustomerDetails,
     isSubmitting,
     setIsSubmitting,
+    resetFlow,
   } = useBookingFlowStore();
 
-  // Route Guard Checks
   const hasCart = cart.length > 0;
   const hasSlot = Boolean(selectedSlot);
   const isValidSession = hasCart && hasSlot;
 
-  // ROUTE GUARD: Cascade back if cart or time slot are missing
   useEffect(() => {
     if (!hasCart) {
       router.replace("/book");
       return;
     }
-
     if (!hasSlot) {
       router.replace("/book/datetime");
       return;
@@ -86,7 +84,6 @@ export default function PatientDetailsPage() {
     },
   });
 
-  // Keep Zustand state synced as user types
   useEffect(() => {
     const subscription = watch((value) => {
       setCustomerDetails({
@@ -96,7 +93,6 @@ export default function PatientDetailsPage() {
         notes: value.notes ?? "",
       });
     });
-
     return () => subscription.unsubscribe();
   }, [watch, setCustomerDetails]);
 
@@ -110,17 +106,12 @@ export default function PatientDetailsPage() {
       notes: values.notes?.trim() || "",
     });
 
-    // If a deposit is due, push to the Square payment page
     if (totalDeposit > 0) {
       router.push("/book/pay-deposit");
       return;
     }
 
-    // Zero-deposit booking: create appointment directly
-    const variationId =
-      cart[0]?.treatment?.variationId || cart[0]?.treatment?.id;
-
-    if (!selectedLocationId || !variationId || !selectedSlot) {
+    if (!selectedLocationId || !selectedSlot) {
       alert("Missing booking details. Please return to step 1 and re-select.");
       return;
     }
@@ -134,7 +125,9 @@ export default function PatientDetailsPage() {
         body: JSON.stringify({
           locationId: selectedLocationId,
           startAt: selectedSlot,
-          serviceVariationId: variationId,
+          services: cart.map((item) => ({
+            variationId: item.treatment.variationId || item.treatment.id,
+          })),
           depositAmount: 0,
           customer: {
             name: values.name.trim(),
@@ -154,14 +147,14 @@ export default function PatientDetailsPage() {
       if (!bookingId) throw new Error("No booking ID returned from server.");
 
       if (typeof clearCart === "function") clearCart();
-      window.location.assign(`/success/${bookingId}`);
+      resetFlow();
+      router.push(`/success/${bookingId}`);
     } catch (err: any) {
       alert(err.message || "Failed to finalize booking.");
       setIsSubmitting(false);
     }
   };
 
-  // Prevent flash of form content while redirecting
   if (!isValidSession) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
@@ -189,7 +182,6 @@ export default function PatientDetailsPage() {
         className="space-y-6"
         noValidate
       >
-        {/* Full Name */}
         <div>
           <label className="block text-caption font-sans font-medium text-text-primary mb-2">
             Full name *
@@ -212,7 +204,6 @@ export default function PatientDetailsPage() {
           )}
         </div>
 
-        {/* Email & Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           <div>
             <label className="block text-caption font-sans font-medium text-text-primary mb-2">
@@ -259,7 +250,6 @@ export default function PatientDetailsPage() {
           </div>
         </div>
 
-        {/* Notes */}
         <div>
           <label className="block text-caption font-sans font-medium text-text-primary mb-2">
             Medical notes or considerations (optional)
@@ -272,7 +262,6 @@ export default function PatientDetailsPage() {
           />
         </div>
 
-        {/* On-screen submit button */}
         <div className="pt-4">
           <button
             type="submit"

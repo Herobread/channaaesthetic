@@ -24,31 +24,171 @@ export async function POST(request: Request) {
       locationId,
       startAt,
       serviceVariationId,
+      services,
       customer,
       notes,
       sourceId,
       depositAmount,
     } = await request.json();
 
-    if (!locationId || !startAt || !serviceVariationId || !customer?.email) {
+    if (!locationId || !startAt || !customer?.email) {
       return NextResponse.json(
         { error: "Missing required booking details." },
         { status: 400 },
       );
     }
 
-    const numericDeposit = Number(depositAmount) || 0;
-    if (numericDeposit > 0 && !sourceId) {
+    // Extract all requested variation IDs
+    const rawServices: { variationId: string }[] =
+      Array.isArray(services) && services.length > 0
+        ? services
+        : serviceVariationId
+          ? [{ variationId: serviceVariationId }]
+          : [];
+
+    if (rawServices.length === 0) {
       return NextResponse.json(
-        { error: "A valid payment card is required to cover the deposit." },
+        { error: "At least one clinical treatment variation is required." },
         { status: 400 },
       );
     }
 
+    const variationIds = rawServices.map((s) => s.variationId);
+    const primaryVariationId = variationIds[0];
+
+    // 1. PRE-FLIGHT AVAILABILITY CHECK
+    const startWindow = new Date(
+      new Date(startAt).getTime() - 60000,
+    ).toISOString();
+    const endWindow = new Date(
+      new Date(startAt).getTime() + 60000,
+    ).toISOString();
+
+    const availRes = await (square.bookings as any).searchAvailability({
+      query: {
+        filter: {
+          startAtRange: { startAt: startWindow, endAt: endWindow },
+          locationId,
+          segmentFilters: [{ serviceVariationId: primaryVariationId }],
+        },
+      },
+    });
+
+    const isAvailable = availRes.availabilities?.some(
+      (a: any) => new Date(a.startAt).getTime() === new Date(startAt).getTime(),
+    );
+
+    if (!isAvailable) {
+      return NextResponse.json(
+        {
+          error:
+            "This appointment slot was just secured by another client. Please select another time.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // 2. SERVER-SIDE DEPOSIT VERIFICATION (Anti-tamper)
+    let catalogObjects: any[] = [];
+    try {
+      const batchRes = await (square.catalog as any).batchGet?.({
+        objectIds: variationIds,
+      });
+      catalogObjects = batchRes?.objects || [];
+    } catch {
+      const singleRes = await square.catalog.object.get({
+        objectId: primaryVariationId,
+      });
+      if ((singleRes as any).object) {
+        catalogObjects = [(singleRes as any).object];
+      }
+    }
+
+    let bookingPolicy: any = null;
+    try {
+      const locPolicyRes = await (
+        square.bookings as any
+      ).retrieveLocationBookingProfile({ locationId });
+      bookingPolicy = locPolicyRes?.locationBookingProfile;
+      if (!bookingPolicy) {
+        const bizPolicyRes = await (
+          square.bookings as any
+        ).retrieveBusinessBookingProfile();
+        bookingPolicy = bizPolicyRes?.businessBookingProfile;
+      }
+    } catch (policyErr) {
+      console.warn(
+        "Could not retrieve Square Booking Profile policy:",
+        policyErr,
+      );
+    }
+
+    const policyRequirement =
+      bookingPolicy?.bookingPolicy || bookingPolicy?.booking_policy;
+    const settings =
+      bookingPolicy?.depositSettings || bookingPolicy?.deposit_settings;
+    const depositPercentage =
+      settings?.percentage || settings?.deposit_percentage;
+    const depositFixed =
+      settings?.fixedAmountMoney?.amount ||
+      settings?.fixed_amount_money?.amount;
+
+    const calculateExpectedDeposit = (price: number) => {
+      if (policyRequirement === "REQUIRE_FULL_PAYMENT") return price;
+      if (policyRequirement === "REQUIRE_DEPOSIT" || Boolean(settings)) {
+        if (depositPercentage) {
+          const pct =
+            Number(depositPercentage) > 1
+              ? Number(depositPercentage) / 100
+              : Number(depositPercentage);
+          return Math.round(price * pct * 100) / 100;
+        }
+        if (depositFixed) {
+          return Math.min(Number(depositFixed) / 100, price);
+        }
+        return Math.min(30, price);
+      }
+      return price > 0 ? Math.min(30, price) : 0;
+    };
+
+    let serverCalculatedDeposit = 0;
+    variationIds.forEach((vId) => {
+      const matched = catalogObjects.find((obj) => obj.id === vId);
+      const priceMoney =
+        matched?.itemVariationData?.priceMoney ||
+        matched?.item_variation_data?.price_money;
+      const price = priceMoney?.amount ? Number(priceMoney.amount) / 100 : 0;
+      serverCalculatedDeposit += calculateExpectedDeposit(price);
+    });
+
+    const clientReportedDeposit = Number(depositAmount) || 0;
+    if (
+      serverCalculatedDeposit > 0 &&
+      clientReportedDeposit < serverCalculatedDeposit
+    ) {
+      return NextResponse.json(
+        {
+          error: `Deposit discrepancy detected. Expected £${serverCalculatedDeposit.toFixed(2)}, received £${clientReportedDeposit.toFixed(2)}.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    const finalDeposit = Math.max(
+      serverCalculatedDeposit,
+      clientReportedDeposit,
+    );
+    if (finalDeposit > 0 && !sourceId) {
+      return NextResponse.json(
+        { error: "A valid card token is required to cover the deposit." },
+        { status: 400 },
+      );
+    }
+
+    // 3. RESOLVE OR CREATE SQUARE CUSTOMER
     const emailClean = customer.email.trim().toLowerCase();
     const phoneClean = sanitizePhoneNumber(customer.phone);
 
-    // 1. Find or create customer
     let customerId: string;
     const searchRes = await square.customers.search({
       query: { filter: { emailAddress: { exact: emailClean } } },
@@ -71,24 +211,13 @@ export async function POST(request: Request) {
       customerId = (created as any).customer.id;
     }
 
-    // 2. Resolve variation details & team member
-    let variationObj: any = null;
-    try {
-      const singleRes = await square.catalog.object.get({
-        objectId: serviceVariationId,
-      });
-      variationObj = (singleRes as any).object;
-    } catch {
-      const batchRes = await (square.catalog as any).batchGet?.({
-        objectIds: [serviceVariationId],
-      });
-      variationObj = batchRes?.objects?.[0];
-    }
-
-    const variationVersion = variationObj?.version
-      ? BigInt(variationObj.version)
-      : BigInt(1);
-    let teamMemberId = variationObj?.itemVariationData?.teamMemberIds?.[0];
+    // 4. RESOLVE PRACTITIONER (TEAM MEMBER)
+    const primaryObj = catalogObjects.find(
+      (obj) => obj.id === primaryVariationId,
+    );
+    let teamMemberId =
+      primaryObj?.itemVariationData?.teamMemberIds?.[0] ||
+      primaryObj?.item_variation_data?.team_member_ids?.[0];
 
     if (!teamMemberId) {
       const teamRes = await square.teamMembers.search({
@@ -103,15 +232,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Create an Order explicitly for the Non-Refundable Deposit
-    let createdOrderId: string | undefined = undefined;
+    // 5. CHARGE DEPOSIT ORDER
+    if (finalDeposit > 0 && sourceId) {
+      depositPence = BigInt(Math.round(finalDeposit * 100));
 
-    if (numericDeposit > 0 && sourceId) {
-      depositPence = BigInt(Math.round(numericDeposit * 100));
-
-      const serviceTitle = variationObj?.itemVariationData?.name
-        ? `${variationObj.itemVariationData.name} - Booking Deposit`
-        : "Treatment Booking Deposit";
+      const serviceTitle =
+        primaryObj?.itemVariationData?.name ||
+        primaryObj?.item_variation_data?.name
+          ? `${primaryObj?.itemVariationData?.name || primaryObj?.item_variation_data?.name} - Deposit`
+          : "Treatment Deposit";
 
       const orderRes = await square.orders.create({
         idempotencyKey: crypto.randomUUID(),
@@ -131,9 +260,6 @@ export async function POST(request: Request) {
         },
       });
 
-      createdOrderId = (orderRes as any).order?.id;
-
-      // 4. Charge the exact deposit against the deposit order (Amounts match 1:1)
       const paymentRes = await square.payments.create({
         sourceId,
         idempotencyKey: crypto.randomUUID(),
@@ -141,7 +267,7 @@ export async function POST(request: Request) {
           amount: depositPence,
           currency: "GBP",
         },
-        orderId: createdOrderId, // Matches order total exactly -> No error
+        orderId: (orderRes as any).order?.id,
         customerId,
         locationId,
         note: `Deposit for booking: ${customer.name || "Client"}`,
@@ -151,9 +277,14 @@ export async function POST(request: Request) {
       capturedPaymentId = (paymentRes as any).payment?.id;
     }
 
-    // 5. Create Booking
+    // 6. BUILD SEGMENTS (Omit duration overrides to let Square deduce valid durations)
+    const appointmentSegments = variationIds.map((vId) => ({
+      serviceVariationId: vId,
+      teamMemberId,
+    }));
+
     const depositNotice = capturedPaymentId
-      ? `NON-REFUNDABLE DEPOSIT PAID: £${numericDeposit.toFixed(2)} (Payment ID: ${capturedPaymentId})`
+      ? `NON-REFUNDABLE DEPOSIT PAID: £${finalDeposit.toFixed(2)} (Payment ID: ${capturedPaymentId})`
       : undefined;
 
     const bookingRes = await square.bookings.create({
@@ -164,18 +295,11 @@ export async function POST(request: Request) {
         startAt,
         customerNote: notes?.trim() || undefined,
         sellerNote: depositNotice,
-        appointmentSegments: [
-          {
-            serviceVariationId,
-            serviceVariationVersion: variationVersion,
-            teamMemberId,
-          },
-        ],
+        appointmentSegments,
       },
     });
 
     const booking = (bookingRes as any).booking;
-
     const serializedBooking = JSON.parse(
       JSON.stringify(booking, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
@@ -199,14 +323,12 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error("Square Booking/Payment Error:", err);
 
-    // Rollback: Refund deposit if booking creation failed after charge
+    // ATOMIC SAFETY REVERSAL
     if (capturedPaymentId && depositPence > BigInt(0)) {
       try {
         console.warn(
-          `Attempting automatic refund for failed booking on payment ${capturedPaymentId}`,
+          `Reversing payment ${capturedPaymentId} after failed booking commit`,
         );
-
-        // Use square.refunds.refundPayment (or square.refunds.create)
         await (square.refunds as any).refundPayment({
           idempotencyKey: crypto.randomUUID(),
           paymentId: capturedPaymentId,

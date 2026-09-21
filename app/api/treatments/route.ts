@@ -26,37 +26,10 @@ export async function GET(request: Request) {
           .join(", "),
       }));
 
-    const primaryLocationId = activeLocations[0]?.id;
-
-    // 2. Fetch Square Booking Policy settings directly from Square
-    let bookingPolicy: any = null;
-    try {
-      if (primaryLocationId) {
-        const locPolicyRes = await (
-          square.bookings as any
-        ).retrieveLocationBookingProfile({
-          locationId: primaryLocationId,
-        });
-        bookingPolicy = locPolicyRes?.locationBookingProfile;
-      }
-
-      if (!bookingPolicy) {
-        const bizPolicyRes = await (
-          square.bookings as any
-        ).retrieveBusinessBookingProfile();
-        bookingPolicy = bizPolicyRes?.businessBookingProfile;
-      }
-    } catch (policyErr) {
-      console.warn(
-        "Could not retrieve Square Booking Profile policy:",
-        policyErr,
-      );
-    }
-
-    // 3. Query Catalog Items, Categories & Images
+    // 2. Query Catalog Items, Categories, Images & Custom Attributes
     const catalogResponse = await square.catalog.search({
       cursor,
-      objectTypes: ["ITEM", "CATEGORY", "IMAGE"],
+      objectTypes: ["ITEM", "CATEGORY", "IMAGE", "CUSTOM_ATTRIBUTE_DEFINITION"],
       includeRelatedObjects: true,
     });
 
@@ -67,21 +40,66 @@ export async function GET(request: Request) {
 
     const categoryMap = new Map<string, string>();
     const imageMap = new Map<string, string>();
+    const depositAttrDefIds = new Set<string>();
 
     allObjects.forEach((obj: any) => {
-      // Support camelCase and snake_case representations
+      // Map Categories
       const catName = obj.categoryData?.name || obj.category_data?.name;
       if (obj.type === "CATEGORY" && catName) {
         categoryMap.set(obj.id, catName);
       }
 
+      // Map Images
       const imgUrl = obj.imageData?.url || obj.image_data?.url;
       if (obj.type === "IMAGE" && imgUrl) {
         imageMap.set(obj.id, imgUrl);
       }
+
+      // Identify any Custom Attribute Definition named "deposit"
+      if (obj.type === "CUSTOM_ATTRIBUTE_DEFINITION") {
+        const attrData =
+          obj.customAttributeDefinitionData ||
+          obj.custom_attribute_definition_data;
+        const name = (attrData?.name || "").toLowerCase();
+        const key = (attrData?.key || "").toLowerCase();
+        if (name === "deposit" || key === "deposit") {
+          depositAttrDefIds.add(obj.id);
+        }
+      }
     });
 
-    // 4. Map treatments and calculate deposit strictly using Square's Policy Profile
+    // Helper: Extracts the deposit number from customAttributeValues
+    const extractDepositFromAttrs = (
+      attrMap: Record<string, any> | undefined,
+    ): number | null => {
+      if (!attrMap || typeof attrMap !== "object") return null;
+
+      for (const [key, entry] of Object.entries(attrMap)) {
+        const defId =
+          entry?.customAttributeDefinitionId ||
+          entry?.custom_attribute_definition_id;
+
+        const isDepositField =
+          key.toLowerCase().includes("deposit") ||
+          (defId && depositAttrDefIds.has(defId));
+
+        if (isDepositField) {
+          const rawVal =
+            entry?.numberValue ??
+            entry?.number_value ??
+            entry?.stringValue ??
+            entry?.string_value;
+
+          if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+            const parsed = Number(rawVal);
+            if (!isNaN(parsed)) return parsed;
+          }
+        }
+      }
+      return null;
+    };
+
+    // 3. Map treatments
     const items = objects
       .filter((obj: any) => {
         if (obj.type !== "ITEM" || obj.isDeleted) return false;
@@ -105,35 +123,11 @@ export async function GET(request: Request) {
         const itemData = item.itemData || item.item_data || {};
         const rawVariations = itemData.variations || [];
 
-        const policyRequirement =
-          bookingPolicy?.bookingPolicy || bookingPolicy?.booking_policy;
-        const settings =
-          bookingPolicy?.depositSettings || bookingPolicy?.deposit_settings;
-        const depositPercentage =
-          settings?.percentage || settings?.deposit_percentage;
-        const depositFixed =
-          settings?.fixedAmountMoney?.amount ||
-          settings?.fixed_amount_money?.amount;
+        // Check for deposit attribute on parent item
+        const itemAttrs =
+          item.customAttributeValues || item.custom_attribute_values;
+        const itemLevelDeposit = extractDepositFromAttrs(itemAttrs);
 
-        const calculateDeposit = (price: number) => {
-          if (policyRequirement === "REQUIRE_FULL_PAYMENT") return price;
-          if (policyRequirement === "REQUIRE_DEPOSIT" || Boolean(settings)) {
-            if (depositPercentage) {
-              const pct =
-                Number(depositPercentage) > 1
-                  ? Number(depositPercentage) / 100
-                  : Number(depositPercentage);
-              return Math.round(price * pct * 100) / 100;
-            }
-            if (depositFixed) {
-              return Math.min(Number(depositFixed) / 100, price);
-            }
-            return Math.min(30, price);
-          }
-          return price > 0 ? Math.min(30, price) : 0;
-        };
-
-        // Map every variation on this catalog item
         const variations = rawVariations.map((vObj: any) => {
           const vData =
             vObj.itemVariationData || vObj.item_variation_data || {};
@@ -149,7 +143,24 @@ export async function GET(request: Request) {
           const price = priceMoney?.amount
             ? Number(priceMoney.amount) / 100
             : 0;
-          const deposit = calculateDeposit(price);
+
+          // Check variation-level attribute first, fallback to parent item attribute
+          const varAttrs =
+            vObj.customAttributeValues || vObj.custom_attribute_values;
+          const varLevelDeposit = extractDepositFromAttrs(varAttrs);
+
+          const resolvedNativeDeposit =
+            varLevelDeposit !== null ? varLevelDeposit : itemLevelDeposit;
+
+          // Priority: 1. Native Custom Attribute -> 2. Free Treatment -> 3. Fallback Cap (£30)
+          let deposit = 0;
+          if (price > 0) {
+            if (resolvedNativeDeposit !== null) {
+              deposit = Math.min(resolvedNativeDeposit, price);
+            } else {
+              deposit = Math.min(30, price);
+            }
+          }
 
           return {
             id: vObj.id,
@@ -161,7 +172,6 @@ export async function GET(request: Request) {
           };
         });
 
-        // Fallback default to first variation
         const defaultVar = variations[0] || {
           id: item.id,
           title: "Standard",
@@ -188,7 +198,6 @@ export async function GET(request: Request) {
         const firstImageId = imageIds?.[0];
         const imageUrl = firstImageId ? imageMap.get(firstImageId) : undefined;
 
-        // Resolve Category: Check singular categoryId, snake_case, and plural categories array
         const primaryCatId =
           itemData.categoryId ||
           itemData.category_id ||
@@ -220,10 +229,10 @@ export async function GET(request: Request) {
       items,
       nextCursor,
       totalCount: items.length,
-      policyApplied: bookingPolicy?.bookingPolicy || "DEFAULT",
+      policyApplied: "SQUARE_CUSTOM_ATTRIBUTES",
     });
   } catch (err: any) {
-    console.error("Failed to query Square treatments & policy:", err);
+    console.error("Failed to query Square treatments & attributes:", err);
     return NextResponse.json(
       { error: err.message || "Failed to load treatments" },
       { status: 500 },

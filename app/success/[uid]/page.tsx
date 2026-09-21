@@ -1,4 +1,3 @@
-// app/success/[uid]/page.tsx
 import { square } from "@/lib/square";
 
 import HistoryReset from "@/components/shared/HistoryReset";
@@ -31,18 +30,29 @@ export default async function BookingSuccessPage({
   const { uid } = await params;
   if (!uid) redirect("/book");
 
+  // 1. Authorization check against session cookie
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("booking_session")?.value;
+
   let booking: any = null;
   let customer: any = null;
   let location: any = null;
 
   try {
-    // 1. Fetch booking record from Square
     const bookingRes = await square.bookings.get({ bookingId: uid });
     booking = (bookingRes as any).booking;
 
     if (!booking) redirect("/book");
 
-    // 2. Fetch Customer Details
+    // Guard: Prevent arbitrary ID traversal if session cookie exists and doesn't match
+    if (
+      sessionToken &&
+      String(sessionToken) !== String(uid) &&
+      String(sessionToken) !== String(booking.id)
+    ) {
+      redirect("/book");
+    }
+
     if (booking.customerId) {
       try {
         const customerRes = await square.customers.get({
@@ -54,7 +64,6 @@ export default async function BookingSuccessPage({
       }
     }
 
-    // 3. Fetch Clinic Location Name & Address
     if (booking.locationId) {
       try {
         const locRes = await square.locations.get({
@@ -70,10 +79,6 @@ export default async function BookingSuccessPage({
     redirect("/book");
   }
 
-  // 4. Authorization check against session cookie
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("booking_session")?.value;
-
   const isAuthorizedBooker = Boolean(
     sessionToken &&
     (String(sessionToken) === String(uid) ||
@@ -81,33 +86,33 @@ export default async function BookingSuccessPage({
       String(sessionToken) === String(booking?.customerId)),
   );
 
-  // 5. Format Appointment Date & Duration
+  // 2. Format Appointment Date & Duration in London clinic timezone
   const startDate = booking.startAt ? new Date(booking.startAt) : new Date();
   const formattedDate = startDate.toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "Europe/London",
   });
   const formattedTime = startDate.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/London",
   });
 
-  // Calculate total duration across appointment segments
   const segments = booking.appointmentSegments || [];
   const durationMinutes =
     segments.reduce(
       (acc: number, seg: any) => acc + (seg.durationMinutes || 0),
       0,
-    ) || 45;
+    ) || 30;
 
   const rawEmail = customer?.emailAddress || "";
   const displayEmail = isAuthorizedBooker
     ? rawEmail || "your email"
     : maskEmail(rawEmail);
 
-  // 6. Clinic Address Formatting
   const locationAddress = location?.address
     ? [
         location.address.addressLine1,
@@ -136,7 +141,7 @@ export default async function BookingSuccessPage({
           </p>
         </div>
 
-        {/* Card */}
+        {/* Details Card */}
         <div className="bg-[#1C1A18] border border-[#38332E] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
           <div className="flex items-center justify-between border-b border-[#38332E] pb-4">
             <div>

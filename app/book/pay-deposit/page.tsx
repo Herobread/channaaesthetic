@@ -1,4 +1,3 @@
-// app/book/pay-deposit/page.tsx
 "use client";
 
 import { useClinicLocations } from "@/api/useClinicLocations";
@@ -53,16 +52,11 @@ const SQUARE_ERROR_MAP: Record<string, string> = {
 };
 
 function formatSquareError(raw: string | undefined | null): string {
-  if (!raw) {
+  if (!raw)
     return "An error occurred while confirming your booking. Please try again.";
-  }
-
   for (const [code, friendlyMessage] of Object.entries(SQUARE_ERROR_MAP)) {
-    if (raw.includes(code)) {
-      return friendlyMessage;
-    }
+    if (raw.includes(code)) return friendlyMessage;
   }
-
   return raw;
 }
 
@@ -72,13 +66,12 @@ export default function PayDepositPage() {
 
   const { cart, totalMinutes, totalPrice, totalDeposit, clearCart } = useCart();
   const { locations, selectedLocationId } = useClinicLocations();
-  const { selectedSlot, customerDetails } = useBookingFlowStore();
+  const { selectedSlot, customerDetails, resetFlow } = useBookingFlowStore();
 
   const [isSdkLoading, setIsSdkLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Validate prerequisite data
   const hasCart = cart.length > 0;
   const hasSlot = Boolean(selectedSlot);
   const hasDetails = Boolean(
@@ -88,25 +81,20 @@ export default function PayDepositPage() {
 
   const isValidSession = hasCart && hasSlot && hasDetails && requiresDeposit;
 
-  // ROUTE GUARD: Cascade back to the earliest missing step
   useEffect(() => {
     if (!hasCart) {
       router.replace("/book");
       return;
     }
-
     if (!hasSlot) {
       router.replace("/book/datetime");
       return;
     }
-
     if (!hasDetails) {
       router.replace("/book/details");
       return;
     }
-
     if (!requiresDeposit) {
-      // Zero-deposit bookings must be confirmed on /book/details directly
       router.replace("/book/details");
       return;
     }
@@ -121,10 +109,8 @@ export default function PayDepositPage() {
   const activeLocationId = activeLocation?.id;
   const squareAppId = process.env.NEXT_PUBLIC_SQUARE_APP_ID || "";
 
-  // Initialize Square SDK only if the session is strictly valid
   useEffect(() => {
     if (!isValidSession || !activeLocationId || !squareAppId) return;
-
     let isMounted = true;
 
     async function initSquarePayment() {
@@ -134,7 +120,6 @@ export default function PayDepositPage() {
           let script = document.getElementById(
             "square-cdn-script",
           ) as HTMLScriptElement;
-
           if (!script) {
             script = document.createElement("script");
             script.id = "square-cdn-script";
@@ -157,7 +142,6 @@ export default function PayDepositPage() {
             "Unable to load Square Payments SDK. Please check your connection.",
           );
         }
-
         if (!isMounted) return;
 
         if (cardInstanceRef.current) {
@@ -175,9 +159,7 @@ export default function PayDepositPage() {
               fontSize: "14px",
               fontFamily: "inherit",
             },
-            "input::placeholder": {
-              color: "#8C827A",
-            },
+            "input::placeholder": { color: "#8C827A" },
           },
         });
 
@@ -212,7 +194,6 @@ export default function PayDepositPage() {
     };
   }, [isValidSession, activeLocationId, squareAppId]);
 
-  // Block rendering until session verification succeeds
   if (!isValidSession) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-text-muted gap-2.5">
@@ -238,11 +219,8 @@ export default function PayDepositPage() {
       return;
     }
 
-    const targetService = cart[0]?.treatment;
-    const variationId = targetService?.variationId || targetService?.id;
-
-    if (!variationId || !activeLocationId) {
-      setErrorMessage("Missing treatment or clinic location data.");
+    if (!activeLocationId) {
+      setErrorMessage("Missing clinic location data.");
       return;
     }
 
@@ -266,7 +244,9 @@ export default function PayDepositPage() {
         body: JSON.stringify({
           locationId: activeLocationId,
           startAt: selectedSlot,
-          serviceVariationId: variationId,
+          services: cart.map((item) => ({
+            variationId: item.treatment.variationId || item.treatment.id,
+          })),
           depositAmount: totalDeposit,
           sourceId: tokenResult.token,
           customer: {
@@ -291,7 +271,8 @@ export default function PayDepositPage() {
       }
 
       if (typeof clearCart === "function") clearCart();
-      window.location.assign(`/success/${bookingId}`);
+      resetFlow();
+      router.push(`/success/${bookingId}`);
     } catch (err: any) {
       setErrorMessage(formatSquareError(err.message));
       setIsSubmitting(false);
@@ -320,7 +301,6 @@ export default function PayDepositPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-        {/* Payment Form: Single Clean Card */}
         <div className="lg:col-span-7 order-2 lg:order-1">
           <form onSubmit={handlePaymentSubmit} className="space-y-5" noValidate>
             <div className="bg-surface-elevated border border-border-subtle rounded-card p-5 sm:p-6 shadow-subtle space-y-5">
@@ -335,8 +315,7 @@ export default function PayDepositPage() {
                 </span>
               </div>
 
-              {/* Square Mount Container */}
-              <div className="relative min-h-24">
+              <div className="relative min-h-[96px]">
                 {isSdkLoading && (
                   <div className="absolute inset-0 flex items-center justify-center text-caption font-sans text-text-muted gap-2 z-10">
                     <Loader2 className="w-4 h-4 animate-spin text-accent" />
@@ -384,13 +363,14 @@ export default function PayDepositPage() {
           </form>
         </div>
 
-        {/* Booking Summary Card */}
         <aside className="lg:col-span-5 order-1 lg:order-2 lg:sticky lg:top-6">
           <div className="bg-surface-elevated border border-border-subtle rounded-card p-5 sm:p-6 shadow-subtle space-y-4">
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-border-subtle">
               <div>
                 <p className="font-serif text-title font-medium text-text-primary">
-                  {cart[0]?.treatment?.title || "Clinical Treatment"}
+                  {cart.length > 1
+                    ? "Multiple Procedures"
+                    : cart[0]?.treatment?.title || "Clinical Treatment"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5 text-caption font-sans text-text-muted">
                   <span className="flex items-center gap-1.5">
@@ -399,11 +379,13 @@ export default function PayDepositPage() {
                       weekday: "short",
                       day: "numeric",
                       month: "short",
+                      timeZone: "Europe/London",
                     })}{" "}
                     at{" "}
-                    {slotDate.toLocaleTimeString([], {
+                    {slotDate.toLocaleTimeString("en-GB", {
                       hour: "2-digit",
                       minute: "2-digit",
+                      timeZone: "Europe/London",
                     })}
                   </span>
                   <span>•</span>
